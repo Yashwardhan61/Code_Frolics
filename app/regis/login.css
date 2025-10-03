@@ -1,0 +1,288 @@
+/* login.css — adapted to your provided palette & rules
+   - Combines your new rules (.form-container, .input-field, .submit-button, .welcome-text, background-overlay)
+   - Preserves treasure / film-strip motifs and responsive layout used in login.html
+*/
+
+/* -------------------------
+   Brand variables
+   ------------------------- */
+:root {
+  --brand-brown-50: #f7efe8;
+  --brand-brown-200: #d6b89a;
+  --brand-brown-400: #a5683f;
+  --brand-brown-600: #704214;
+  --brand-brown-800: #4a2800;
+  --brand-accent: #8B4513;
+  --brand-beige: #f5d0a0;
+
+  --glass-white: rgba(255,255,255,0.95);
+  --muted-text: #6b5150;
+}
+
+/* -------------------------
+   Base / layout
+   ------------------------- */
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+html, body { height: 100%; }
+
+body {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #fffefc 0%, #fbf7f4 50%, #f3ece2 100%);
+  color: #111827;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+}
+
+/* decorative background (cover image + dark overlay) */
+.background-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.background-overlay img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.85) contrast(0.9);
+}
+.background-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(42,28,18,0.45), rgba(42,28,18,0.25));
+}
+
+/* main container sits above the background */
+.container {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1100px;
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 32px;
+  align-items: center;
+}
+
+/* left column: brand + film strip */
+.left-panel { display: flex; flex-direction: column; gap: 20px; align-items: flex-start; }
+.brand { display: flex; gap: 12px; align-items: center; }
+.logo {
+  width: 56px; height: 56px;
+  background: linear-gradient(135deg, var(--brand-brown-600), var(--brand-brown-800));
+  border-radius: 10px;
+  display: grid; place-items: center;
+  color: var(--brand-beige); font-weight: 800; font-size: 1.25rem;
+  box-shadow: 0 10px 25px rgba(74,40,0,0.12);
+}
+.brand h1 { margin: 0; font-size: 1.2rem; color: var(--brand-brown-800); }
+.brand p { margin: 0; font-size: 0.9rem; color: var(--muted-text); }
+
+/* film-strip mini-carousel */
+.film-strip-wrapper { display: flex; align-items: center; gap: 12px; overflow: hidden; width: 100%; padding: 8px 0; }
+.film-strip-inner { display: flex; gap: 8px; animation: scroll 18s linear infinite; }
+.film-frame { width: 160px; height: 156px; border: 6px solid #333; position: relative; background: #1a1a1a; flex-shrink: 0; overflow: hidden; border-radius: 6px; margin-right: 12px; }
+.film-frame img { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; transition: opacity 0.28s; }
+.film-frame:hover img { opacity: 1; }
+
+/* scroll keyframes (keeps movement subtle) */
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* -------------------------
+   Login card / treasure motif
+   ------------------------- */
+
+/* The .form-container is the glass/card that holds the form.
+   Here we make it visually distinct and follow the specified rules. */
+.form-container {
+  background: var(--glass-white);
+  backdrop-filter: blur(10px);
+  border: 2px solid var(--brand-brown-200);
+  border-radius: 16px;
+  padding: 8px;
+  width: 100%;
+}
+
+/* treasure-box used previously; keep the decorative lid & glow */
+.treasure-box {
+  position: relative;
+  width: 360px;
+  max-width: calc(100% - 48px);
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  margin: 0 auto;
+}
+.treasure-lid {
+  position: absolute;
+  top: -18px;
+  width: 100%;
+  height: 56px;
+  background: linear-gradient(45deg, var(--brand-brown-600), var(--brand-brown-400));
+  border: 10px solid var(--brand-brown-600);
+  border-radius: 14px 14px 0 0;
+  transform-origin: top;
+  transition: transform 0.55s cubic-bezier(.4,0,.2,1);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+}
+.treasure-box:hover .treasure-lid { transform: rotateX(-100deg); }
+
+/* treasure-body acts as inner card -- we'll convert it into the primary form card */
+.treasure-body {
+  position: relative;
+  width: 100%;
+  padding: 28px;
+  background: linear-gradient(135deg, rgba(139,69,19,0.06), rgba(167,120,88,0.03));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 18px 40px rgba(74,40,0,0.06);
+}
+
+/* engraved title */
+.engraved-text {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--brand-brown-800);
+  margin-bottom: 10px;
+  background: linear-gradient(45deg, var(--brand-brown-600), var(--brand-brown-400));
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  text-align: center;
+}
+
+/* -------------------------
+   Form + inputs (mapping .input-field -> .input for compatibility)
+   ------------------------- */
+
+/* The container around the HTML <form> element */
+.login-card { width: 100%; max-width: 420px; margin: 0 auto; }
+
+/* Keep a consistent form class name but prefer .form-container as wrapper */
+.form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Accept either .input or .input-field on inputs */
+.input,
+.input-field {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.9);            /* from your requested rule */
+  border: 2px solid var(--brand-brown-200);     /* from your requested rule */
+  color: #2b2b2b;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.26s ease;
+}
+
+/* Additional fallback styling for original markup if it uses .input */
+.input { background: rgba(255,255,255,0.9); border: 1px solid rgba(0,0,0,0.06); color: #111827; }
+
+/* Focus state — uses the provided focus rule */
+.input:focus,
+.input-field:focus {
+  border-color: var(--brand-brown-400);
+  box-shadow: 0 0 0 8px rgba(165, 104, 63, 0.08); /* softened halo */
+  transform: translateY(-3px);
+}
+
+/* small hint under fields */
+.hint {
+  font-size: 0.78rem;
+  color: var(--muted-text);
+  margin-top: 6px;
+}
+
+/* password row and toggle */
+.password-row { display:flex; gap:8px; align-items:center; }
+.toggle-pass {
+  background: transparent;
+  border: 1px solid rgba(0,0,0,0.06);
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* -------------------------
+   Buttons
+   ------------------------- */
+
+/* Accept .submit-button as primary and .btn as fallback */
+.submit-button,
+.btn {
+  display: inline-block;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1rem;
+  color: white;
+  background: linear-gradient(45deg, var(--brand-brown-600), var(--brand-accent)); /* your rule */
+  transition: all 0.26s ease;
+  box-shadow: 0 8px 18px rgba(112,66,20,0.12);
+}
+.submit-button:hover,
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(139,69,19,0.22); /* your hover rule */
+}
+
+/* secondary (outline) */
+.btn.secondary {
+  background: transparent;
+  color: var(--brand-brown-600);
+  border: 1px solid var(--brand-brown-200);
+}
+
+/* -------------------------
+   Messages / small helpers
+   ------------------------- */
+.row-between { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.small { font-size:0.85rem; color: var(--muted-text); }
+.message { font-size:0.9rem; padding:8px 12px; border-radius:10px; display:none; }
+.error { background: rgba(255,55,55,0.12); color:#8b1c1c; border: 1px solid rgba(255,55,55,0.08); }
+.success { background: rgba(6,160,100,0.08); color: #064e2a; border: 1px solid rgba(6,160,100,0.12); }
+
+/* -------------------------
+   Welcome text: Dancing Script
+   ------------------------- */
+.welcome-text {
+  font-family: 'Dancing Script', cursive;
+  font-size: 1.6rem;
+  line-height: 1;
+  background: linear-gradient(45deg, var(--brand-brown-600), var(--brand-brown-400));
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  margin-top: 8px;
+  color: var(--brand-brown-800);
+}
+
+/* -------------------------
+   Responsive
+   ------------------------- */
+@media (max-width: 900px) {
+  .container { grid-template-columns: 1fr; padding: 12px; }
+  .left-panel { order: 2; width: 100%; align-items: center; }
+  .login-card { order: 1; }
+  .film-frame { display: none; }
+  .treasure-box { width: 100%; }
+}
+
+/* small finish: ensure focus states are visible for accessibility */
+:focus { outline: 3px solid rgba(112,66,20,0.12); outline-offset: 2px; }
+
+/* -------------------------
+   End of stylesheet
+   ------------------------- */

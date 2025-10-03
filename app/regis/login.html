@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login — Yaado Ka baksha</title>
+
+  <!-- Dancing Script for welcome text -->
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- main stylesheet -->
+  <link rel="stylesheet" href="login.css">
+</head>
+<body>
+  <!-- decorative full-bleed background (covered by login.css .background-overlay) -->
+  <div class="background-overlay" aria-hidden="true">
+    <img src="https://picsum.photos/1600/900?blur=2&seed=treasure" alt="">
+  </div>
+
+  <main class="container" role="main" aria-labelledby="signin-heading">
+    <!-- left column: branding + film strip -->
+    <section class="left-panel" aria-hidden="false">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">TS</div>
+        <div>
+          <h1 id="signin-heading" class="brand-text">Yaado ka baksa</h1>
+          <p class="small">Secure sign in to continue</p>
+        </div>
+      </div>
+
+      <div class="film-strip-wrapper" aria-hidden="true">
+        <div class="film-strip-inner">
+          <div class="film-frame"><img src="https://picsum.photos/seed/1/320/300" alt=""></div>
+          <div class="film-frame"><img src="https://picsum.photos/seed/2/320/300" alt=""></div>
+          <div class="film-frame"><img src="https://picsum.photos/seed/3/320/300" alt=""></div>
+          <div class="film-frame"><img src="https://picsum.photos/seed/4/320/300" alt=""></div>
+          <div class="film-frame"><img src="https://picsum.photos/seed/5/320/300" alt=""></div>
+        </div>
+      </div>
+
+      <div class="welcome-text">Welcome back — open the chest</div>
+    </section>
+
+    <!-- right column: login card -->
+    <section class="login-card" aria-label="Login form">
+      <!-- decorative treasure lid / box (kept for motif) -->
+      <div class="treasure-box" aria-hidden="true">
+        <div class="treasure-lid"></div>
+        <div class="treasure-body">
+          <!-- form container (glass card) -->
+          <div class="form-container" role="region" aria-label="Sign in card">
+            <div style="text-align:center; padding: 8px 4px 0;">
+              <div class="engraved-text">Sign in</div>
+            </div>
+
+            <!-- actual form -->
+            <form id="loginForm" class="form" autocomplete="on" novalidate>
+              <label for="email" class="small">Email</label>
+              <input id="email" name="email" class="input-field" type="email" required placeholder="you@domain.com" />
+
+              <div style="margin-top:6px;">
+                <label for="password" class="small">Password</label>
+                <div class="password-row">
+                  <input id="password" name="password" class="input-field" type="password" required minlength="6" placeholder="Minimum 6 characters" />
+                  <button type="button" id="togglePass" class="toggle-pass" aria-pressed="false">Show</button>
+                </div>
+              </div>
+
+              <div class="row-between" style="margin-top:8px">
+                <label class="small"><input type="checkbox" id="remember" /> Remember me</label>
+                <a href="#" class="small nav-link">Forgot?</a>
+              </div>
+
+              <div style="display:flex; gap:10px; margin-top:12px;">
+                <!-- primary submit uses .submit-button (per your CSS) -->
+                <button type="submit" class="submit-button">Sign in</button>
+                <button type="button" id="demoBtn" class="btn secondary">Demo</button>
+              </div>
+
+              <div id="message" class="message" aria-live="polite" style="margin-top:12px;"></div>
+
+              <p style="margin-top:12px; text-align:center;">
+                <span class="small">New here?</span>
+                <a href="#" class="nav-link small">Create an account</a>
+              </p>
+            </form>
+          </div> <!-- .form-container -->
+        </div> <!-- .treasure-body -->
+      </div> <!-- .treasure-box -->
+    </section>
+  </main>
+
+  <!-- Use module type if your login.js imports Firebase (as suggested earlier) -->
+  <script type="module" src="login.js"></script>
+</body>
+</html>
