@@ -9,12 +9,12 @@ Grishma Doshi — 2025CA038, MCA
 
 Harshita Prajapat — 2025CA042, MCA
 
-🌍 Overview
+Overview
 
 The Legacy Trunk (Yaadoo ka Baksa) is a digital family archive that helps preserve memories, heirlooms, and life stories across generations.
 It’s a secure storytelling platform where family members can record, upload, and relive shared memories through photos, videos, audio, and text — keeping the heritage alive for years to come.
 
-💡 Problem Statement
+Problem Statement
 
 Families often struggle to preserve and share their stories, traditions, and emotions in a structured, accessible, and private way.
 Our goal is to create a centralized digital archive where families can:
@@ -25,13 +25,13 @@ Relive life moments through timelines.
 
 Share memories privately within trusted circles.
 
-🧠 Core Idea
+ Core Idea
 
 “A family’s legacy is its story. We make sure it’s never forgotten.”
 
 The Legacy Trunk acts as a digital family trunk — combining storytelling, memory preservation, and AI assistance to safeguard emotional heritage.
 
-🔧 Process Flow
+ Process Flow
 
 User Registration & Authentication
 Secure sign-up and login using Firebase Authentication.
@@ -60,7 +60,7 @@ Share stories only within private family circles.
 Export Feature
 Download stories as PDFs or create digital family scrapbooks.
 
-⚙️ Basic Features
+ Basic Features
 
 Family Story Recording — Upload and store stories in audio, video, photo, or text form.
 
@@ -76,7 +76,7 @@ User Roles — Parents, grandparents, and kids can contribute.
 
 Story Export — Convert stories into printable PDFs or books.
 
-🚀 Advanced Features
+ Advanced Features
 
 AI Memory Prompts — Predefined story-starter questions (e.g., “What was your happiest childhood moment?”).
 
