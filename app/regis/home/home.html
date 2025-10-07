@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Yaadoo ka Baksa — Stories</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="home.css">
+</head>
+<body>
+  <!-- Background Image -->
+  <div class="background-overlay" aria-hidden="true">
+    <img src="../../background.jpg" alt="Background">
+  </div>
+
+  <!-- Header Section -->
+  <header class="topbar">
+    <button id="menuToggle" class="menu-btn" aria-label="Open menu">☰</button>
+
+    <div class="brand">
+      <div class="logo-placeholder">
+        <img src="../../logo.jpeg" alt="Yaadoo ka Baksa Logo" id="brandLogo">
+      </div>
+      <div class="brand-text">Yaadoo ka Baksa</div>
+    </div>
+
+    <div class="search-wrap">
+      <input id="searchInput" class="search-input" placeholder="Search stories by tag, member or location..." aria-label="Search stories" />
+      <select id="filterBy" class="filter-select" aria-label="Filter category">
+        <option value="all">All</option>
+        <option value="tag">Tag</option>
+        <option value="member">Member</option>
+        <option value="location">Location</option>
+      </select>
+      <button id="searchBtn" class="submit-button">Search</button>
+    </div>
+
+    <div class="header-actions">
+      <button id="addStoryBtn" class="primary-btn">+ Add Story</button>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <aside class="side-menu" id="sideMenu" aria-hidden="true">
+    <div class="menu-head">
+      <div class="logo small">
+        <img src="../../logo.jpeg" alt="Small Logo">
+      </div>
+      <h3>Account</h3>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="../profile/profile.html" id="profileLink">Profile</a></li>
+        <li><a href="../paternal/paternal-tree.html" id="paternalLink">Paternal Family Tree</a></li>
+        <li><a href="../maternal/maternal-tree.html" id="maternalLink">Maternal Family Tree</a></li>
+        <li><button id="logoutBtn" class="btn secondary">Logout</button></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <div class="menu-overlay" id="menuOverlay"></div>
+
+  <!-- Main Section -->
+  <main class="main-content">
+    <section class="timeline-area" aria-label="Stories timeline">
+      <div class="timeline-track" aria-hidden="true"></div>
+      <div id="storiesContainer" class="stories">
+        <!-- Stories injected dynamically -->
+      </div>
+    </section>
+  </main>
+
+  <!-- Add Story Modal -->
+  <div id="addStoryModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-content">
+      <span class="close" id="closeModal" role="button" tabindex="0">&times;</span>
+      <h2>Add a New Story</h2>
+
+      <form id="addStoryForm">
+        <label for="storyTitle">Title</label>
+        <input type="text" id="storyTitle" required>
+
+        <label for="storyTags">Tags</label>
+        <input type="text" id="storyTags" placeholder="e.g. family, heritage">
+
+        <label for="storyLocation">Location</label>
+        <input type="text" id="storyLocation" placeholder="e.g. Delhi, India">
+
+        <label for="storyMembers">Members</label>
+        <input type="text" id="storyMembers" placeholder="e.g. John, Asha, Raj">
+
+        <label for="storyDate">Date</label>
+        <input type="date" id="storyDate" required>
+
+        <label for="storyDescription">Description</label>
+        <textarea id="storyDescription" rows="3" placeholder="Write your story..."></textarea>
+
+        <label for="storyMedia">Media</label>
+        <input type="file" id="storyMedia" accept="image/*,video/*,audio/*">
+
+        <div class="form-buttons">
+          <button type="button" id="transcribeBtn" class="secondary-btn">Transcribe by AI</button>
+          <button type="submit" id="uploadBtn" class="primary-btn">Add Story</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Firebase + Home JS -->
+  <script type="module" src="home.js"></script>
+</body>
+</html>
