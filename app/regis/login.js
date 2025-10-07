@@ -1,14 +1,3 @@
-// login.js — Firebase Authentication (email/password) integration
-// Save alongside login.html and login.css
-// IMPORTANT: Replace the firebaseConfig object with your project's values
-// This file uses the Firebase v9+ modular SDK via CDN imports (ES modules).
-//
-// Usage:
-// 1. Make sure your web hosting serves this file as a module (login.html should
-//    include: <script type="module" src="login.js"></script>).
-// 2. Enable Email/Password sign-in in your Firebase Console (Authentication > Sign-in method).
-// 3. Replace firebaseConfig values below.
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import {
   getAuth,
@@ -19,21 +8,22 @@ import {
   browserSessionPersistence
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-/* ============ CONFIG: REPLACE WITH YOUR FIREBASE PROJECT CONFIG ============ */
+// 🔹 Your Firebase configuration
 const firebaseConfig = {
-  apiKey: "REPLACE_WITH_YOUR_API_KEY",
-  authDomain: "REPLACE_WITH_YOUR_AUTH_DOMAIN",
-  projectId: "REPLACE_WITH_YOUR_PROJECT_ID",
-  storageBucket: "REPLACE_WITH_YOUR_STORAGE_BUCKET",
-  messagingSenderId: "REPLACE_WITH_YOUR_MESSAGING_SENDER_ID",
-  appId: "REPLACE_WITH_YOUR_APP_ID"
+  apiKey: "AIzaSyCIIbfmTiLcnbBIf2a1RDe4NtgWvQ16IgE",
+  authDomain: "baksha-d6af1.firebaseapp.com",
+  projectId: "baksha-d6af1",
+  storageBucket: "baksha-d6af1.firebasestorage.app",
+  messagingSenderId: "1000632616535",
+  appId: "1:1000632616535:web:5841a1627a3e609988c512",
+  measurementId: "G-L4MXKVGCJM"
 };
-/* ========================================================================== */
 
+// 🔹 Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// DOM elements
+// 🔹 DOM elements
 const form = document.getElementById("loginForm");
 const emailEl = document.getElementById("email");
 const passwordEl = document.getElementById("password");
@@ -42,7 +32,7 @@ const messageEl = document.getElementById("message");
 const demoBtn = document.getElementById("demoBtn");
 const rememberCheckbox = document.getElementById("remember");
 
-// helper to show a message
+// 🔹 Show message helper
 function showMessage(text, type = "error", autoHide = true) {
   messageEl.style.display = "block";
   messageEl.className = "message " + (type === "success" ? "success" : "error");
@@ -54,7 +44,7 @@ function showMessage(text, type = "error", autoHide = true) {
   }
 }
 
-// toggle password visibility
+// 🔹 Toggle password visibility
 togglePass?.addEventListener("click", () => {
   if (!passwordEl) return;
   const isHidden = passwordEl.type === "password";
@@ -63,14 +53,14 @@ togglePass?.addEventListener("click", () => {
   togglePass.setAttribute("aria-pressed", String(isHidden));
 });
 
-// quick demo fill (keeps same UI behavior)
+// 🔹 Demo autofill
 demoBtn?.addEventListener("click", () => {
   emailEl.value = "demo@example.com";
   passwordEl.value = "demo1234";
   showMessage("Demo credentials filled. Click Sign in to continue.", "success");
 });
 
-// Map Firebase Auth error codes to friendly messages
+// 🔹 Friendly Firebase Auth error messages
 function friendlyErrorMessage(code) {
   switch (code) {
     case "auth/invalid-email":
@@ -88,21 +78,31 @@ function friendlyErrorMessage(code) {
   }
 }
 
-// attempt sign-in using Firebase Auth
+// 🔹 Sign in and redirect
 async function signInWithFirebase(email, password, remember) {
   try {
-    // Choose persistence based on "remember me"
+    // Persistence setting based on "remember me"
     await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
 
     const credential = await signInWithEmailAndPassword(auth, email, password);
-    // credential.user contains the authenticated user
-    showMessage("Welcome back! Signing in...", "success", false);
+    const user = credential.user;
 
-    // Example: redirect to dashboard or homepage after success
-    // Replace '#' with your actual app route.
+    // Save user details in localStorage for home.html to read
+    localStorage.setItem(
+      "userDetails",
+      JSON.stringify({
+        email: user.email,
+        uid: user.uid,
+        tags: ["family", "heritage", "legacy"] // Example tags (can replace later from Firestore)
+      })
+    );
+
+    showMessage("Welcome back! Redirecting...", "success", false);
+
+    // ✅ Redirect to home.html
     setTimeout(() => {
-      window.location.href = "/dashboard.html"; // <-- change as needed
-    }, 800);
+      window.location.href = "./home/home.html";
+    }, 1000);
   } catch (err) {
     const code = err.code || err?.message || "unknown";
     showMessage(friendlyErrorMessage(code));
@@ -110,14 +110,14 @@ async function signInWithFirebase(email, password, remember) {
   }
 }
 
-// Form submission handler
+// 🔹 Handle login form submit
 form?.addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = (emailEl.value || "").trim();
   const password = passwordEl.value || "";
   const remember = rememberCheckbox?.checked || false;
 
-  // Basic client-side validation
+  // Client-side validation
   if (!email || !email.includes("@")) {
     showMessage("Please enter a valid email address.");
     return;
@@ -127,27 +127,21 @@ form?.addEventListener("submit", async (e) => {
     return;
   }
 
-  // Disable controls while authenticating
   const controls = form.querySelectorAll("input, button, a");
   controls.forEach((c) => (c.disabled = true));
 
   try {
     await signInWithFirebase(email, password, remember);
   } finally {
-    // Re-enable controls (if redirect doesn't happen)
     controls.forEach((c) => (c.disabled = false));
   }
 });
 
-// Optional: watch auth state and act if user already signed in
+// 🔹 Optional: Check auth state on page load
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    // User is signed in.
-    // If you want to auto-redirect already authenticated users away from the login page:
-    // window.location.href = "/dashboard.html"; // <-- change as needed
     console.log("User is signed in:", user.email);
   } else {
-    // No user signed in.
     console.log("No user signed in.");
   }
 });

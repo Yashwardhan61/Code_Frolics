@@ -65,7 +65,7 @@ function initializeModal() {
     // Get Started button click handler
     getStartedBtn.addEventListener('click', () => {
         console.log('Get Started clicked');
-        // Add your Get Started functionality here
+        
     });
 
     // Prevent closing when clicking inside modal content
@@ -91,7 +91,7 @@ function initializeModal(openSound) {
 
     // Open modal when clicking on treasure box
     treasureBox.addEventListener('click', () => {
-        console.log('Treasure box clicked'); // Debug log
+        console.log('Treasure box clicked'); 
         if (openSound) {
             openSound.currentTime = 0;
             openSound.play().catch(err => console.log('Audio error:', err));
@@ -127,7 +127,7 @@ function initializeModal(openSound) {
     // Get Started button click handler
     getStartedBtn.addEventListener('click', () => {
         console.log('Get Started clicked!');
-        // Add your "Get Started" functionality here
+        
     });
 
     // Prevent closing when clicking inside modal content
@@ -167,7 +167,6 @@ function initializeModal(openSound) {
 
     // Get Started button click handler
     getStartedBtn.addEventListener('click', () => {
-        // Add your "Get Started" functionality here
         console.log('Get Started clicked!');
     });
 
