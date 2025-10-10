@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications | Family Stories</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="home.css">
+  <link rel="stylesheet" href="notifications.css">
+</head>
+<body>
+  <div class="background-overlay">
+    <img src="../../background.jpg" alt="Background Pattern">
+  </div>
+
+  <!-- Header -->
+  <header class="topbar">
+    <button class="menu-btn" id="menuBtn" aria-label="Menu">
+      <i class="fas fa-bars"></i>
+    </button>
+    <div class="brand">
+      <div class="logo-placeholder">
+        <img src="../../logo.jpeg" alt="Logo">
+      </div>
+      <div class="brand-text">Family Stories</div>
+    </div>
+    <div class="header-actions">
+      <a href="home.html" class="back-btn">
+        <i class="fas fa-arrow-left"></i> Back to Home
+      </a>
+    </div>
+  </header>
+
+  <!-- Side Menu -->
+  <aside class="side-menu" id="sideMenu" aria-hidden="true">
+    <div class="menu-head">
+      <div class="logo small">
+        <img src="../../logo.jpeg" alt="Small Logo">
+      </div>
+      <h3>Account</h3>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="../profile/profile.html" id="profileLink">Profile</a></li>
+        <li><a href="home.html">Home</a></li>
+        <li><a href="../paternal/paternal-tree.html" id="paternalLink">Paternal Family Tree</a></li>
+        <li><a href="../maternal/maternal-tree.html" id="maternalLink">Maternal Family Tree</a></li>
+        <li><button id="logoutBtn" class="btn secondary">Logout</button></li>
+      </ul>
+    </nav>
+  </aside>
+  <div class="menu-overlay" id="menuOverlay"></div>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="notifications-header">
+      <h1>Notifications</h1>
+      <p class="subtitle">Your memories and story reminders</p>
+      
+      <div class="filters">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="anniversary">Anniversaries</button>
+        <button class="filter-btn" data-filter="memory">Memories</button>
+        <button class="filter-btn" data-filter="unread">Unread</button>
+      </div>
+    </div>
+    
+    <div class="notifications-container">
+      <div id="notificationsLoading" class="loading-indicator">
+        <div class="spinner"></div>
+        <p>Loading your notifications...</p>
+      </div>
+      
+      <div id="notificationsEmpty" class="empty-state hidden">
+        <i class="fas fa-bell-slash"></i>
+        <h3>No Notifications Yet</h3>
+        <p>You don't have any notifications at the moment. Notifications will appear when you have memories to revisit or new stories are shared with you.</p>
+      </div>
+      
+      <div id="notificationsList" class="notifications-list">
+        <!-- Notifications will be inserted here dynamically -->
+      </div>
+    </div>
+  </main>
+
+  <!-- Toast Notifications -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js" type="module"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js" type="module"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js" type="module"></script>
+
+  <!-- App Scripts -->
+  <script src="notifications.js" type="module"></script>
+</body>
+</html>

@@ -52,6 +52,7 @@
     <nav>
       <ul>
         <li><a href="../profile/profile.html" id="profileLink">Profile</a></li>
+        <li><a href="notifications.html" id="notificationsLink">Notifications <span id="notificationBadge" class="notification-badge hidden">0</span></a></li>
         <li><a href="../paternal/paternal-tree.html" id="paternalLink">Paternal Family Tree</a></li>
         <li><a href="../maternal/maternal-tree.html" id="maternalLink">Maternal Family Tree</a></li>
         <li><button id="logoutBtn" class="btn secondary">Logout</button></li>
@@ -87,8 +88,17 @@
         <label for="storyLocation">Location</label>
         <input type="text" id="storyLocation" placeholder="e.g. Delhi, India">
 
-        <label for="storyMembers">Members</label>
-        <input type="text" id="storyMembers" placeholder="e.g. John, Asha, Raj">
+        <div class="members-section">
+          <label>Share with Members</label>
+          <div class="members-input-group">
+            <input type="email" id="memberEmail" placeholder="Enter member's email">
+            <button type="button" id="addMemberBtn" class="secondary-btn">Add</button>
+          </div>
+          <div id="selectedMembers" class="selected-members">
+            <!-- Added members will appear here -->
+          </div>
+          <p class="members-help">Only registered users can be added as members</p>
+        </div>
 
         <label for="storyDate">Date</label>
         <input type="date" id="storyDate" required>
@@ -96,15 +106,92 @@
         <label for="storyDescription">Description</label>
         <textarea id="storyDescription" rows="3" placeholder="Write your story..."></textarea>
 
-        <label for="storyMedia">Media</label>
-        <input type="file" id="storyMedia" accept="image/*,video/*,audio/*">
+        <div class="media-upload-section">
+          <label for="storyMedia">Media Files</label>
+          <div class="upload-zone" id="uploadZone">
+            <input type="file" id="storyMedia" accept="image/*,video/*,audio/*" multiple>
+            <div class="upload-prompt">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <p>Drag & drop your files here<br>or click to browse</p>
+            </div>
+          </div>
+          
+          <div class="media-preview" id="mediaPreview">
+            <!-- Preview items will be added here dynamically -->
+          </div>
+          
+          <div class="upload-info">
+            <p class="file-limits">Supported: Images, Videos, Audio • Max 10 files</p>
+          </div>
+        </div>
 
         <div class="form-buttons">
-          <button type="button" id="transcribeBtn" class="secondary-btn">Transcribe by AI</button>
+          <div class="transcribe-btn-wrapper">
+            <button type="button" id="transcribeBtn" class="secondary-btn">
+              <i>🤖</i> Transcribe by AI
+            </button>
+            <div class="transcribe-menu" id="transcribeMenu">
+              <div class="transcribe-option" data-action="audio-to-text">
+                <i>🎙️</i>
+                <div class="text-content">
+                  <div class="title">Audio to Text</div>
+                  <div class="description">Convert audio recordings into written text</div>
+                </div>
+              </div>
+              <div class="transcribe-option" data-action="image-to-text">
+                <i>📝</i>
+                <div class="text-content">
+                  <div class="title">Extract Text from Images</div>
+                  <div class="description">Extract text content from images (OCR)</div>
+                </div>
+              </div>
+              <div class="transcribe-option" data-action="image-caption">
+                <i>🖼️</i>
+                <div class="text-content">
+                  <div class="title">Generate Image Captions</div>
+                  <div class="description">Create descriptive captions for images</div>
+                </div>
+              </div>
+              <div class="transcribe-option" data-action="auto-description">
+                <i>✨</i>
+                <div class="text-content">
+                  <div class="title">Auto-Generate Description</div>
+                  <div class="description">Create story description from media content</div>
+                </div>
+              </div>
+            </div>
+          </div>
           <button type="submit" id="uploadBtn" class="primary-btn">Add Story</button>
         </div>
       </form>
     </div>
+  </div>
+
+  <!-- Media Preview Modal -->
+  <div id="previewModal" class="modal preview-modal hidden" aria-hidden="true">
+    <div class="preview-content">
+      <span class="close-preview" role="button" tabindex="0">&times;</span>
+      <div class="preview-container">
+        <!-- Preview content will be inserted here -->
+      </div>
+      <div class="preview-thumbnails">
+        <!-- Thumbnails will be inserted here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Fullscreen View -->
+  <div id="fullscreenView" class="fullscreen-view hidden" aria-hidden="true">
+    <span class="close-fullscreen" role="button" tabindex="0">&times;</span>
+    <div class="fullscreen-content">
+      <!-- Fullscreen content will be inserted here -->
+    </div>
+    <button class="nav-btn prev-btn" aria-label="Previous">&lt;</button>
+    <button class="nav-btn next-btn" aria-label="Next">&gt;</button>
   </div>
 
   <!-- Firebase + Home JS -->

@@ -167,7 +167,7 @@
 
   <div class="form-container">
     <h2 class="welcome-text">Share Your Thoughts</h2>
-    <form>
+    <form id="feedbackForm">
       <label for="name">Your Name:</label><br>
       <input type="text" id="name" name="name" class="input-field" placeholder="Enter your name" required><br>
 
@@ -205,12 +205,7 @@
     <p>&copy; 2025 Yaado Ka Baksa. All Rights Reserved.</p>
   </footer>
 
-  <script>
-    document.querySelector('form').addEventListener('submit', function(e) {
-      e.preventDefault();
-      alert('Thank you for your feedback! We truly appreciate it ❤️');
-      this.reset();
-    });
-  </script>
+  <!-- Firebase Setup -->
+  <script type="module" src="feedback.js"></script>
 </body>
 </html>
