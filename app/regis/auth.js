@@ -3,7 +3,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebas
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-analytics.js";
 import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
 
-// Initialize Firebase with your configuration
 const firebaseConfig = {
     apiKey: "AIzaSyCIIbfmTiLcnbBIf2a1RDe4NtgWvQ16IgE",
     authDomain: "baksha-d6af1.firebaseapp.com",
@@ -63,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             showAlert('Registration successful! You can now login.', 'success');
             setTimeout(() => {
-                window.location.href = '../login/login.html';
+                window.location.href = '../regis/login.html';
             }, 2000);
         } catch (error) {
             console.error('Registration error:', error);
