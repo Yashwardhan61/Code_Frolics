@@ -7,6 +7,9 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="home.css">
+  <link rel="stylesheet" href="download-styles.css">
+  <link rel="stylesheet" href="enhanced-tags.css">
+  <link rel="stylesheet" href="story-animations.css">
 </head>
 <body>
   <!-- Background Image -->
@@ -20,9 +23,9 @@
 
     <div class="brand">
       <div class="logo-placeholder">
-        <img src="../../logo.jpeg" alt="Yaado ka Baksa Logo" id="brandLogo">
+        <img src="../../logo.jpeg" alt="Yaadoo ka Baksa Logo" id="brandLogo">
       </div>
-      <div class="brand-text">Yaado ka Baksa</div>
+      <div class="brand-text">Yaadoo ka Baksa</div>
     </div>
 
     <div class="search-wrap">
@@ -38,6 +41,16 @@
 
     <div class="header-actions">
       <button id="addStoryBtn" class="primary-btn">+ Add Story</button>
+      <button id="downloadStoriesBtn" class="download-btn">
+        <span class="download-icon-wrapper">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </span>
+        Download Stories
+      </button>
     </div>
   </header>
 
@@ -53,6 +66,7 @@
       <ul>
         <li><a href="../profile/profile.html" id="profileLink">Profile</a></li>
         <li><a href="notifications.html" id="notificationsLink">Notifications <span id="notificationBadge" class="notification-badge hidden">0</span></a></li>
+        <li><a href="friend-circle.html" id="friendsLink">Friend Circle <span id="friendInviteBadge" class="notification-badge hidden">0</span></a></li>
         <li><a href="../paternal/paternal-tree.html" id="paternalLink">Paternal Family Tree</a></li>
         <li><a href="../maternal/maternal-tree.html" id="maternalLink">Maternal Family Tree</a></li>
         <li><button id="logoutBtn" class="btn secondary">Logout</button></li>
@@ -82,22 +96,19 @@
         <label for="storyTitle">Title</label>
         <input type="text" id="storyTitle" required>
 
-        <label for="storyTags">Tags</label>
-        <input type="text" id="storyTags" placeholder="e.g. family, heritage">
+        <label>Tags</label>
+        <div id="tagInputContainer" class="tag-input-container">
+          <!-- Enhanced tag input will be initialized here -->
+        </div>
 
         <label for="storyLocation">Location</label>
         <input type="text" id="storyLocation" placeholder="e.g. Delhi, India">
 
         <div class="members-section">
-          <label>Share with Members</label>
-          <div class="members-input-group">
-            <input type="email" id="memberEmail" placeholder="Enter member's email">
-            <button type="button" id="addMemberBtn" class="secondary-btn">Add</button>
+          <label>Share with Family Members</label>
+          <div id="memberInputContainer" class="member-input-container">
+            <!-- Enhanced member input will be initialized here -->
           </div>
-          <div id="selectedMembers" class="selected-members">
-            <!-- Added members will appear here -->
-          </div>
-          <p class="members-help">Only registered users can be added as members</p>
         </div>
 
         <label for="storyDate">Date</label>
@@ -194,7 +205,190 @@
     <button class="nav-btn next-btn" aria-label="Next">&gt;</button>
   </div>
 
+  <!-- Download Stories Modal -->
+  <div id="downloadModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-content download-modal">
+      <span class="close" id="closeDownloadModal" role="button" tabindex="0" aria-label="Close download modal">&times;</span>
+      <h2>Download Your Stories</h2>
+      
+      <div class="download-options">
+        <div class="selection-type">
+          <h3>What would you like to download?</h3>
+          <div class="option-toggles">
+            <button id="singleStoryOption" class="option-btn active">Single Story</button>
+            <button id="multipleStoriesOption" class="option-btn">Multiple Stories</button>
+            <button id="allStoriesOption" class="option-btn">All Stories</button>
+          </div>
+        </div>
+
+        <div id="singleStorySelector" class="story-selector">
+          <label for="selectSingleStory">Select a story</label>
+          <select id="selectSingleStory" class="story-select">
+            <!-- Options will be populated dynamically -->
+          </select>
+        </div>
+
+        <div id="multipleStoriesSelector" class="story-selector hidden">
+          <label>Select stories to include</label>
+          <div class="story-checkbox-list" id="storyCheckboxList">
+            <!-- Checkboxes will be populated dynamically -->
+          </div>
+        </div>
+        
+        <div class="format-options">
+          <h3>Choose a format</h3>
+          <div class="format-selection">
+            <label class="format-option">
+              <input type="radio" name="downloadFormat" value="pdf" checked>
+              <div class="format-details">
+                <div class="format-icon">📄</div>
+                <div class="format-info">
+                  <h4>PDF Document</h4>
+                  <p>Clean, printable document with all story details and images</p>
+                </div>
+              </div>
+            </label>
+            
+            <label class="format-option">
+              <input type="radio" name="downloadFormat" value="scrapbook">
+              <div class="format-details">
+                <div class="format-icon">📔</div>
+                <div class="format-info">
+                  <h4>Digital Scrapbook</h4>
+                  <p>Beautifully styled pages with decorative elements and layouts</p>
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="customization-options">
+          <h3>Customize your download</h3>
+          <div class="customize-fields">
+            <div class="customize-option">
+              <label for="includeCoverPage">
+                <input type="checkbox" id="includeCoverPage" checked>
+                Include cover page
+              </label>
+            </div>
+            
+            <div class="customize-option">
+              <label for="includeTableOfContents">
+                <input type="checkbox" id="includeTableOfContents" checked>
+                Include table of contents
+              </label>
+            </div>
+            
+            <div class="customize-option">
+              <label for="includeMedia">
+                <input type="checkbox" id="includeMedia" checked>
+                Include media files
+              </label>
+            </div>
+            
+            <div id="mediaOptions" class="media-options">
+              <h4>Media Options</h4>
+              <div class="media-options-grid">
+                <div class="media-option">
+                  <label for="includeImages">
+                    <input type="checkbox" id="includeImages" checked>
+                    <span class="media-option-icon">🖼️</span>
+                    <span class="media-option-text">Images</span>
+                  </label>
+                </div>
+                <div class="media-option">
+                  <label for="includeVideos">
+                    <input type="checkbox" id="includeVideos" checked>
+                    <span class="media-option-icon">🎬</span>
+                    <span class="media-option-text">Videos</span>
+                  </label>
+                </div>
+                <div class="media-option">
+                  <label for="includeAudio">
+                    <input type="checkbox" id="includeAudio" checked>
+                    <span class="media-option-icon">🎵</span>
+                    <span class="media-option-text">Audio</span>
+                  </label>
+                </div>
+                <div class="media-option">
+                  <label for="maxImagesPerStory">
+                    <span class="media-option-text">Max images per story:</span>
+                    <select id="maxImagesPerStory">
+                      <option value="all">All</option>
+                      <option value="1">1</option>
+                      <option value="3">3</option>
+                      <option value="5">5</option>
+                      <option value="10">10</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            <div class="customize-option">
+              <label for="pageSize">Page size</label>
+              <select id="pageSize">
+                <option value="a4">A4 (210 × 297 mm)</option>
+                <option value="letter">Letter (8.5 × 11 in)</option>
+                <option value="legal">Legal (8.5 × 14 in)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="download-preview">
+        <h3>Preview</h3>
+        <div class="preview-container" id="downloadPreview">
+          <div class="preview-placeholder">
+            <div class="preview-icon">👁️</div>
+            <p>Your document preview will appear here</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="download-actions">
+        <button id="generatePreviewBtn" class="secondary-btn">Generate Preview</button>
+        <button id="downloadBtn" class="primary-btn">Download Now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase CDN (Compatibility Mode) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+  
+  <!-- Firebase Config -->
+  <script>
+    // Initialize Firebase with config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCIIbfmTiLcnbBIf2a1RDe4NtgWvQ16IgE",
+      authDomain: "baksha-d6af1.firebaseapp.com",
+      projectId: "baksha-d6af1",
+      storageBucket: "baksha-d6af1.firebasestorage.app",
+      messagingSenderId: "1000632616535",
+      appId: "1:1000632616535:web:5841a1627a3e609988c512",
+      databaseURL: "https://baksha-d6af1-default-rtdb.firebaseio.com/"
+    };
+    
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+  </script>
+  
   <!-- Firebase + Home JS -->
   <script type="module" src="home.js"></script>
+  
+  <!-- jsPDF library for PDF generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  
+  <!-- html2canvas for rendering HTML to canvas (for PDF) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  
+  <!-- Download Stories Feature -->
+  <script src="download-stories.js"></script>
+  <script src="enhanced-tags.js"></script>
+  <script src="story-animations.js"></script>
 </body>
 </html>
