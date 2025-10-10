@@ -5,7 +5,8 @@ import {
   onAuthStateChanged,
   setPersistence,
   browserLocalPersistence,
-  browserSessionPersistence
+  browserSessionPersistence,
+  sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
 // 🔹 Your Firebase configuration
@@ -31,6 +32,14 @@ const togglePass = document.getElementById("togglePass");
 const messageEl = document.getElementById("message");
 const demoBtn = document.getElementById("demoBtn");
 const rememberCheckbox = document.getElementById("remember");
+
+// Forgot password elements
+const forgotPasswordLink = document.getElementById("forgotPasswordLink");
+const forgotPasswordModal = document.getElementById("forgotPasswordModal");
+const closeModalBtn = document.getElementById("closeModalBtn");
+const resetPasswordForm = document.getElementById("resetPasswordForm");
+const resetEmailEl = document.getElementById("resetEmail");
+const resetMessageEl = document.getElementById("resetMessage");
 
 // 🔹 Show message helper
 function showMessage(text, type = "error", autoHide = true) {
@@ -134,6 +143,83 @@ form?.addEventListener("submit", async (e) => {
     await signInWithFirebase(email, password, remember);
   } finally {
     controls.forEach((c) => (c.disabled = false));
+  }
+});
+
+// 🔹 Forgot password functionality
+forgotPasswordLink?.addEventListener("click", (e) => {
+  e.preventDefault();
+  forgotPasswordModal.classList.remove("hidden");
+  resetEmailEl.value = emailEl.value || "";
+  resetMessageEl.style.display = "none";
+});
+
+closeModalBtn?.addEventListener("click", () => {
+  forgotPasswordModal.classList.add("hidden");
+});
+
+// Close modal if clicking outside content
+forgotPasswordModal?.addEventListener("click", (e) => {
+  if (e.target === forgotPasswordModal) {
+    forgotPasswordModal.classList.add("hidden");
+  }
+});
+
+// Show message in reset form
+function showResetMessage(text, type = "error") {
+  resetMessageEl.style.display = "block";
+  resetMessageEl.className = "message " + (type === "success" ? "success" : "error");
+  resetMessageEl.textContent = text;
+}
+
+// Handle reset password form submission
+resetPasswordForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = (resetEmailEl.value || "").trim();
+
+  // Client-side validation
+  if (!email || !email.includes("@")) {
+    showResetMessage("Please enter a valid email address.");
+    return;
+  }
+
+  const submitBtn = resetPasswordForm.querySelector("button[type='submit']");
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Sending...";
+
+  try {
+    await sendPasswordResetEmail(auth, email);
+    showResetMessage("Password reset email sent! Check your inbox.", "success");
+    
+    // Clear and close after 3 seconds on success
+    setTimeout(() => {
+      forgotPasswordModal.classList.add("hidden");
+      resetEmailEl.value = "";
+    }, 3000);
+    
+  } catch (err) {
+    const code = err.code || "unknown";
+    let errorMessage;
+    
+    switch (code) {
+      case "auth/invalid-email":
+        errorMessage = "Invalid email address.";
+        break;
+      case "auth/user-not-found":
+        errorMessage = "No account found with this email.";
+        break;
+      case "auth/too-many-requests":
+        errorMessage = "Too many attempts. Please try again later.";
+        break;
+      default:
+        errorMessage = "Failed to send reset email. Please try again.";
+    }
+    
+    showResetMessage(errorMessage);
+    console.error("Firebase reset password error:", err);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Send Reset Link";
   }
 });
 

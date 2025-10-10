@@ -96,8 +96,16 @@ Multilingual Translation — Share stories globally in multiple languages.
      Frontend          | HTML5, CSS3, JavaScript (Firebase SDK)        |
 | Backend / Database** | Firebase Realtime Database / Firestore        |
 |   Storage            | Firebase Storage                              |
-|   AI / NLP           | OpenAI API / Hugging Face Transformers / NLTK |
+|   AI / NLP           | Google Gemini API / Hugging Face Transformers / NLTK |
 |   Image Recognition  | Google Cloud Vision API                       |
 |   Geo-Tagging        | Mapbox / Google Maps API                      |
 |   Media Recording    | WebRTC for live audio-video capture           |
+
+## Installation and Setup
+
+For detailed installation instructions, see [INSTALL.md](INSTALL.md).
+
+## API Integration
+
+This project uses the Google Gemini API for AI-powered features. For setup instructions and usage examples, see [API_SETUP.md](API_SETUP.md).
 

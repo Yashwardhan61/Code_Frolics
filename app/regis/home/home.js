@@ -1,42 +1,53 @@
-/* ===== Firebase Modular SDK imports ===== */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import {
-  getAuth,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import {
-  getDatabase,
-  ref as dbRef,
-  onValue,
-  push,
-  set,
-  remove,
-  get
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-import {
-  getStorage,
-  ref as storageRef,
-  uploadBytesResumable,
-  getDownloadURL,
-  deleteObject
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
+/* ===== Firebase Setup ===== */
+// Using Firebase from the global namespace (initialized in HTML)
+// This provides compatibility between the module version and the script version
 
-/* ===== Firebase Config ===== */
-const firebaseConfig = {
-  apiKey: "AIzaSyCIIbfmTiLcnbBIf2a1RDe4NtgWvQ16IgE",
-  authDomain: "baksha-d6af1.firebaseapp.com",
-  projectId: "baksha-d6af1",
-  storageBucket: "baksha-d6af1.firebasestorage.app",
-  messagingSenderId: "1000632616535",
-  appId: "1:1000632616535:web:5841a1627a3e609988c512",
-  databaseURL: "https://baksha-d6af1-default-rtdb.firebaseio.com/"
+// Get references to Firebase services
+const auth = firebase.auth();
+const db = firebase.database();
+const storage = firebase.storage();
+
+// For compatibility with existing code - mapping Firebase SDK v9 functions to v8 compatibility mode
+const onAuthStateChanged = (auth, callback) => {
+  return auth.onAuthStateChanged(callback);
+};
+const signOut = (auth) => {
+  return auth.signOut();
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
-const storage = getStorage(app);
+// Database compatibility functions
+const dbRef = (db, path) => {
+  return db.ref(path);
+};
+const onValue = (ref, callback) => {
+  return ref.on('value', callback);
+};
+const push = (ref) => {
+  return ref.push();
+};
+const set = (ref, data) => {
+  return ref.set(data);
+};
+const remove = (ref) => {
+  return ref.remove();
+};
+const get = (ref) => {
+  return ref.once('value');
+};
+
+// Storage compatibility functions
+const storageRef = (storage, path) => {
+  return storage.ref(path);
+};
+const uploadBytesResumable = (ref, data) => {
+  return ref.put(data);
+};
+const getDownloadURL = (ref) => {
+  return ref.getDownloadURL();
+};
+const deleteObject = (ref) => {
+  return ref.delete();
+};
 
 /* ===== Main Page Script ===== */
 window.addEventListener("DOMContentLoaded", () => {
@@ -52,6 +63,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const storiesContainer = document.getElementById("storiesContainer");
   const logoutBtn = document.getElementById("logoutBtn");
   const notificationBadge = document.getElementById("notificationBadge");
+  const friendInviteBadge = document.getElementById("friendInviteBadge");
 
   let storiesCache = [];
 
@@ -392,20 +404,21 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById('storyDate').value = story.date || '';
     document.getElementById('storyDescription').value = story.content || '';
     
-    // Handle members
-    selectedMembers.clear();
-    selectedMembersDiv.innerHTML = '';
-    if (story.members) {
-      story.members.forEach(email => {
-        selectedMembers.add(email);
-        const tag = document.createElement('div');
-        tag.className = 'member-tag';
-        tag.innerHTML = `
-          <span>${email}</span>
-          <span class="remove" data-email="${email}">&times;</span>
-        `;
-        selectedMembersDiv.appendChild(tag);
-      });
+    // Handle members through enhanced-tags.js
+    const storyMembersInput = document.getElementById('storyMembers');
+    if (storyMembersInput && story.members) {
+      // Set the hidden input value with members
+      storyMembersInput.value = Array.isArray(story.members) ? story.members.join(',') : '';
+      
+      // Reset and reinitialize the member input system
+      const memberInputContainer = document.getElementById('memberInputContainer');
+      if (memberInputContainer) {
+        // Clear existing content
+        memberInputContainer.innerHTML = '';
+        
+        // Re-initialize the member system with the updated values
+        window.initMemberSystem();
+      }
     }
 
     // Set form mode to edit
@@ -460,6 +473,14 @@ window.addEventListener("DOMContentLoaded", () => {
       console.log('No stories to render');
       storiesContainer.innerHTML = `<div class="no-stories">No stories yet. Click <strong>Add Story</strong> to add one.</div>`;
       return;
+    }
+
+    // Add animation to timeline track
+    const timelineTrack = document.querySelector('.timeline-track');
+    if (timelineTrack) {
+      timelineTrack.style.animation = 'none';
+      void timelineTrack.offsetWidth; // Force reflow
+      timelineTrack.style.animation = 'timelineGrow 1.2s ease-out forwards';
     }
 
     list.sort((a, b) => b.createdAt - a.createdAt);
@@ -998,65 +1019,8 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   /* === Member Management === */
-  const selectedMembers = new Set();
-  const memberEmail = document.getElementById("memberEmail");
-  const addMemberBtn = document.getElementById("addMemberBtn");
-  const selectedMembersDiv = document.getElementById("selectedMembers");
-
-  async function addMember(email) {
-    email = email.trim().toLowerCase();
-    
-    // Basic validation
-    if (!email || !email.includes("@")) {
-      alert("Please enter a valid email address");
-      return;
-    }
-
-    // Check if already added
-    if (selectedMembers.has(email)) {
-      alert("This member is already added");
-      return;
-    }
-
-    // Check if user exists in the system
-    try {
-      const exists = await checkUserExists(email);
-      if (!exists) {
-        alert("This user is not registered in the system");
-        return;
-      }
-
-      // Add member
-      selectedMembers.add(email);
-      const tag = document.createElement("div");
-      tag.className = "member-tag";
-      tag.innerHTML = `
-        <span>${email}</span>
-        <span class="remove" data-email="${email}">&times;</span>
-      `;
-      selectedMembersDiv.appendChild(tag);
-      memberEmail.value = "";
-    } catch (err) {
-      console.error("Error checking user:", err);
-      alert("Error adding member. Please try again.");
-    }
-  }
-
-  addMemberBtn?.addEventListener("click", () => addMember(memberEmail.value));
-  memberEmail?.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addMember(memberEmail.value);
-    }
-  });
-
-  selectedMembersDiv?.addEventListener("click", (e) => {
-    if (e.target.classList.contains("remove")) {
-      const email = e.target.dataset.email;
-      selectedMembers.delete(email);
-      e.target.parentElement.remove();
-    }
-  });
+  // Member management is now handled by enhanced-tags.js
+  // This ensures consistent functionality across the application
 
   /* === Add Story Form === */
   addStoryForm?.addEventListener("submit", async (e) => {
@@ -1066,7 +1030,11 @@ window.addEventListener("DOMContentLoaded", () => {
     const title = document.getElementById("storyTitle").value.trim();
     const tags = document.getElementById("storyTags").value.trim();
     const location = document.getElementById("storyLocation").value.trim();
-    const members = Array.from(selectedMembers);
+    
+    // Get members from the hidden input field populated by enhanced-tags.js
+    const membersInput = document.getElementById("storyMembers");
+    const members = membersInput && membersInput.value ? membersInput.value.split(',') : [];
+    
     const date = document.getElementById("storyDate").value.trim();
     const description = document.getElementById("storyDescription").value.trim();
 
@@ -1206,9 +1174,15 @@ window.addEventListener("DOMContentLoaded", () => {
     // Reset form
     addStoryForm.reset();
     selectedFiles.clear();
-    selectedMembers.clear();
     mediaPreview.innerHTML = "";
-    selectedMembersDiv.innerHTML = "";
+    
+    // Reset member input by reinitializing it
+    const memberInputContainer = document.getElementById('memberInputContainer');
+    if (memberInputContainer) {
+      memberInputContainer.innerHTML = '';
+      window.initMemberSystem();
+    }
+    
     closeModalFn();
   });
 
@@ -1372,6 +1346,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
     startStoriesListener(user.email);
     startNotificationsListener(user.email);
+    startFriendInvitationsListener(user.email);
 
     logoutBtn?.addEventListener("click", async () => {
       await signOut(auth);
@@ -1404,6 +1379,32 @@ window.addEventListener("DOMContentLoaded", () => {
           notificationBadge.classList.remove('hidden');
         } else {
           notificationBadge.classList.add('hidden');
+        }
+      }
+    });
+  }
+  
+  /* === Friend Invitation Handler === */
+  function startFriendInvitationsListener(userEmail) {
+    const safeEmail = userEmail.replace(/\./g, "_").replace(/@/g, "_");
+    const invitationsRef = dbRef(db, `users/${safeEmail}/invitations`);
+    
+    onValue(invitationsRef, (snapshot) => {
+      const data = snapshot.val();
+      let invitationsCount = 0;
+      
+      if (data) {
+        // Count invitations
+        invitationsCount = Object.keys(data).length;
+      }
+      
+      // Update friend invitation badge
+      if (friendInviteBadge) {
+        if (invitationsCount > 0) {
+          friendInviteBadge.textContent = invitationsCount > 99 ? '99+' : invitationsCount;
+          friendInviteBadge.classList.remove('hidden');
+        } else {
+          friendInviteBadge.classList.add('hidden');
         }
       }
     });
