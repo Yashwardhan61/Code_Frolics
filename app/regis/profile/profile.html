@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yaado ka Baksa - Profile</title>
+
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&display=swap" rel="stylesheet">
+<link href="profile.css" rel="stylesheet">
+</head>
+
+<body>
+<!-- Navbar -->
+<nav class="navbar">
+    <div class="logo-section">
+        <img src="../../logo.jpeg" alt="Logo">
+        <h2>Yaado ka Baksa</h2>
+    </div>
+
+    <!-- Hamburger Menu -->
+    <div class="menu-icon" id="menuIcon" title="Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <!-- Dropdown Menu -->
+    <div class="dropdown" id="dropdownMenu">
+        <a href="./notifications.html">Notifications</a>
+        <a href="../feedback.html">Feedback</a>
+        <a href="../about.html">About Us</a>
+        <button id="logoutBtn" class="btn secondary">Logout</button>
+    </div>
+</nav>
+
+<!-- Profile Section -->
+<div class="profile-container">
+    <div class="profile-pic">
+        <img id="profileImage" src="https://via.placeholder.com/150" alt="Profile Photo">
+        <div class="add-icon" id="addIcon">+</div>
+    </div>
+
+    <div class="user-info">
+        <h3 id="usernameDisplay">@username</h3>
+        <p id="nameDisplay">Your Name</p>
+        <p id="descDisplay">Write something about yourself...</p>
+    </div>
+
+    <div class="btn-group">
+        <button class="upload-btn" id="uploadBtn">Upload</button>
+        <button class="edit-btn" id="editBtn">Edit Profile</button>
+    </div>
+</div>
+
+<!-- Overlay and Popups -->
+<div class="overlay" id="overlay"></div>
+
+<div class="popup" id="popupUpload">
+    <h3>Select Upload Type</h3>
+    <button onclick="filterMedia('photo')">Photos</button>
+    <button onclick="filterMedia('video')">Videos</button>
+    <button onclick="filterMedia('text')">Texts</button>
+    <button onclick="filterMedia('audio')">Audios</button>
+    <button onclick="closePopup()">Close</button>
+</div>
+
+<div class="popup edit-form" id="popupEdit">
+    <h3>Edit Profile</h3>
+    <label>Username (@)</label>
+    <input type="text" id="usernameInput" placeholder="username" pattern="[A-Za-z0-9_]+" title="Only letters, numbers, and underscore allowed">
+    <label>Name</label>
+    <input type="text" id="nameInput" placeholder="Enter name (emojis allowed)">
+    <label>Description (max 50 words)</label>
+    <textarea id="descInput" maxlength="300" placeholder="Write about yourself..."></textarea>
+    <button onclick="saveProfile()">Save</button>
+    <button onclick="closePopup()">Cancel</button>
+</div>
+
+<!-- Media Section -->
+<div class="media-section">
+    <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterMedia('all')">All</button>
+        <button class="filter-btn" onclick="filterMedia('photo')">Photos</button>
+        <button class="filter-btn" onclick="filterMedia('video')">Videos</button>
+        <button class="filter-btn" onclick="filterMedia('text')">Texts</button>
+        <button class="filter-btn" onclick="filterMedia('audio')">Audios</button>
+    </div>
+
+    <div class="media-grid" id="mediaGrid">
+        <div class="media-item photo"><img src="https://via.placeholder.com/120x100" alt="Photo"></div>
+        <div class="media-item video"><video src="" controls></video></div>
+        <div class="media-item text">A short memory note here.</div>
+        <div class="media-item audio">🎵 Audio memory file</div>
+    </div>
+</div>
+
+<script type="module" src="profile.js"></script>
+</body>
+</html>
