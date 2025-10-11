@@ -8,17 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/global.css">
     <style>
-        :root {
-            --brand-brown-50: #f7efe8;
-            --brand-brown-200: #d6b89a;
-            --brand-brown-400: #a5683f;
-            --brand-brown-600: #704214;
-            --brand-brown-800: #4a2800;
-            --brand-accent: #8B4513;
-            --brand-beige: #f5d0a0;
-        }
-
         .form-container {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
@@ -45,14 +36,6 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
         }
-
-        .welcome-text {
-            font-family: 'Dancing Script', cursive;
-            background: linear-gradient(45deg, var(--brand-brown-600), var(--brand-brown-400));
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
     </style>
 </head>
 <body class="min-h-screen relative">
@@ -68,7 +51,7 @@
         <div class="mb-8 text-center">
             <div class="flex items-center justify-center mb-4">
                 <img src="../logo.jpeg" alt="Yaado ka baksa" class="w-16 h-16 rounded-lg shadow-lg">
-                <h1 class="ml-4 text-4xl welcome-text">Yaado ka baksa</h1>
+                <h1 class="ml-4 text-4xl welcome-text brand-title">Yaado ka baksa</h1>
             </div>
             <p class="text-white text-lg">Create your treasure chest of memories</p>
         </div>

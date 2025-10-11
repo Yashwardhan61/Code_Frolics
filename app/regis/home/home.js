@@ -35,6 +35,27 @@ const get = (ref) => {
   return ref.once('value');
 };
 
+// Function to update the side menu username
+function updateSideMenuUsername(user) {
+  const sideMenuUserName = document.getElementById('sideMenuUserName');
+  if (!sideMenuUserName) return;
+  
+  // First set default from user email
+  const displayName = user.displayName || user.email.split('@')[0] || 'My Account';
+  sideMenuUserName.textContent = displayName;
+  
+  // Then check database for profile info
+  const userProfileRef = dbRef(db, `users/${user.uid}/profile`);
+  get(userProfileRef).then(snapshot => {
+    const profileData = snapshot.val();
+    if (profileData && profileData.name) {
+      sideMenuUserName.textContent = profileData.name;
+    }
+  }).catch(error => {
+    console.error("Error fetching user profile for side menu:", error);
+  });
+}
+
 // Storage compatibility functions
 const storageRef = (storage, path) => {
   return storage.ref(path);
@@ -399,7 +420,11 @@ window.addEventListener("DOMContentLoaded", () => {
 
     // Populate form
     document.getElementById('storyTitle').value = story.title || '';
-    document.getElementById('storyTags').value = story.tag || '';
+    
+    // Handle tags - convert array to comma-separated string
+    const tagsValue = Array.isArray(story.tags) ? story.tags.join(', ') : (story.tags || '');
+    document.getElementById('storyTags').value = tagsValue;
+    
     document.getElementById('storyLocation').value = story.location || '';
     document.getElementById('storyDate').value = story.date || '';
     document.getElementById('storyDescription').value = story.content || '';
@@ -409,26 +434,31 @@ window.addEventListener("DOMContentLoaded", () => {
     if (storyMembersInput && story.members) {
       // Set the hidden input value with members
       storyMembersInput.value = Array.isArray(story.members) ? story.members.join(',') : '';
-      
-      // Reset and reinitialize the member input system
-      const memberInputContainer = document.getElementById('memberInputContainer');
-      if (memberInputContainer) {
-        // Clear existing content
-        memberInputContainer.innerHTML = '';
-        
-        // Re-initialize the member system with the updated values
-        window.initMemberSystem();
-      }
     }
+    
+    // Show modal first, then initialize member system only
+    openModal();
+    
+    // Need to use a small delay to ensure the DOM is updated
+    setTimeout(() => {
+      // Only reinitialize member system with the updated values
+      try {
+        if (window.initMemberSystem && typeof window.initMemberSystem === 'function') {
+          console.log("Reinitializing member system for editing");
+          window.initMemberSystem();
+        } else {
+          console.warn("Member system not available for editing");
+        }
+      } catch (memberSystemError) {
+        console.error("Error reinitializing member system for editing:", memberSystemError);
+      }
+    }, 300);
 
     // Set form mode to edit
     addStoryForm.dataset.mode = 'edit';
     addStoryForm.dataset.editId = storyId;
     document.querySelector('.modal-content h2').textContent = 'Edit Story';
     document.getElementById('uploadBtn').textContent = 'Save Changes';
-    
-    // Show modal
-    openModal();
   }
 
   /* === Sidebar Toggle === */
@@ -457,9 +487,48 @@ window.addEventListener("DOMContentLoaded", () => {
   function closeModalFn() {
     addStoryModal.classList.add("hidden");
     document.body.classList.remove("no-scroll");
+    
+    // Clear form mode when closing
+    if (addStoryForm) {
+      addStoryForm.dataset.mode = '';
+      addStoryForm.dataset.editId = '';
+      document.querySelector('.modal-content h2').textContent = 'Add New Story';
+    }
   }
 
-  addStoryBtn?.addEventListener("click", openModal);
+  addStoryBtn?.addEventListener("click", () => {
+    openModal();
+    // Clear the form for new story
+    setTimeout(() => {
+      // Clear the simple tags input
+      const tagsInput = document.getElementById("storyTags");
+      if (tagsInput) {
+        console.log("Clearing existing tags");
+        tagsInput.value = "";
+      }
+      
+      // Initialize member system only if available
+      try {
+        if (window.initMemberSystem && typeof window.initMemberSystem === 'function') {
+          console.log("Initializing member system");
+          window.initMemberSystem();
+          
+          // Make sure the hidden input exists and is cleared
+          const membersInput = document.getElementById("storyMembers");
+          if (membersInput) {
+            console.log("Clearing existing members");
+            membersInput.value = "";
+          }
+        } else {
+          console.warn("Member system not available - enhanced-tags.js may not be loaded");
+        }
+      } catch (memberSystemError) {
+        console.error("Error initializing member system:", memberSystemError);
+        // Continue without member system if there's an error
+      }
+    }, 100);
+  });
+  
   closeModal?.addEventListener("click", closeModalFn);
   addStoryModal?.addEventListener("click", (ev) => {
     if (ev.target === addStoryModal) closeModalFn();
@@ -467,13 +536,22 @@ window.addEventListener("DOMContentLoaded", () => {
 
   /* === Render Stories === */
   function renderStories(list) {
-    console.log('Rendering stories:', list);
+    console.log('DEBUG: renderStories called with list:', list);
+    console.log('DEBUG: storiesContainer element:', storiesContainer);
+    
+    if (!storiesContainer) {
+      console.error('ERROR: storiesContainer element not found!');
+      return;
+    }
+    
     storiesContainer.innerHTML = "";
     if (!list || list.length === 0) {
-      console.log('No stories to render');
+      console.log('No stories to render - showing empty state');
       storiesContainer.innerHTML = `<div class="no-stories">No stories yet. Click <strong>Add Story</strong> to add one.</div>`;
       return;
     }
+    
+    console.log('Rendering', list.length, 'stories');
 
     // Add animation to timeline track
     const timelineTrack = document.querySelector('.timeline-track');
@@ -565,13 +643,52 @@ window.addEventListener("DOMContentLoaded", () => {
         }
       }
 
+      // Process tags to display as badges if they exist
+      let tagsHTML = '';
+      try {
+        if (s.tags) {
+          // Handle both string and array formats
+          let tagsList = [];
+          if (typeof s.tags === 'string' && s.tags.trim()) {
+            tagsList = s.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+          } else if (Array.isArray(s.tags)) {
+            tagsList = s.tags.filter(tag => tag && tag.trim());
+          }
+          
+          if (tagsList.length > 0) {
+            tagsHTML = `
+              <div class="story-badges">
+                ${tagsList.map(tag => `<span class="badge story-tag">${tag.trim ? tag.trim() : tag}</span>`).join('')}
+              </div>
+            `;
+          }
+        }
+      } catch (tagError) {
+        console.error('Error processing tags:', tagError, s.tags);
+        // Continue without tags if there's an error
+        tagsHTML = '';
+      }
+      
+      // Process members for display
+      let membersHTML = '';
+      if (s.members && s.members.length > 0) {
+        const memberCount = s.members.length;
+        const memberText = memberCount === 1 
+          ? 'Shared with 1 member' 
+          : `Shared with ${memberCount} members`;
+        
+        membersHTML = `<span class="member-count">${memberText}</span>`;
+      } else {
+        membersHTML = '<span class="member-count">Private</span>';
+      }
+      
       card.innerHTML = `
         <div class="dot-wrap"><div class="dot"></div></div>
         <div class="content">
         <div class="story-header">
           <div class="story-title">
             <h3>${s.title || "Untitled"}</h3>
-            <div class="meta">${s.members.length ? `Shared with ${s.members.length} members` : 'Private'} • ${s.location || ""} • ${s.date || ""}</div>
+            <div class="meta">${membersHTML} • ${s.location || ""} • ${s.date || ""}</div>
           </div>
           ${s.owner === auth.currentUser.email ? `
             <div class="story-menu">
@@ -587,6 +704,7 @@ window.addEventListener("DOMContentLoaded", () => {
             </div>
           ` : ''}
         </div>
+        ${tagsHTML}
         <p>${s.content || ""}</p>
         ${mediaHTML}
       </div>
@@ -605,6 +723,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function startStoriesListener(userEmail) {
     console.log('Starting stories listener for:', userEmail);
+    // Temporary debug alert
+    console.log('DEBUG: startStoriesListener called for:', userEmail);
     const safeEmail = userEmail.replace(/\./g, "_").replace(/@/g, "_");
     
     // Listen for user's own stories
@@ -613,9 +733,10 @@ window.addEventListener("DOMContentLoaded", () => {
     const sharedStoriesRef = dbRef(db, `shared_stories/${safeEmail}`);
 
     onValue(ownStoriesRef, (snapshot) => {
-      console.log('Got stories update from Firebase');
-      const data = snapshot.val();
-      console.log('Raw stories data:', data);
+      try {
+        console.log('Got stories update from Firebase');
+        const data = snapshot.val();
+        console.log('Raw stories data:', data);
       
       const arr = [];
       if (data) {
@@ -658,6 +779,21 @@ window.addEventListener("DOMContentLoaded", () => {
             }
           }
 
+          // Handle tags - support both array and string formats
+          let processedTags = "";
+          try {
+            if (v.tags) {
+              if (Array.isArray(v.tags)) {
+                processedTags = v.tags.join(', ');
+              } else if (typeof v.tags === 'string') {
+                processedTags = v.tags;
+              }
+            }
+          } catch (tagError) {
+            console.error('Error processing tags for story', key, ':', tagError);
+            processedTags = "";
+          }
+
           const story = {
             id: key,
             title: v.title || "",
@@ -666,7 +802,7 @@ window.addEventListener("DOMContentLoaded", () => {
                     (typeof v.members === 'object' ? Object.values(v.members) : []),
             location: v.location || "",
             date: v.date || "",
-            tag: v.tags || "",
+            tags: processedTags,
             mediaUrls: mediaUrls,
             mediaTypes: mediaTypes,
             createdAt: v.createdAt || 0,
@@ -684,6 +820,21 @@ window.addEventListener("DOMContentLoaded", () => {
         const sharedData = sharedSnapshot.val();
         if (sharedData) {
           Object.entries(sharedData).forEach(([key, v]) => {
+            // Handle tags for shared stories too
+            let sharedProcessedTags = "";
+            try {
+              if (v.tags) {
+                if (Array.isArray(v.tags)) {
+                  sharedProcessedTags = v.tags.join(', ');
+                } else if (typeof v.tags === 'string') {
+                  sharedProcessedTags = v.tags;
+                }
+              }
+            } catch (tagError) {
+              console.error('Error processing tags for shared story', key, ':', tagError);
+              sharedProcessedTags = "";
+            }
+            
             arr.push({
               id: v.storyId,
               title: v.title || "",
@@ -691,7 +842,7 @@ window.addEventListener("DOMContentLoaded", () => {
               members: v.members || [],
               location: v.location || "",
               date: v.date || "",
-              tag: v.tags || "",
+              tags: sharedProcessedTags,
               mediaUrls: v.mediaUrls || [],
               mediaTypes: v.mediaTypes || [],
               createdAt: v.createdAt || 0,
@@ -702,6 +853,11 @@ window.addEventListener("DOMContentLoaded", () => {
         storiesCache = arr.sort((a, b) => b.createdAt - a.createdAt);
         renderStories(storiesCache);
       });
+    } catch (error) {
+      console.error('Error in stories listener:', error);
+      // Show error message to user
+      storiesContainer.innerHTML = `<div class="error-message">Error loading stories: ${error.message}. Please refresh the page.</div>`;
+    }
     });
   }
 
@@ -1028,12 +1184,20 @@ window.addEventListener("DOMContentLoaded", () => {
     if (!auth.currentUser) return alert("Please log in first.");
 
     const title = document.getElementById("storyTitle").value.trim();
-    const tags = document.getElementById("storyTags").value.trim();
+    
+    // Get tags from the simple text input
+    const tagsInput = document.getElementById("storyTags");
+    // Convert comma-separated tags to an array and clean them up
+    const tags = tagsInput && tagsInput.value.trim() ? 
+      tagsInput.value.trim().split(',').map(tag => tag.trim()).filter(tag => tag.length > 0) : [];
+    console.log("Tags being submitted:", tags);
+    
     const location = document.getElementById("storyLocation").value.trim();
     
     // Get members from the hidden input field populated by enhanced-tags.js
     const membersInput = document.getElementById("storyMembers");
     const members = membersInput && membersInput.value ? membersInput.value.split(',') : [];
+    console.log("Members being submitted:", members);
     
     const date = document.getElementById("storyDate").value.trim();
     const description = document.getElementById("storyDescription").value.trim();
@@ -1125,9 +1289,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
     const storyData = {
       title,
-      tags,
+      tags: Array.isArray(tags) ? tags : [],       // Ensure tags is always an array
       location,
-      members,
+      members: Array.isArray(members) ? members : [],    // Ensure members is always an array
       date,
       description,
       mediaUrls: mediaUrls.length > 0 ? mediaUrls : [],  // Ensure it's always an array
@@ -1135,12 +1299,16 @@ window.addEventListener("DOMContentLoaded", () => {
       createdAt: Date.now()
     };
     
+    console.log('Story data prepared for saving:', storyData);
+    
     console.log('Saving story data:', storyData);
     console.log('Media URLs:', mediaUrls);
     console.log('Media Types:', mediaTypes);
 
     try {
       // Ensure arrays are properly set
+      storyData.tags = Array.isArray(storyData.tags) ? storyData.tags : 
+                       (typeof storyData.tags === 'string' && storyData.tags ? storyData.tags.split(',') : []);
       storyData.members = Array.isArray(storyData.members) ? storyData.members : [];
       storyData.mediaUrls = Array.isArray(storyData.mediaUrls) ? storyData.mediaUrls : [];
       storyData.mediaTypes = Array.isArray(storyData.mediaTypes) ? storyData.mediaTypes : [];
@@ -1175,6 +1343,12 @@ window.addEventListener("DOMContentLoaded", () => {
     addStoryForm.reset();
     selectedFiles.clear();
     mediaPreview.innerHTML = "";
+    
+    // Clear the simple tags input
+    const tagsInputElement = document.getElementById('storyTags');
+    if (tagsInputElement) {
+      tagsInputElement.value = '';
+    }
     
     // Reset member input by reinitializing it
     const memberInputContainer = document.getElementById('memberInputContainer');
@@ -1344,6 +1518,28 @@ window.addEventListener("DOMContentLoaded", () => {
       window.location.href = "../login.html";
       return;
     }
+    
+    // Update side menu with user name
+    updateSideMenuUsername(user);
+    
+    // Test rendering with a fake story first
+    console.log('DEBUG: Testing story rendering with fake data');
+    const testStory = {
+      id: 'test-1',
+      title: 'Test Story',
+      content: 'This is a test story',
+      members: [],
+      location: 'Test Location',
+      date: '2024-01-01',
+      tags: 'test, debug',
+      mediaUrls: [],
+      mediaTypes: [],
+      createdAt: Date.now(),
+      owner: user.email
+    };
+    renderStories([testStory]);
+    
+    // Start the real stories listener
     startStoriesListener(user.email);
     startNotificationsListener(user.email);
     startFriendInvitationsListener(user.email);

@@ -283,6 +283,9 @@ body {
   cursor:pointer;
   padding:6px;
   border-radius:8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .menu-btn:hover,
 .menu-btn:focus{ background: rgba(255,255,255,0.04); outline:none; }
@@ -1210,4 +1213,35 @@ body.no-scroll{ overflow:hidden; }
   flex-shrink: 0;
   background: var(--brown-dark);
   padding: 15px;
+}
+
+/* Simple input group styles */
+.simple-input-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.simple-input-group input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  margin-top: 6px;
+  border-radius: 12px;
+  border: 1px solid rgba(90,62,27,0.1);
+  font-size: 0.95rem;
+  background: #fff;
+  transition: all 0.2s ease;
+  color: var(--brown-dark);
+}
+
+.simple-input-group input:focus {
+  border-color: var(--gold);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(240,183,108,0.1);
+}
+
+.simple-input-group .input-help {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 4px;
+  line-height: 1.4;
 }

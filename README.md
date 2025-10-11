@@ -1,4 +1,4 @@
-The Legacy Trunk — Yaadoo ka Baksa
+The Legacy Trunk — Yaado ka Baksa
 Project by Team Code Frolics (Team ID: 631)
 
 Members:
@@ -11,7 +11,7 @@ Harshita Prajapat — 2025CA042, MCA
 
 Overview
 
-The Legacy Trunk (Yaadoo ka Baksa) is a digital family archive that helps preserve memories, heirlooms, and life stories across generations.
+The Legacy Trunk (Yaado ka Baksa) is a digital family archive that helps preserve memories, heirlooms, and life stories across generations.
 It’s a secure storytelling platform where family members can record, upload, and relive shared memories through photos, videos, audio, and text — keeping the heritage alive for years to come.
 
 Problem Statement

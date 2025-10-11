@@ -1,30 +1,49 @@
 /**
  * Enhanced tagging and family member addition system
- * For Yaadoo ka Baksa family archive application
+ * For Yaado ka Baksa family archive application
  */
 
 // Initialize tag and member systems when document is ready
 document.addEventListener('DOMContentLoaded', () => {
   // Initialize enhanced tag input
-  initTagSystem();
-  
-  // Initialize enhanced member input
-  initMemberSystem();
-  
-  // Initialize story tags in timeline for filtering
-  initStoryTagsInTimeline();
+  setTimeout(() => {
+    console.log("Auto-initializing tag system");
+    initTagSystem();
+    
+    // Initialize enhanced member input
+    console.log("Auto-initializing member system");
+    initMemberSystem();
+    
+    // Initialize story tags in timeline for filtering
+    initStoryTagsInTimeline();
+  }, 500); // Add a small delay to ensure DOM is fully loaded
 });
 
 /**
  * Enhanced tag system
  */
 function initTagSystem() {
+  console.log("Initializing tag system...");
+  
   // Get necessary elements
   const tagInputContainer = document.getElementById('tagInputContainer');
   if (!tagInputContainer) {
     console.warn('Tag input container not found');
     return;
   }
+  
+  // Check if already initialized with a data attribute
+  if (tagInputContainer.dataset.initialized === 'true') {
+    console.log('Tag system already initialized, resetting...');
+    // Clear existing tags from the hidden input
+    const hiddenInput = document.getElementById('storyTags');
+    if (hiddenInput) {
+      hiddenInput.value = '';
+    }
+  }
+  
+  // Mark as initialized
+  tagInputContainer.dataset.initialized = 'true';
   
   // Get or create tag input wrapper
   let tagInputWrapper = tagInputContainer.querySelector('.tag-input-wrapper');
@@ -112,15 +131,15 @@ function initTagSystem() {
     }
   });
 
-  // Show suggestions when typing
-  tagInput.addEventListener('input', () => {
-    const query = tagInput.value.trim();
-    if (query.length > 0) {
-      showSuggestions(query);
-    } else {
-      hideSuggestions();
-    }
-  });
+  // Disable suggestions - just keep it simple
+  // tagInput.addEventListener('input', () => {
+  //   const query = tagInput.value.trim();
+  //   if (query.length > 0) {
+  //     showSuggestions(query);
+  //   } else {
+  //     hideSuggestions();
+  //   }
+  // });
   
   // Hide suggestions when clicking outside
   document.addEventListener('click', (event) => {
@@ -129,23 +148,42 @@ function initTagSystem() {
     }
   });
 
+  // Function to handle adding tag from button click
+  function handleAddTagClick() {
+    const tagInput = tagInputContainer.querySelector('.tag-input');
+    const tag = tagInput.value.trim();
+    if (tag) {
+      addTag(tag);
+      tagInput.value = '';
+      tagInput.focus();
+    }
+  }
+  
+  // Add click handler for add tag button
+  const addTagBtn = tagInputContainer.querySelector('.add-tag-btn');
+  if (addTagBtn) {
+    addTagBtn.addEventListener('click', handleAddTagClick);
+  }
+  
   // Add a tag to the container
   function addTag(tag) {
-    // Remove special characters and trim
-    tag = tag.replace(/[,;]/g, '').trim();
+    // Just trim whitespace, keep everything else
+    tag = tag.trim();
     
-    // Skip empty tags or duplicates
-    if (!tag || tags.has(tag.toLowerCase())) return;
+    // Skip empty tags only
+    if (!tag) return;
     
-    // Add to tags collection
-    tags.add(tag.toLowerCase());
+    console.log("Adding tag:", tag);
+    
+    // Add to tags collection using original case
+    tags.add(tag);
     
     // Create tag element
     const tagElement = document.createElement('div');
     tagElement.className = 'tag';
     tagElement.innerHTML = `
       <span class="tag-text">${tag}</span>
-      <span class="tag-remove" data-tag="${tag.toLowerCase()}">×</span>
+      <span class="tag-remove" data-tag="${tag}">×</span>
     `;
     
     // Add tag to container
@@ -154,21 +192,24 @@ function initTagSystem() {
     // Update hidden input
     updateHiddenInput();
     
+    // Verify the hidden input was updated
+    if (document.getElementById('storyTags')) {
+      console.log("Tag added. Current tags:", document.getElementById('storyTags').value);
+    }
+    
     // Save to popular tags
     saveTagToPopular(tag);
   }
 
   // Remove a tag from the container
   function removeTag(tag) {
-    tag = tag.toLowerCase();
-    
     // Remove from tags collection
     tags.delete(tag);
     
     // Find and remove the element
     const tagElements = tagsContainer.querySelectorAll('.tag');
     tagElements.forEach(el => {
-      if (el.querySelector('.tag-text').textContent.toLowerCase() === tag) {
+      if (el.querySelector('.tag-text').textContent === tag) {
         el.remove();
       }
     });
@@ -181,6 +222,9 @@ function initTagSystem() {
   function updateHiddenInput() {
     if (hiddenInput) {
       hiddenInput.value = Array.from(tags).join(',');
+      console.log("Updated story tags:", hiddenInput.value);
+    } else {
+      console.error("Hidden input for tags not found");
     }
   }
 
@@ -283,8 +327,8 @@ function initTagSystem() {
     }
   });
 
-  // Load and display popular tags
-  loadPopularTags();
+  // Disable popular tags - keep it simple
+  // loadPopularTags();
   
   // Load popular tags from storage and display them
   function loadPopularTags() {
@@ -373,12 +417,27 @@ function initTagSystem() {
  * Enhanced family member system
  */
 function initMemberSystem() {
+  console.log("Initializing member system...");
+  
   // Get necessary elements
   const memberInputContainer = document.getElementById('memberInputContainer');
   if (!memberInputContainer) {
     console.warn('Member input container not found');
     return;
   }
+  
+  // Check if already initialized with a data attribute
+  if (memberInputContainer.dataset.initialized === 'true') {
+    console.log('Member system already initialized, resetting...');
+    // Clear existing members from the hidden input
+    const hiddenInput = document.getElementById('storyMembers');
+    if (hiddenInput) {
+      hiddenInput.value = '';
+    }
+  }
+  
+  // Mark as initialized
+  memberInputContainer.dataset.initialized = 'true';
   
   // Get or create member input wrapper
   let memberInputWrapper = memberInputContainer.querySelector('.members-input-wrapper');
@@ -468,15 +527,15 @@ function initMemberSystem() {
     }
   });
 
-  // Show suggestions when typing
-  memberInput.addEventListener('input', () => {
-    const query = memberInput.value.trim();
-    if (query.length > 0) {
-      showSuggestions(query);
-    } else {
-      hideSuggestions();
-    }
-  });
+  // Disable member suggestions - keep it simple
+  // memberInput.addEventListener('input', () => {
+  //   const query = memberInput.value.trim();
+  //   if (query.length > 0) {
+  //     showSuggestions(query);
+  //   } else {
+  //     hideSuggestions();
+  //   }
+  // });
   
   // Hide suggestions when clicking outside
   document.addEventListener('click', (event) => {
@@ -485,51 +544,37 @@ function initMemberSystem() {
     }
   });
 
+  // Function to handle adding member from button click
+  async function handleAddMemberClick() {
+    const memberInput = memberInputContainer.querySelector('.member-input');
+    const email = memberInput.value.trim();
+    if (email) {
+      await addMember(email);
+      memberInput.value = '';
+      memberInput.focus();
+    }
+  }
+  
+  // Add click handler for add member button
+  const addMemberBtn = memberInputContainer.querySelector('.add-member-btn');
+  if (addMemberBtn) {
+    addMemberBtn.addEventListener('click', handleAddMemberClick);
+  }
+
   // Add a member to the container
   async function addMember(email, skipValidation = false) {
-    // Basic validation and cleanup
-    email = email.replace(/[;,]/g, '').trim().toLowerCase();
+    // Basic cleanup
+    email = email.replace(/[;,]/g, '').trim();
     
     // Skip empty emails or duplicates
     if (!email || members.has(email)) return;
     
-    // Validate email format
-    if (!isValidEmail(email)) {
-      showMemberError('Please enter a valid email address');
-      return;
-    }
-    
-    // Skip further validation if requested (for existing members)
-    if (!skipValidation) {
-      // Show checking state
-      isCheckingEmail = true;
-      showCheckingState();
-      
-      try {
-        // Check if user exists
-        const exists = await checkUserExists(email);
-        
-        if (!exists) {
-          showMemberError('This email is not registered in the system');
-          return;
-        }
-      } catch (error) {
-        console.error('Error checking user:', error);
-        showMemberError('Failed to check user. Please try again.');
-        return;
-      } finally {
-        // Hide checking state
-        isCheckingEmail = false;
-        hideMemberInfo();
-      }
-    }
-    
-    // All validations passed, add member
+    console.log("Adding member:", email);
     
     // Add to members collection
     members.add(email);
     
-    // Create member element with avatar
+    // Create member element
     const memberElement = document.createElement('div');
     memberElement.className = 'member-tag';
     memberElement.innerHTML = `
@@ -543,21 +588,24 @@ function initMemberSystem() {
     // Update hidden input
     updateHiddenInput();
     
-    // Save to recent contacts
+    // Verify the hidden input was updated
+    if (document.getElementById('storyMembers')) {
+      console.log("Member added. Current members:", document.getElementById('storyMembers').value);
+    }
+    
+    // Save to recent contacts (optional)
     saveToRecentContacts(email);
   }
 
   // Remove a member from the container
   function removeMember(email) {
-    email = email.toLowerCase();
-    
     // Remove from members collection
     members.delete(email);
     
     // Find and remove the element
     const memberElements = membersContainer.querySelectorAll('.member-tag');
     memberElements.forEach(el => {
-      if (el.querySelector('.member-tag-text').textContent.toLowerCase() === email) {
+      if (el.querySelector('.member-tag-text').textContent === email) {
         el.remove();
       }
     });
@@ -570,6 +618,9 @@ function initMemberSystem() {
   function updateHiddenInput() {
     if (hiddenInput) {
       hiddenInput.value = Array.from(members).join(',');
+      console.log("Updated story members:", hiddenInput.value);
+    } else {
+      console.error("Hidden input for members not found");
     }
   }
 
@@ -708,8 +759,8 @@ function initMemberSystem() {
     memberInfo.innerHTML = 'Share stories with family members or create stories together';
   }
 
-  // Load and display recent contacts
-  loadRecentContacts();
+  // Disable recent contacts - keep it simple
+  // loadRecentContacts();
   
   // Load recent contacts from storage and display them
   function loadRecentContacts() {

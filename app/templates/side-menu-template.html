@@ -1,0 +1,54 @@
+<!-- Sidebar -->
+<aside class="side-menu" id="sideMenu" aria-hidden="true">
+  <div class="menu-head">
+    <div class="logo small">
+      <img src="/app/logo.jpeg" alt="Small Logo">
+    </div>
+    <h3>Account</h3>
+  </div>
+  <nav>
+    <ul>
+      <li><a href="/app/regis/profile/profile.html" id="profileLink">Profile</a></li>
+      <li><a href="/app/regis/home/home.html" id="homeLink">Home</a></li>
+      <li><a href="/app/regis/home/notifications.html" id="notificationsLink">Notifications <span id="notificationBadge" class="notification-badge hidden">0</span></a></li>
+      <li><a href="/app/regis/home/friend-circle.html" id="friendsLink">Friend Circle <span id="friendInviteBadge" class="notification-badge hidden">0</span></a></li>
+      <li><a href="/app/regis/paternal/paternal-tree.html" id="paternalLink">Paternal Family Tree</a></li>
+      <li><a href="/app/regis/maternal/maternal-tree.html" id="maternalLink">Maternal Family Tree</a></li>
+      <li><button id="logoutBtn" class="btn secondary">Logout</button></li>
+    </ul>
+  </nav>
+</aside>
+<div class="menu-overlay" id="menuOverlay"></div>
+
+<script>
+  // Add active class to current page link
+  document.addEventListener('DOMContentLoaded', function() {
+    // Get current page path
+    const currentPath = window.location.pathname;
+    
+    // Find matching link and add active class
+    const links = document.querySelectorAll('#sideMenu a');
+    links.forEach(link => {
+      if (currentPath.includes(link.getAttribute('href'))) {
+        link.classList.add('active');
+      }
+    });
+    
+    // Setup menu toggle functionality
+    const menuBtn = document.getElementById('menuBtn');
+    const sideMenu = document.getElementById('sideMenu');
+    const menuOverlay = document.getElementById('menuOverlay');
+    
+    if (menuBtn && sideMenu && menuOverlay) {
+      menuBtn.addEventListener('click', () => {
+        sideMenu.classList.toggle('active');
+        menuOverlay.classList.toggle('active');
+      });
+      
+      menuOverlay.addEventListener('click', () => {
+        sideMenu.classList.remove('active');
+        menuOverlay.classList.remove('active');
+      });
+    }
+  });
+</script>

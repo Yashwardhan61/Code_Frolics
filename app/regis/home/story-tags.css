@@ -1,0 +1,58 @@
+/* Story Tags and Badges CSS */
+
+/* Story tag badge styling */
+.story-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.badge {
+  background: #fff;
+  color: var(--brown-dark);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: 1px solid rgba(90,62,27,0.06);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.badge:hover {
+  background: var(--gold);
+  color: var(--brown-dark);
+  border-color: var(--gold);
+  transform: translateY(-2px);
+  box-shadow: 0 3px 10px rgba(90,62,27,0.1);
+}
+
+.badge.story-tag {
+  background: rgba(240,183,108,0.1);
+  border: 1px solid rgba(240,183,108,0.3);
+}
+
+.badge.story-tag:hover {
+  background: rgba(240,183,108,0.3);
+}
+
+/* Member count styling */
+.member-count {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 500;
+  color: var(--brown-medium);
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .story-badges {
+    gap: 6px;
+  }
+  
+  .badge {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+  }
+}

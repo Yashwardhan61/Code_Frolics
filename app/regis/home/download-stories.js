@@ -1,5 +1,12 @@
 // Download Stories Feature JavaScript
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('Download feature initialized');
+  
+  // Check if required libraries are loaded
+  console.log('jsPDF available:', !!window.jspdf);
+  console.log('html2canvas available:', !!window.html2canvas);
+  console.log('Firebase available:', !!window.firebase);
+  
   // References to modal elements
   const downloadBtn = document.getElementById('downloadStoriesBtn');
   const downloadModal = document.getElementById('downloadModal');
@@ -95,7 +102,10 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Download the final document
   downloadActionBtn.addEventListener('click', () => {
+    console.log('Download button clicked');
     updateSelectedStories();
+    console.log('Selected stories:', selectedStoryIds);
+    console.log('Selected format:', selectedFormat);
     
     // Update the button text based on the format
     if (selectedFormat === 'scrapbook') {
@@ -131,6 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Load all stories from Firebase
   async function loadStories() {
+    console.log('Loading stories...');
+    
     // Show loading state
     selectSingleStory.innerHTML = '<option value="">Loading stories...</option>';
     storyCheckboxList.innerHTML = '<div class="loading">Loading stories...</div>';
@@ -140,24 +152,37 @@ document.addEventListener('DOMContentLoaded', () => {
       const auth = firebase.auth();
       const user = auth.currentUser;
       
+      console.log('Current user:', user?.email);
+      
       if (!user) {
         console.error('User not authenticated');
+        selectSingleStory.innerHTML = '<option value="">Please log in first</option>';
+        storyCheckboxList.innerHTML = '<div class="error">Please log in first</div>';
         return;
       }
       
       const userEmail = user.email.replace(/\./g, '_').replace(/@/g, '_');
+      console.log('Safe email for database:', userEmail);
+      
       const db = firebase.database();
       const storiesRef = db.ref(`users/${userEmail}/stories`);
       
+      console.log('Firebase reference created:', storiesRef.toString());
+      
       // Get all stories
+      console.log('Fetching stories from Firebase...');
       const snapshot = await storiesRef.once('value');
       const storiesData = snapshot.val() || {};
+      console.log('Raw stories data from Firebase:', storiesData);
       
       // Convert to array and sort by date (newest first)
       allStories = Object.entries(storiesData).map(([id, story]) => ({
         id,
         ...story
       })).sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      console.log('Processed stories array:', allStories);
+      console.log('Number of stories loaded:', allStories.length);
       
       // Populate single story dropdown
       populateSingleStoryDropdown(allStories);
@@ -303,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
               
               <div style="margin-top: 20px; font-size: 16px;">${data.storyCount} ${data.storyCount === 1 ? 'memory' : 'memories'}</div>
-              <div style="margin-top: 20px; font-style: italic; font-size: 22px; color: #ab7a45;">Yaadoo ka Baksa</div>
+              <div style="margin-top: 20px; font-style: italic; font-size: 22px; color: #ab7a45;">Yaado ka Baksa</div>
               <div style="margin-top: 10px; font-size: 14px; font-family: Arial, sans-serif;">${new Date().toLocaleDateString()}</div>
             </div>
           `;
@@ -378,7 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="text-align: center; padding-top: 40px;">
               <h1 style="font-size: 32px; margin-bottom: 20px;">${data.title}</h1>
               <div style="font-size: 18px;">A collection of ${data.storyCount} ${data.storyCount === 1 ? 'story' : 'stories'}</div>
-              <div style="margin-top: 40px; font-style: italic;">Yaadoo ka Baksa</div>
+              <div style="margin-top: 40px; font-style: italic;">Yaado ka Baksa</div>
               <div style="margin-top: 20px;">${new Date().toLocaleDateString()}</div>
             </div>
           `;
@@ -477,6 +502,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Generate and download the final document
   async function generateDocument() {
+    console.log('generateDocument called');
+    
     if (selectedStoryIds.length === 0) {
       alert('Please select at least one story to download');
       return;
@@ -484,6 +511,22 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Get selected stories data
     const selectedStories = allStories.filter(story => selectedStoryIds.includes(story.id));
+    console.log('Selected stories for download:', selectedStories);
+    
+    // Check if required libraries are available
+    if (!window.jspdf) {
+      console.error('jsPDF not loaded');
+      alert('PDF library not loaded. Please refresh the page and try again.');
+      return;
+    }
+    
+    if (!window.html2canvas) {
+      console.error('html2canvas not loaded');
+      alert('Canvas library not loaded. Please refresh the page and try again.');
+      return;
+    }
+    
+    console.log('Libraries available - jsPDF:', !!window.jspdf, 'html2canvas:', !!window.html2canvas);
     
     // Show progress indicator
     showDownloadProgress();
@@ -503,7 +546,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const pageSize = document.getElementById('pageSize').value;
       
       // Create different output based on format
+      console.log('Starting document generation, format:', selectedFormat);
+      
       if (selectedFormat === 'pdf') {
+        console.log('Generating PDF...');
         await generatePDF(selectedStories, {
           includeCover,
           includeTOC,
@@ -515,6 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
           pageSize
         });
       } else {
+        console.log('Generating Scrapbook...');
         await generateScrapbook(selectedStories, {
           includeCover,
           includeTOC,
@@ -530,7 +577,15 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       console.error('Error generating document:', error);
       hideDownloadProgress();
-      alert('Failed to generate document. Please try again.');
+      
+      // Reset button text
+      if (selectedFormat === 'scrapbook') {
+        downloadActionBtn.innerHTML = 'Create Scrapbook';
+      } else {
+        downloadActionBtn.innerHTML = 'Download PDF';
+      }
+      
+      alert(`Failed to generate ${selectedFormat === 'scrapbook' ? 'scrapbook' : 'PDF'}. Error: ${error.message || 'Unknown error'}. Please try again.`);
     }
   }
   
@@ -584,6 +639,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Generate PDF document
   async function generatePDF(stories, options) {
+    console.log('generatePDF called with stories:', stories.length);
+    
     // Create a temporary container for the PDF content
     const container = document.createElement('div');
     container.style.width = '800px';
@@ -595,9 +652,11 @@ document.addEventListener('DOMContentLoaded', () => {
     container.style.color = '#333';
     
     document.body.appendChild(container);
+    console.log('Container added to DOM');
     
     try {
       // Set up PDF document
+      console.log('Setting up PDF document...');
       const { jsPDF } = window.jspdf;
       
       // Set page size
@@ -620,7 +679,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="text-align: center; padding: 100px 40px;">
             <h1 style="font-size: 32px; margin-bottom: 20px;">My Stories</h1>
             <div style="font-size: 18px;">A collection of ${stories.length} ${stories.length === 1 ? 'story' : 'stories'}</div>
-            <div style="margin-top: 80px; font-style: italic;">Yaadoo ka Baksa</div>
+            <div style="margin-top: 80px; font-style: italic;">Yaado ka Baksa</div>
             <div style="margin-top: 20px;">${new Date().toLocaleDateString()}</div>
           </div>
         `;
@@ -784,11 +843,24 @@ document.addEventListener('DOMContentLoaded', () => {
         ? `${stories[0].title || 'Story'}.pdf` 
         : 'My Stories Collection.pdf';
       
+      console.log('About to save PDF with filename:', filename);
       updateDownloadProgress(100, 'Preparing download...');
       
       setTimeout(() => {
-        doc.save(filename);
-        hideDownloadProgress();
+        try {
+          console.log('Attempting to save PDF...');
+          doc.save(filename);
+          console.log('PDF save completed successfully');
+          hideDownloadProgress();
+          
+          // Reset button text
+          downloadActionBtn.innerHTML = 'Download PDF';
+        } catch (saveError) {
+          console.error('Error saving PDF:', saveError);
+          hideDownloadProgress();
+          downloadActionBtn.innerHTML = 'Download PDF';
+          alert('Failed to save PDF file. Please try again.');
+        }
       }, 1000);
       
     } finally {
@@ -888,7 +960,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h1 style="font-size: 46px; color: #784e2b; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); margin-bottom: 10px;">Our Story Collection</h1>
                 <div style="font-size: 22px; margin: 30px 0; font-style: italic; color: #6b553a;">A journey through time</div>
                 <div style="font-size: 28px; margin-top: 30px;">${stories.length} ${stories.length === 1 ? 'precious memory' : 'precious memories'}</div>
-                <div style="margin-top: 50px; font-size: 34px; color: #ab7a45;">Yaadoo ka Baksa</div>
+                <div style="margin-top: 50px; font-size: 34px; color: #ab7a45;">Yaado ka Baksa</div>
                 <div style="margin-top: 20px; font-size: 18px; color: #6b5545; font-family: 'Arial', sans-serif;">${new Date().toLocaleDateString()}</div>
               </div>
               
@@ -1185,11 +1257,24 @@ document.addEventListener('DOMContentLoaded', () => {
         ? `${stories[0].title || 'Memory'} Scrapbook.pdf` 
         : 'My Memories Scrapbook.pdf';
       
+      console.log('About to save Scrapbook with filename:', filename);
       updateDownloadProgress(100, 'Preparing your scrapbook...');
       
       setTimeout(() => {
-        doc.save(filename);
-        hideDownloadProgress();
+        try {
+          console.log('Attempting to save Scrapbook...');
+          doc.save(filename);
+          console.log('Scrapbook save completed successfully');
+          hideDownloadProgress();
+          
+          // Reset button text
+          downloadActionBtn.innerHTML = 'Create Scrapbook';
+        } catch (saveError) {
+          console.error('Error saving Scrapbook:', saveError);
+          hideDownloadProgress();
+          downloadActionBtn.innerHTML = 'Create Scrapbook';
+          alert('Failed to save Scrapbook file. Please try again.');
+        }
       }, 1000);
       
     } finally {

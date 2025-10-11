@@ -7,48 +7,74 @@
 
 <!-- Google Font -->
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="../../css/global.css" rel="stylesheet">
+<link href="../../css/navbar.css" rel="stylesheet">
+<link href="../../css/side-menu.css" rel="stylesheet">
 <link href="profile.css" rel="stylesheet">
+<link href="media-stats.css" rel="stylesheet">
+<link href="download-styles.css" rel="stylesheet">
 </head>
 
 <body>
-<!-- Navbar -->
-<nav class="navbar">
-    <div class="logo-section">
-        <img src="../../logo.jpeg" alt="Logo">
-        <h2>Yaado ka Baksa</h2>
-    </div>
+<!-- Navbar Container -->
+<div id="navbarContainer"></div>
 
-    <!-- Hamburger Menu -->
-    <div class="menu-icon" id="menuIcon" title="Menu">
-        <span></span>
-        <span></span>
-        <span></span>
-    </div>
+<!-- Header Section removed to avoid duplicate navigation -->
 
-    <!-- Dropdown Menu -->
-    <div class="dropdown" id="dropdownMenu">
-        <a href="./notifications.html">Notifications</a>
-        <a href="../feedback.html">Feedback</a>
-        <a href="../about.html">About Us</a>
-        <button id="logoutBtn" class="btn secondary">Logout</button>
+<!-- Sidebar -->
+<aside class="side-menu" id="sideMenu" aria-hidden="true">
+    <div class="menu-head">
+        <div class="logo small">
+            <img src="../../logo.jpeg" alt="Small Logo">
+        </div>
+        <h3 id="sideMenuUserName">Account</h3>
     </div>
-</nav>
+    <nav>
+        <ul>
+            <li><a href="../profile/profile.html" id="profileLink">Profile</a></li>
+            <li><a href="../home/home.html" id="homeLink">Home</a></li>
+            <li><a href="../home/notifications.html" id="notificationsLink">Notifications <span id="notificationBadge" class="notification-badge hidden">0</span></a></li>
+            <li><a href="../home/friend-circle.html" id="friendsLink">Friend Circle <span id="friendInviteBadge" class="notification-badge hidden">0</span></a></li>
+            <li><a href="../paternal/paternal-tree.html" id="paternalLink">Paternal Family Tree</a></li>
+            <li><a href="../maternal/maternal-tree.html" id="maternalLink">Maternal Family Tree</a></li>
+            <li><button id="logoutBtn" class="btn secondary">Logout</button></li>
+        </ul>
+    </nav>
+</aside>
+<div class="menu-overlay" id="menuOverlay"></div>
 
 <!-- Profile Section -->
 <div class="profile-container">
     <div class="profile-pic">
         <img id="profileImage" src="https://via.placeholder.com/150" alt="Profile Photo">
-        <div class="add-icon" id="addIcon">+</div>
+        <div class="add-icon" id="addIcon"><i class="fas fa-camera"></i></div>
     </div>
 
     <div class="user-info">
         <h3 id="usernameDisplay">@username</h3>
-        <p id="nameDisplay">Your Name</p>
-        <p id="descDisplay">Write something about yourself...</p>
+        <p class="name" id="nameDisplay">Your Name</p>
+        <p class="email" id="emailDisplay">user@example.com</p>
+        <p class="description" id="descDisplay">Write something about yourself...</p>
+        
+        <div class="user-stats">
+            <div class="stat">
+                <span id="storiesCount">0</span>
+                Stories
+            </div>
+            <div class="stat">
+                <span id="memoriesCount">0</span>
+                Memories
+            </div>
+            <div class="stat">
+                <span id="membersCount">0</span>
+                Members
+            </div>
+        </div>
     </div>
 
     <div class="btn-group">
-        <button class="upload-btn" id="uploadBtn">Upload</button>
         <button class="edit-btn" id="editBtn">Edit Profile</button>
     </div>
 </div>
@@ -56,45 +82,156 @@
 <!-- Overlay and Popups -->
 <div class="overlay" id="overlay"></div>
 
-<div class="popup" id="popupUpload">
-    <h3>Select Upload Type</h3>
-    <button onclick="filterMedia('photo')">Photos</button>
-    <button onclick="filterMedia('video')">Videos</button>
-    <button onclick="filterMedia('text')">Texts</button>
-    <button onclick="filterMedia('audio')">Audios</button>
-    <button onclick="closePopup()">Close</button>
-</div>
-
 <div class="popup edit-form" id="popupEdit">
     <h3>Edit Profile</h3>
     <label>Username (@)</label>
     <input type="text" id="usernameInput" placeholder="username" pattern="[A-Za-z0-9_]+" title="Only letters, numbers, and underscore allowed">
+    <div class="error-text" id="usernameError"></div>
+    <div class="note-text" id="usernameNote" style="display: none;">Username can only be changed once.</div>
+    
     <label>Name</label>
-    <input type="text" id="nameInput" placeholder="Enter name (emojis allowed)">
+    <input type="text" id="nameInput" placeholder="Enter your full name">
+    
     <label>Description (max 50 words)</label>
-    <textarea id="descInput" maxlength="300" placeholder="Write about yourself..."></textarea>
-    <button onclick="saveProfile()">Save</button>
-    <button onclick="closePopup()">Cancel</button>
+    <textarea id="descInput" maxlength="300" placeholder="Write something about yourself..."></textarea>
+    <div class="error-text" id="descError"></div>
+    
+    <button id="saveProfileBtn">Save Changes</button>
+    <button id="cancelEditBtn">Cancel</button>
 </div>
 
 <!-- Media Section -->
 <div class="media-section">
+    <h2 class="section-title">My Media Collection</h2>
     <div class="filter-bar">
-        <button class="filter-btn active" onclick="filterMedia('all')">All</button>
-        <button class="filter-btn" onclick="filterMedia('photo')">Photos</button>
-        <button class="filter-btn" onclick="filterMedia('video')">Videos</button>
-        <button class="filter-btn" onclick="filterMedia('text')">Texts</button>
-        <button class="filter-btn" onclick="filterMedia('audio')">Audios</button>
+        <button class="filter-btn active" data-type="all">All Media</button>
+        <button class="filter-btn" data-type="photo">Photos</button>
+        <button class="filter-btn" data-type="video">Videos</button>
+        <button class="filter-btn" data-type="text">Texts</button>
+        <button class="filter-btn" data-type="audio">Audio</button>
     </div>
 
     <div class="media-grid" id="mediaGrid">
-        <div class="media-item photo"><img src="https://via.placeholder.com/120x100" alt="Photo"></div>
-        <div class="media-item video"><video src="" controls></video></div>
-        <div class="media-item text">A short memory note here.</div>
-        <div class="media-item audio">🎵 Audio memory file</div>
+        <div class="no-media" id="noMedia">No media available in your collection</div>
+    </div>
+    
+    <div class="media-stats">
+        <div class="stat-item">
+            <span id="totalMediaCount">0</span>
+            <label>Total Media</label>
+        </div>
+        <div class="stat-item">
+            <span id="recentMediaDate">--</span>
+            <label>Last Added</label>
+        </div>
     </div>
 </div>
 
-<script type="module" src="profile.js"></script>
+<!-- Loading Indicator -->
+<div class="loading-indicator" id="loadingIndicator">
+    <div class="spinner"></div>
+</div>
+
+<!-- Error Message Box -->
+<div class="error-message" id="errorMessage"></div>
+
+<!-- Notification Toast -->
+<div class="notification" id="notification"></div>
+
+<!-- Preview Overlay for Media -->
+<div class="preview-overlay" id="previewOverlay" style="display: none;">
+    <div class="preview-content">
+        <div class="close-preview" id="closePreview">&times;</div>
+        <div id="previewContentContainer"></div>
+    </div>
+</div>
+
+<!-- Activity Feed Section -->
+<div class="activity-section">
+    <h2 class="section-title">Recent Activity</h2>
+    <div class="activity-feed" id="activityFeed">
+        <div class="no-activity" id="noActivity">No recent activities to display</div>
+    </div>
+</div>
+
+<!-- Firebase CDN (Compatibility Mode) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+
+<!-- Firebase Config -->
+<script>
+    // Initialize Firebase with config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCIIbfmTiLcnbBIf2a1RDe4NtgWvQ16IgE",
+      authDomain: "baksha-d6af1.firebaseapp.com",
+      projectId: "baksha-d6af1",
+      storageBucket: "baksha-d6af1.firebasestorage.app",
+      messagingSenderId: "1000632616535",
+      appId: "1:1000632616535:web:5841a1627a3e609988c512",
+      databaseURL: "https://baksha-d6af1-default-rtdb.firebaseio.com/"
+    };
+    
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+</script>
+
+<!-- Shared scripts -->
+<script src="../../js/user-profile.js"></script>
+<script src="../../js/navbar.js"></script>
+
+<script>
+    // Initialize UserProfileUtil
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.UserProfileUtil) {
+            UserProfileUtil.init(firebase.auth(), firebase.database(), firebase.storage());
+            
+            // Subscribe to profile updates to get the user's name
+            UserProfileUtil.subscribe(function(profile) {
+                if (profile) {
+                    // Update the side menu header with user's name
+                    const sideMenuUserName = document.getElementById('sideMenuUserName');
+                    if (sideMenuUserName) {
+                        sideMenuUserName.textContent = profile.name || 'My Account';
+                    }
+                }
+            });
+        }
+        
+        // Set active class for current page
+        const profileLink = document.getElementById('profileLink');
+        if (profileLink) {
+            profileLink.classList.add('active');
+        }
+    });
+</script>
+
+<script src="profile.js"></script>
+
+<!-- Menu initialization script for navbar hamburger menu -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuIcon = document.querySelector('.menu-icon');
+        const sideMenu = document.getElementById('sideMenu');
+        const menuOverlay = document.getElementById('menuOverlay');
+        
+        if (menuIcon && sideMenu && menuOverlay) {
+            console.log('Menu initialization with navbar');
+            
+            menuIcon.addEventListener('click', function() {
+                console.log('Menu icon clicked');
+                sideMenu.classList.toggle('active');
+                menuOverlay.classList.toggle('active');
+            });
+            
+            menuOverlay.onclick = function() {
+                console.log('Menu overlay clicked');
+                sideMenu.classList.remove('active');
+                menuOverlay.classList.remove('active');
+            };
+        }
+    });
+</script>
 </body>
 </html>

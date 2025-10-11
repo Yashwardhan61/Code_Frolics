@@ -68,10 +68,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Set up event listeners
     setupEventListeners();
     
-    // Check if this is a profile setup session
-    const urlParams = new URLSearchParams(window.location.search);
-    const isProfileSetup = urlParams.get('setup') === 'true';
-    
     /* ===== Auth State Observer ===== */
     auth.onAuthStateChanged(user => {
         if (user) {
@@ -79,11 +75,6 @@ document.addEventListener('DOMContentLoaded', () => {
             loadUserProfile();
             loadUserMedia();
             loadUserActivity();
-            
-            // If this is a profile setup, show welcome notification and auto-open edit form
-            if (isProfileSetup) {
-                showProfileSetupWelcome();
-            }
         } else {
             // Redirect to login if not authenticated
             window.location.href = '../login.html';
@@ -185,12 +176,6 @@ function updateProfileUI() {
     nameDisplay.innerText = userProfile.name;
     emailDisplay.innerText = userProfile.email;
     descDisplay.innerText = userProfile.description || 'Write something about yourself...';
-    
-    // Update side menu user name if element exists
-    const sideMenuUserName = document.getElementById('sideMenuUserName');
-    if (sideMenuUserName) {
-        sideMenuUserName.innerText = userProfile.name || 'My Account';
-    }
 }
 
 // Save profile changes to Firebase
@@ -243,15 +228,9 @@ async function saveProfileChanges() {
         
         // Update profile data
         const userId = currentUser.uid;
-        const safeEmail = currentUser.email.replace(/\./g, "_").replace(/@/g, "_");
         const updates = {
             [`users/${userId}/profile/name`]: name || 'New User',
-            [`users/${safeEmail}/profile/name`]: name || 'New User',
-            [`users/${userId}/profile/description`]: description,
-            [`users/${safeEmail}/profile/description`]: description,
-            // Mark profile setup as complete
-            [`users/${userId}/profile/profileSetupComplete`]: true,
-            [`users/${safeEmail}/profile/profileSetupComplete`]: true
+            [`users/${userId}/profile/description`]: description
         };
         
         // Update username and set hasChangedUsername flag if this is the first change
@@ -296,22 +275,6 @@ async function saveProfileChanges() {
         showError('Failed to save profile changes. Please try again.');
     } finally {
         showLoading(false);
-        
-        // Check if this was a redirect from first-time login
-        const urlParams = new URLSearchParams(window.location.search);
-        const isProfileSetup = urlParams.get('setup') === 'true';
-        
-        if (isProfileSetup) {
-            // Show success message and redirect to home
-            showNotification('Profile setup complete! Redirecting to home page...', 3000);
-            setTimeout(() => {
-                window.location.href = '../home/home.html';
-            }, 3000);
-            
-            // Remove setup parameter from URL to prevent redirect loop if user refreshes
-            const newUrl = window.location.pathname;
-            window.history.replaceState({}, document.title, newUrl);
-        }
     }
 }
 
@@ -892,20 +855,11 @@ function previewMedia(media) {
         </div>
     `;
     
-    // Create download button (except for text type)
-    const downloadButton = media.type !== 'text' ? 
-        `<div class="preview-actions">
-            <button class="download-btn" onclick="downloadMedia('${media.url}', '${media.title || 'download'}_${Date.now()}')">
-                <i class="fas fa-download"></i> Download
-            </button>
-        </div>` : '';
-    
     switch (media.type) {
         case 'photo':
             previewContentContainer.innerHTML = `
                 ${storyInfo}
                 <img class="preview-image" src="${media.url}" alt="${media.title || 'Photo'}">
-                ${downloadButton}
             `;
             break;
             
@@ -913,7 +867,6 @@ function previewMedia(media) {
             previewContentContainer.innerHTML = `
                 ${storyInfo}
                 <video class="preview-video" src="${media.url}" controls autoplay></video>
-                ${downloadButton}
             `;
             break;
             
@@ -933,7 +886,6 @@ function previewMedia(media) {
                 <div class="audio-preview-container">
                     <div class="audio-icon-large"><i class="fas fa-music"></i></div>
                     <audio src="${media.url}" controls autoplay></audio>
-                    ${downloadButton}
                 </div>
             `;
             break;
@@ -1118,163 +1070,6 @@ function showLoading(show) {
     loadingIndicator.style.display = show ? 'flex' : 'none';
 }
 
-// Show welcome message for first-time users
-function showProfileSetupWelcome() {
-    // Create a special welcome notification
-    const welcomeNotification = document.createElement('div');
-    welcomeNotification.className = 'notification welcome-notification';
-    welcomeNotification.innerHTML = `
-        <div class="notification-content">
-            <h3>Welcome to Yaado ka Baksa!</h3>
-            <p>Let's set up your profile first to get started.</p>
-        </div>
-    `;
-    document.body.appendChild(welcomeNotification);
-    
-    // Auto-open edit form
-    setTimeout(() => {
-        if (editBtn) editBtn.click();
-        welcomeNotification.classList.add('show');
-        
-        // Remove welcome notification after 5 seconds
-        setTimeout(() => {
-            welcomeNotification.classList.remove('show');
-            setTimeout(() => welcomeNotification.remove(), 500);
-        }, 5000);
-    }, 500);
-    
-    // Add some CSS for the welcome notification
-    const style = document.createElement('style');
-    style.innerHTML = `
-        .welcome-notification {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100px);
-            background: linear-gradient(45deg, #704214, #8B4513);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            z-index: 2000;
-            transition: transform 0.5s ease;
-            text-align: center;
-            max-width: 400px;
-        }
-        .welcome-notification.show {
-            transform: translateX(-50%) translateY(0);
-        }
-        .welcome-notification h3 {
-            margin: 0 0 8px;
-            font-family: 'Dancing Script', cursive;
-            font-size: 24px;
-        }
-        .welcome-notification p {
-            margin: 0;
-            font-size: 14px;
-        }
-    `;
-    document.head.appendChild(style);
-}
-
-// Download media function
-function downloadMedia(url, filename) {
-    console.log('Downloading media from URL:', url);
-    
-    try {
-        // Create a loading element
-        const loadingElement = document.createElement('div');
-        loadingElement.className = 'download-status';
-        loadingElement.innerHTML = `
-            <div class="download-status-icon loading">
-                <i class="fas fa-spinner fa-spin"></i>
-            </div>
-            <div class="download-status-text">Preparing download...</div>
-        `;
-        document.body.appendChild(loadingElement);
-        
-        // Fetch the file
-        fetch(url)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Network response error: ${response.status}`);
-                }
-                return response.blob();
-            })
-            .then(blob => {
-                // Convert blob to downloadable file
-                const blobUrl = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                
-                // Get file extension from URL or use default based on media type
-                let fileExt = url.split('?')[0].split('.').pop().toLowerCase();
-                if (!fileExt || fileExt.length > 5) {
-                    // Determine from blob type
-                    const type = blob.type;
-                    if (type.includes('image')) {
-                        fileExt = 'jpg';
-                    } else if (type.includes('video')) {
-                        fileExt = 'mp4';
-                    } else if (type.includes('audio')) {
-                        fileExt = 'mp3';
-                    } else {
-                        fileExt = 'file';
-                    }
-                }
-                
-                // Set download attributes
-                link.href = blobUrl;
-                link.download = `${filename}.${fileExt}`;
-                document.body.appendChild(link);
-                link.click();
-                
-                // Clean up
-                URL.revokeObjectURL(blobUrl);
-                document.body.removeChild(link);
-                
-                // Show success
-                loadingElement.innerHTML = `
-                    <div class="download-status-icon success">
-                        <i class="fas fa-check"></i>
-                    </div>
-                    <div class="download-status-text">Download successful!</div>
-                `;
-                
-                // Remove after delay
-                setTimeout(() => {
-                    loadingElement.classList.add('fade-out');
-                    setTimeout(() => {
-                        document.body.removeChild(loadingElement);
-                    }, 500);
-                }, 2000);
-                
-            })
-            .catch(error => {
-                console.error('Download error:', error);
-                
-                // Show error
-                loadingElement.innerHTML = `
-                    <div class="download-status-icon error">
-                        <i class="fas fa-times"></i>
-                    </div>
-                    <div class="download-status-text">Download failed! Please try again.</div>
-                `;
-                
-                // Remove after delay
-                setTimeout(() => {
-                    loadingElement.classList.add('fade-out');
-                    setTimeout(() => {
-                        document.body.removeChild(loadingElement);
-                    }, 500);
-                }, 3000);
-            });
-            
-    } catch (error) {
-        console.error('Download function error:', error);
-        showError('Failed to download media. Please try again.');
-    }
-}
-
 // Show error message
 function showError(message) {
     errorMessage.innerText = message;
@@ -1286,13 +1081,13 @@ function showError(message) {
 }
 
 // Show notification
-function showNotification(message, duration = 3000) {
+function showNotification(message) {
     notification.innerText = message;
     notification.classList.add('show');
     
     setTimeout(() => {
         notification.classList.remove('show');
-    }, duration);
+    }, 3000);
 }
 
 // Show success message (alias for showNotification)

@@ -60,6 +60,23 @@ document.addEventListener('DOMContentLoaded', () => {
             await updateProfile(userCredential.user, { displayName: name });
             console.log('Profile updated successfully');
             
+            // Get database reference
+            const user = userCredential.user;
+            const safeEmail = user.email.replace(/\./g, "_").replace(/@/g, "_");
+            
+            // Import required Firebase modules
+            const { getDatabase, ref, set } = await import("https://www.gstatic.com/firebasejs/10.5.0/firebase-database.js");
+            const database = getDatabase();
+            
+            // Initialize basic profile with profileSetupComplete = false
+            await set(ref(database, `users/${safeEmail}/profile`), {
+                name: name,
+                email: user.email,
+                profileSetupComplete: false, // Flag to track if user has completed profile setup
+                createdAt: Date.now()
+            });
+            console.log('Initial profile data created in database');
+            
             showAlert('Registration successful! You can now login.', 'success');
             setTimeout(() => {
                 window.location.href = '../regis/login.html';

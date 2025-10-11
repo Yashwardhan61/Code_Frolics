@@ -8,6 +8,7 @@ import {
   browserSessionPersistence,
   sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
 // 🔹 Your Firebase configuration
 const firebaseConfig = {
@@ -90,13 +91,18 @@ function friendlyErrorMessage(code) {
 // 🔹 Sign in and redirect
 async function signInWithFirebase(email, password, remember) {
   try {
+    console.log("Beginning authentication process for:", email);
+    
     // Persistence setting based on "remember me"
     await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
+    console.log("Persistence set:", remember ? "Local" : "Session");
 
+    console.log("Attempting to sign in...");
     const credential = await signInWithEmailAndPassword(auth, email, password);
     const user = credential.user;
+    console.log("Authentication successful for:", user.email);
 
-    // Save user details in localStorage for home.html to read
+    // Save user details in localStorage for other pages to read
     localStorage.setItem(
       "userDetails",
       JSON.stringify({
@@ -108,14 +114,65 @@ async function signInWithFirebase(email, password, remember) {
 
     showMessage("Welcome back! Redirecting...", "success", false);
 
-    // ✅ Redirect to home.html
-    setTimeout(() => {
-      window.location.href = "./home/home.html";
-    }, 1000);
+    // Check if user has completed profile setup
+    // We'll convert email to safe format for database keys
+    const safeEmail = user.email.replace(/\./g, "_").replace(/@/g, "_");
+    const database = getDatabase(app);
+    const userProfileRef = ref(database, `users/${safeEmail}/profile`);
+    
+    try {
+      console.log("Checking user profile at:", `users/${safeEmail}/profile`);
+      const snapshot = await get(userProfileRef);
+      const profileData = snapshot.val();
+      console.log("Profile data retrieved:", profileData);
+      
+      // Check if profile exists and has been set up
+      if (!profileData || !profileData.profileSetupComplete) {
+        console.log("First time login or profile not set up, redirecting to profile page");
+        // First-time user or profile not set up, redirect to profile setup
+        setTimeout(() => {
+          window.location.href = "./profile/profile.html?setup=true";
+        }, 1000);
+      } else {
+        // Returning user with profile already set up, redirect to home
+        console.log("Profile already set up, redirecting to home page");
+        setTimeout(() => {
+          window.location.href = "./home/home.html";
+        }, 1000);
+      }
+    } catch (dbErr) {
+      console.error("Error checking profile:", dbErr);
+      console.error("Database error code:", dbErr.code);
+      console.error("Database error message:", dbErr.message);
+      
+      // Log additional context for debugging
+      console.log("User info:", {
+        email: user.email,
+        safeEmail: safeEmail
+      });
+      
+      // Default to home page if there's an error checking profile
+      setTimeout(() => {
+        window.location.href = "./home/home.html";
+      }, 1000);
+    }
+    
   } catch (err) {
     const code = err.code || err?.message || "unknown";
     showMessage(friendlyErrorMessage(code));
     console.error("Firebase sign-in error:", err);
+    console.error("Error code:", code);
+    console.error("Error message:", err.message);
+    
+    // Log additional details for debugging
+    if (err.customData) {
+      console.error("Custom data:", err.customData);
+    }
+    
+    // Check for common configuration issues
+    if (code === "auth/invalid-api-key") {
+      console.error("API key issue detected. Check your Firebase config.");
+    }
   }
 }
 

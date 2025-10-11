@@ -3,13 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Yaadoo ka Baksa — Stories</title>
+  <title>Yaado ka Baksa — Stories</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="../../css/navbar.css">
   <link rel="stylesheet" href="home.css">
   <link rel="stylesheet" href="download-styles.css">
   <link rel="stylesheet" href="enhanced-tags.css">
   <link rel="stylesheet" href="story-animations.css">
+  <link rel="stylesheet" href="story-tags.css">
 </head>
 <body>
   <!-- Background Image -->
@@ -20,12 +23,11 @@
   <!-- Header Section -->
   <header class="topbar">
     <button id="menuToggle" class="menu-btn" aria-label="Open menu">☰</button>
-
     <div class="brand">
       <div class="logo-placeholder">
-        <img src="../../logo.jpeg" alt="Yaadoo ka Baksa Logo" id="brandLogo">
+        <img src="../../logo.jpeg" alt="Yaado ka Baksa Logo" id="brandLogo">
       </div>
-      <div class="brand-text">Yaadoo ka Baksa</div>
+      <div class="brand-text">Yaado ka Baksa</div>
     </div>
 
     <div class="search-wrap">
@@ -60,7 +62,7 @@
       <div class="logo small">
         <img src="../../logo.jpeg" alt="Small Logo">
       </div>
-      <h3>Account</h3>
+      <h3 id="sideMenuUserName">My Account</h3>
     </div>
     <nav>
       <ul>
@@ -97,8 +99,9 @@
         <input type="text" id="storyTitle" required>
 
         <label>Tags</label>
-        <div id="tagInputContainer" class="tag-input-container">
-          <!-- Enhanced tag input will be initialized here -->
+        <div class="simple-input-group">
+          <input type="text" id="storyTags" name="storyTags" placeholder="Add tags (separate with commas, e.g. holiday, wedding, childhood)">
+          <small class="input-help">Add tags to help organize and find your stories</small>
         </div>
 
         <label for="storyLocation">Location</label>
@@ -108,6 +111,17 @@
           <label>Share with Family Members</label>
           <div id="memberInputContainer" class="member-input-container">
             <!-- Enhanced member input will be initialized here -->
+            <div class="members-input-wrapper">
+              <div class="members-container"></div>
+              <div class="member-input-group">
+                <input type="text" class="member-input" placeholder="Add family members by email..." aria-label="Add family members">
+                <button type="button" class="add-member-btn" aria-label="Add member">Add</button>
+              </div>
+            </div>
+            <div class="member-suggestions"></div>
+            <div class="member-info">Share stories with family members or create stories together</div>
+            <div class="recent-contacts"></div>
+            <input type="hidden" id="storyMembers" name="storyMembers">
           </div>
         </div>
 
@@ -377,8 +391,31 @@
     firebase.initializeApp(firebaseConfig);
   </script>
   
+  <!-- Shared scripts -->
+  <script src="../../js/user-profile.js"></script>
+
+  <script>
+    // Initialize UserProfileUtil
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.UserProfileUtil) {
+            UserProfileUtil.init(firebase.auth(), firebase.database(), firebase.storage());
+            
+            // Subscribe to profile updates to get the user's name
+            UserProfileUtil.subscribe(function(profile) {
+                if (profile) {
+                    // Update the side menu header with user's name
+                    const sideMenuUserName = document.getElementById('sideMenuUserName');
+                    if (sideMenuUserName) {
+                        sideMenuUserName.textContent = profile.name || 'My Account';
+                    }
+                }
+            });
+        }
+    });
+  </script>
+  
   <!-- Firebase + Home JS -->
-  <script type="module" src="home.js"></script>
+  <script src="home.js"></script>
   
   <!-- jsPDF library for PDF generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -386,9 +423,11 @@
   <!-- html2canvas for rendering HTML to canvas (for PDF) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   
+  <!-- Enhanced Tags System - load before other scripts -->
+  <script src="enhanced-tags.js"></script>
+  
   <!-- Download Stories Feature -->
   <script src="download-stories.js"></script>
-  <script src="enhanced-tags.js"></script>
   <script src="story-animations.js"></script>
 </body>
 </html>
