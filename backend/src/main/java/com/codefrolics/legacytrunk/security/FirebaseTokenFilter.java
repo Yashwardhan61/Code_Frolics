@@ -1,0 +1,108 @@
+package com.codefrolics.legacytrunk.security;
+
+import com.codefrolics.legacytrunk.model.User;
+import com.codefrolics.legacytrunk.repository.UserRepository;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.FirebaseToken;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+
+@Component
+@RequiredArgsConstructor
+@Slf4j
+public class FirebaseTokenFilter extends OncePerRequestFilter {
+
+    private final UserRepository userRepository;
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+
+        try {
+            String token = getBearerToken(request);
+            if (StringUtils.hasText(token)) {
+                String parsedUid = null;
+                String parsedEmail = null;
+                String parsedName = null;
+
+                try {
+                    FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(token);
+                    parsedUid = decodedToken.getUid();
+                    parsedEmail = decodedToken.getEmail();
+                    parsedName = decodedToken.getName();
+                } catch (IllegalStateException e) {
+                    // Fallback to unsafe manual JWT decoding if Firebase Admin is not initialized
+                    log.warn("Firebase Admin not initialized! Using unsafe manual token decoding for local dev.");
+                    String[] parts = token.split("\\.");
+                    if (parts.length == 3) {
+                        String base64 = parts[1];
+                        // Add padding if necessary
+                        int padding = 4 - (base64.length() % 4);
+                        if (padding > 0 && padding < 4) {
+                            base64 += "====".substring(0, padding);
+                        }
+                        String payload = new String(java.util.Base64.getUrlDecoder().decode(base64));
+                        com.fasterxml.jackson.databind.JsonNode json = new com.fasterxml.jackson.databind.ObjectMapper().readTree(payload);
+                        parsedUid = json.has("user_id") ? json.get("user_id").asText() : json.get("sub").asText();
+                        parsedEmail = json.has("email") ? json.get("email").asText() : "dummy@example.com";
+                        parsedName = json.has("name") ? json.get("name").asText() : "Dev User";
+                    } else {
+                        throw new IllegalArgumentException("Invalid JWT format");
+                    }
+                }
+
+                // Make effectively final for lambda
+                final String uid = parsedUid;
+                final String email = parsedEmail;
+                final String name = parsedName;
+
+                // Find user in local DB, or create if first time (sync from Firebase)
+                User user = userRepository.findByFirebaseUid(uid).orElseGet(() -> {
+                    log.info("Creating new user from Firebase token: {}", email);
+                    User newUser = User.builder()
+                            .firebaseUid(uid)
+                            .email(email)
+                            .displayName(name)
+                            .build();
+                    return userRepository.save(newUser);
+                });
+
+                FirebaseUserDetails userDetails = new FirebaseUserDetails(user);
+
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        } catch (FirebaseAuthException e) {
+            log.error("Firebase Auth Exception: {}", e.getMessage());
+            // SecurityContextHolder will be empty, Spring Security will reject requests requiring auth
+        } catch (Exception e) {
+            log.error("Internal server error during auth filter: {}", e.getMessage());
+        }
+
+        filterChain.doFilter(request, response);
+    }
+
+    private String getBearerToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
+    }
+}

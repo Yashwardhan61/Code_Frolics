@@ -1,0 +1,360 @@
+@import "tailwindcss";
+
+/* Global styles for consistent branding across all pages */
+:root {
+    --brand-brown-50: #f7efe8;
+    --brand-brown-100: #e9d8c8;
+    --brand-brown-200: #d6b89a;
+    --brand-brown-300: #c49a75;
+    --brand-brown-400: #a5683f;
+    --brand-brown-500: #8b5628;
+    --brand-brown-600: #704214;
+    --brand-brown-700: #5a3509;
+    --brand-brown-800: #4a2800;
+    --brand-accent: #8B4513;
+    --brand-beige: #f5d0a0;
+}
+
+/* Global brand font styling */
+.brand-text,
+.logo-section h2,
+.welcome-text,
+.topbar-title,
+.brand h1,
+h1.brand-title,
+h2.brand-title {
+    font-family: 'Dancing Script', cursive !important;
+    font-weight: 700;
+}
+
+/* Ensure topbar title is consistent with navbar */
+.topbar-title {
+    color: var(--brand-beige);
+    font-family: 'Dancing Script', cursive;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+/* Utility classes to mirror a few Tailwind-like utilities used in markup */
+.brand-text {
+    color: var(--brand-brown-600) !important;
+}
+
+.nav-link {
+    color: #4b5563; /* gray-700 fallback */
+}
+.nav-link:hover {
+    color: var(--brand-brown-600);
+}
+
+.mobile-nav-link:hover {
+    color: var(--brand-brown-600);
+    background-color: rgba(112,66,20,0.04);
+}
+
+.bg-brown-gradient {
+    background: linear-gradient(to right, var(--brand-brown-50), white);
+}
+
+.film-strip {
+    display: flex;
+    animation: scroll 30s linear infinite;
+    width: fit-content;
+}
+
+@keyframes scroll {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+.film-frame {
+    width: 160px;
+    height: 156px;
+    border: 6px solid #333;
+    position: relative;
+    background: #1a1a1a;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.film-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.8;
+    transition: opacity 0.3s;
+}
+
+.film-frame:hover img {
+    opacity: 1;
+}
+
+.film-frame::before,
+.film-frame::after {
+    content: '';
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    background: #333;
+    border-radius: 50%;
+}
+
+.film-frame::before {
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.film-frame::after {
+    bottom: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.treasure-box {
+    position: relative;
+    width: 300px;
+    height: 250px;
+    perspective: 1000px;
+    transform-style: preserve-3d;
+    cursor: pointer;
+    transform: scale(0.95);
+    transition: transform 0.3s ease;
+}
+
+.treasure-box:hover {
+    transform: scale(1);
+}
+
+.treasure-body {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(45deg, #8B4513, #A0522D);
+    border: 12px solid #704214;
+    border-radius: 15px;
+    box-shadow: 
+        0 10px 30px rgba(0,0,0,0.2),
+        inset 0 -10px 20px rgba(0,0,0,0.2),
+        inset 0 10px 20px rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transform-style: preserve-3d;
+    animation: glow 3s infinite;
+}
+
+.treasure-body::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23000000' fill-opacity='0.1' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.1;
+    pointer-events: none;
+}
+
+.treasure-lid {
+    position: absolute;
+    top: -20px;
+    width: 100%;
+    height: 60px;
+    background: linear-gradient(45deg, #8B4513, #A0522D);
+    border: 12px solid #704214;
+    border-radius: 15px 15px 0 0;
+    transform-origin: top;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 
+        0 5px 15px rgba(0,0,0,0.2),
+        inset 0 -5px 10px rgba(0,0,0,0.2),
+        inset 0 5px 10px rgba(255,255,255,0.1);
+}
+
+.treasure-lid::after {
+    content: '';
+    position: absolute;
+    width: 40px;
+    height: 20px;
+    background: #5c3511;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.treasure-box:hover .treasure-lid, .treasure-box.open .treasure-lid {
+    transform: rotateX(-110deg);
+}
+
+.treasure-box::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 20px;
+    bottom: -10px;
+    background: rgba(0,0,0,0.2);
+    filter: blur(10px);
+    border-radius: 50%;
+    z-index: -1;
+    transition: all 0.3s ease;
+}
+
+.treasure-box:hover::after {
+    transform: scaleX(1.1);
+    opacity: 0.3;
+}
+
+.treasure-glow {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, rgba(255, 215, 0, 0.2), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.treasure-box:hover .treasure-glow, .treasure-box.open .treasure-glow {
+    opacity: 1;
+    animation: pulse 2s infinite;
+}
+
+.lock {
+    position: absolute;
+    width: 30px;
+    height: 35px;
+    background: #4a2800;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 5px;
+    box-shadow: 
+        inset 0 -2px 5px rgba(0,0,0,0.5),
+        inset 0 2px 5px rgba(255,255,255,0.2);
+    transition: transform 0.5s ease;
+}
+
+.lock::before {
+    content: '';
+    position: absolute;
+    width: 40px;
+    height: 25px;
+    border: 5px solid #4a2800;
+    border-radius: 20px 20px 0 0;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.treasure-box:hover .lock, .treasure-box.open .lock {
+    transform: translate(-50%, -20px) scale(0.9);
+    opacity: 0.7;
+}
+
+.sparkles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.sparkles::before,
+.sparkles::after {
+    content: '✨';
+    position: absolute;
+    font-size: 20px;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.treasure-box:hover .sparkles::before, .treasure-box.open .sparkles::before {
+    opacity: 1;
+    animation: sparkleLeft 1s infinite;
+}
+
+.treasure-box:hover .sparkles::after, .treasure-box.open .sparkles::after {
+    opacity: 1;
+    animation: sparkleRight 1s infinite;
+}
+
+.engraved-text {
+    position: relative;
+    text-align: center;
+    font-size: 2rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+    transform: translateZ(20px);
+    text-shadow: 
+        -1px -1px 0 var(--brand-brown-600),
+        1px -1px 0 var(--brand-brown-600),
+        -1px 1px 0 var(--brand-brown-600),
+        1px 1px 0 var(--brand-brown-600),
+        0 0 10px rgba(112, 66, 20, 0.3);
+    color: var(--brand-brown-600);
+    background: linear-gradient(45deg, var(--brand-brown-400), var(--brand-brown-600));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 2s infinite linear;
+}
+
+@keyframes shimmer {
+    0% { background-position: -200px; }
+    100% { background-position: 200px; }
+}
+
+@keyframes glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(95, 158, 160, 0.5); }
+    50% { box-shadow: 0 0 30px rgba(95, 158, 160, 0.8); }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.2; }
+    50% { transform: scale(1.1); opacity: 0.4; }
+}
+
+@keyframes sparkleLeft {
+    0% { left: 20%; top: 50%; transform: scale(1); }
+    100% { left: 10%; top: 40%; transform: scale(0.5); opacity: 0; }
+}
+
+@keyframes sparkleRight {
+    0% { right: 20%; top: 50%; transform: scale(1); }
+    100% { right: 10%; top: 40%; transform: scale(0.5); opacity: 0; }
+}
+
+.welcome-text {
+    position: relative;
+    text-shadow: 2px 2px 4px rgba(112,66,20,0.15);
+    animation: welcomeAnimation 1.5s ease-out;
+    background: linear-gradient(45deg, var(--brand-brown-200), var(--brand-brown-50));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+@keyframes welcomeAnimation {
+    0% { opacity: 0; transform: translateY(-20px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--brand-brown-50);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--brand-brown-300);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--brand-brown-400);
+}

@@ -1,0 +1,40 @@
+import api from './axiosConfig';
+
+export const storyService = {
+    getAllStories: async () => {
+        const response = await api.get('/stories');
+        return response.data;
+    },
+    
+    getStoryById: async (id) => {
+        const response = await api.get(`/stories/${id}`);
+        return response.data;
+    },
+    
+    createStory: async (storyRequest, files) => {
+        const formData = new FormData();
+        
+        // Append JSON data as a blob
+        formData.append('story', new Blob([JSON.stringify(storyRequest)], {
+            type: 'application/json'
+        }));
+        
+        // Append files
+        if (files && files.length > 0) {
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files', files[i]);
+            }
+        }
+        
+        const response = await api.post('/stories', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        return response.data;
+    },
+    
+    deleteStory: async (id) => {
+        await api.delete(`/stories/${id}`);
+    }
+};
