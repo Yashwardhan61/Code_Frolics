@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { storyService } from '../api/storyService';
-import { ArrowLeft, MapPin, Calendar, Trash2, Edit } from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
+import { ArrowLeft, MapPin, Calendar, Trash2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function StoryView() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { currentUser } = useAuth();
+    const toast = useToast();
     const [story, setStory] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeMedia, setActiveMedia] = useState(0);
@@ -18,7 +20,8 @@ export default function StoryView() {
                 const data = await storyService.getStoryById(id);
                 setStory(data);
             } catch (error) {
-                console.error("Failed to fetch story", error);
+                console.error('Failed to fetch story', error);
+                toast.error('Could not load this story. Please try again.');
             } finally {
                 setLoading(false);
             }
@@ -28,14 +31,14 @@ export default function StoryView() {
     }, [id]);
 
     const handleDelete = async () => {
-        if (window.confirm("Are you sure you want to delete this memory? This action cannot be undone.")) {
-            try {
-                await storyService.deleteStory(id);
-                navigate('/dashboard');
-            } catch (error) {
-                console.error("Failed to delete story", error);
-                alert("Failed to delete story");
-            }
+        if (!window.confirm('Are you sure you want to delete this memory? This action cannot be undone.')) return;
+        try {
+            await storyService.deleteStory(id);
+            toast.success('Memory deleted.');
+            navigate('/dashboard');
+        } catch (error) {
+            console.error('Failed to delete story', error);
+            toast.error('Failed to delete this memory. Please try again.');
         }
     };
 

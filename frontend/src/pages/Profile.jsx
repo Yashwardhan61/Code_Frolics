@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { profileService } from '../api/profileService';
+import { useToast } from '../contexts/ToastContext';
 import { User, Image as ImageIcon, CheckCircle, Edit2, Save, X } from 'lucide-react';
 
 export default function Profile() {
@@ -9,6 +10,7 @@ export default function Profile() {
     const [formData, setFormData] = useState({ displayName: '', username: '', description: '' });
     const [saving, setSaving] = useState(false);
     const [photoFile, setPhotoFile] = useState(null);
+    const toast = useToast();
 
     const fetchProfile = async () => {
         try {
@@ -21,7 +23,8 @@ export default function Profile() {
                 description: data.description || ''
             });
         } catch (err) {
-            console.error("Failed to fetch profile", err);
+            console.error('Failed to fetch profile', err);
+            toast.error('Failed to load profile. Please refresh.');
         } finally {
             setLoading(false);
         }
@@ -35,17 +38,18 @@ export default function Profile() {
         try {
             setSaving(true);
             await profileService.updateProfile(formData);
-            
+
             if (photoFile) {
                 await profileService.uploadPhoto(photoFile);
             }
-            
+
             await fetchProfile();
             setEditing(false);
             setPhotoFile(null);
+            toast.success('Profile updated successfully.');
         } catch (err) {
-            console.error("Failed to update profile", err);
-            alert("Failed to update profile: " + err.message);
+            console.error('Failed to update profile', err);
+            toast.error('Failed to update profile: ' + (err.response?.data?.message || err.message));
         } finally {
             setSaving(false);
         }
@@ -65,7 +69,11 @@ export default function Profile() {
         );
     }
 
-    if (!profile) return <div>Failed to load profile.</div>;
+    if (!profile) return (
+        <div className="max-w-4xl mx-auto py-8 text-center">
+            <p className="text-gray-500">Failed to load profile.</p>
+        </div>
+    );
 
     const previewUrl = photoFile ? URL.createObjectURL(photoFile) : profile.photoUrl;
 
@@ -73,7 +81,7 @@ export default function Profile() {
         <div className="max-w-4xl mx-auto py-8">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="h-32 bg-gradient-to-r from-amber-600 to-amber-800"></div>
-                
+
                 <div className="px-8 pb-8">
                     <div className="relative flex justify-between items-end -mt-16 mb-6">
                         <div className="relative">
@@ -84,7 +92,7 @@ export default function Profile() {
                                     <User className="w-16 h-16 text-gray-400" />
                                 )}
                             </div>
-                            
+
                             {editing && (
                                 <label className="absolute bottom-0 right-0 bg-amber-600 text-white p-2 rounded-full cursor-pointer hover:bg-amber-700 shadow-md">
                                     <ImageIcon className="w-4 h-4" />
@@ -92,7 +100,7 @@ export default function Profile() {
                                 </label>
                             )}
                         </div>
-                        
+
                         <div>
                             {!editing ? (
                                 <button onClick={() => setEditing(true)} className="flex items-center text-gray-600 bg-gray-100 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors font-medium">
@@ -113,7 +121,7 @@ export default function Profile() {
                             )}
                         </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div className="md:col-span-2 space-y-6">
                             <div>
@@ -121,10 +129,10 @@ export default function Profile() {
                                     <div className="space-y-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
-                                            <input 
-                                                type="text" 
-                                                value={formData.displayName} 
-                                                onChange={e => setFormData({...formData, displayName: e.target.value})}
+                                            <input
+                                                type="text"
+                                                value={formData.displayName}
+                                                onChange={e => setFormData({ ...formData, displayName: e.target.value })}
                                                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500"
                                             />
                                         </div>
@@ -132,19 +140,19 @@ export default function Profile() {
                                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                                 Username {!profile.hasChangedUsername && <span className="text-xs text-amber-600">(Can be changed)</span>}
                                             </label>
-                                            <input 
-                                                type="text" 
-                                                value={formData.username} 
-                                                onChange={e => setFormData({...formData, username: e.target.value})}
+                                            <input
+                                                type="text"
+                                                value={formData.username}
+                                                onChange={e => setFormData({ ...formData, username: e.target.value })}
                                                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500"
                                                 disabled={profile.hasChangedUsername && profile.username}
                                             />
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">About Me</label>
-                                            <textarea 
-                                                value={formData.description} 
-                                                onChange={e => setFormData({...formData, description: e.target.value})}
+                                            <textarea
+                                                value={formData.description}
+                                                onChange={e => setFormData({ ...formData, description: e.target.value })}
                                                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 min-h-[100px]"
                                             />
                                         </div>
@@ -160,10 +168,10 @@ export default function Profile() {
                                 )}
                             </div>
                         </div>
-                        
+
                         <div className="bg-gray-50 p-6 rounded-xl border border-gray-100 h-fit">
                             <h3 className="font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">Account Status</h3>
-                            
+
                             <div className="space-y-3 text-sm">
                                 <div className="flex justify-between items-center">
                                     <span className="text-gray-500">Email</span>
@@ -182,9 +190,9 @@ export default function Profile() {
                                     )}
                                 </div>
                             </div>
-                            
+
                             <h3 className="font-semibold text-gray-900 mt-6 mb-4 pb-2 border-b border-gray-200">Stats</h3>
-                            
+
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-white p-3 rounded-lg border border-gray-200 text-center">
                                     <div className="text-2xl font-bold text-amber-700">{profile.storyCount}</div>

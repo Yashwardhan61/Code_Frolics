@@ -2,25 +2,32 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebase';
-import { Mail, Lock, AlertCircle } from 'lucide-react';
+import { Mail, Lock } from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
 
 export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const toast = useToast();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
         try {
-            setError('');
             setLoading(true);
             await signInWithEmailAndPassword(auth, email, password);
+            toast.success('Welcome back! Opening your treasure chest...');
             navigate('/dashboard');
         } catch (err) {
-            setError('Failed to sign in. Please check your credentials.');
+            const msg = err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password'
+                ? 'Incorrect email or password. Please try again.'
+                : err.code === 'auth/user-not-found'
+                ? 'No account found with this email.'
+                : err.code === 'auth/too-many-requests'
+                ? 'Too many attempts. Please wait a moment and try again.'
+                : 'Failed to sign in. Please check your credentials.';
+            toast.error(msg);
             console.error(err);
         } finally {
             setLoading(false);
@@ -34,13 +41,6 @@ export default function Login() {
                     <h2 className="text-3xl font-bold text-gray-800 font-serif" style={{ color: 'var(--brand-brown-600)' }}>Welcome Back</h2>
                     <p className="text-gray-600 mt-2">Open your treasure chest of memories</p>
                 </div>
-
-                {error && (
-                    <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-md flex items-start">
-                        <AlertCircle className="w-5 h-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-red-700">{error}</span>
-                    </div>
-                )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>

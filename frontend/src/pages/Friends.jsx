@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import api from '../api/axiosConfig';
+import { friendService } from '../api/friendService';
+import { useToast } from '../contexts/ToastContext';
 import { Users, UserPlus, Check, X, User } from 'lucide-react';
 
 export default function Friends() {
@@ -7,18 +8,19 @@ export default function Friends() {
     const [invitations, setInvitations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [email, setEmail] = useState('');
-    const [inviteMsg, setInviteMsg] = useState({ text: '', type: '' });
+    const toast = useToast();
 
     const fetchData = async () => {
         try {
-            const [friendsRes, invRes] = await Promise.all([
-                api.get('/friends'),
-                api.get('/friends/invitations')
+            const [friendsData, invitationsData] = await Promise.all([
+                friendService.getFriends(),
+                friendService.getPendingInvitations()
             ]);
-            setFriends(friendsRes.data);
-            setInvitations(invRes.data);
+            setFriends(friendsData);
+            setInvitations(invitationsData);
         } catch (error) {
-            console.error("Failed to fetch friends data", error);
+            console.error('Failed to fetch friends data', error);
+            toast.error('Could not load friends. Please refresh.');
         } finally {
             setLoading(false);
         }
@@ -31,41 +33,45 @@ export default function Friends() {
     const handleInvite = async (e) => {
         e.preventDefault();
         try {
-            await api.post('/friends/invite', { email });
-            setInviteMsg({ text: 'Invitation sent successfully!', type: 'success' });
+            await friendService.sendInvitation(email);
+            toast.success('Invitation sent successfully!');
             setEmail('');
         } catch (error) {
-            setInviteMsg({ text: error.response?.data?.message || 'Failed to send invitation', type: 'error' });
+            toast.error(error.response?.data?.message || 'Failed to send invitation');
         }
-        setTimeout(() => setInviteMsg({ text: '', type: '' }), 3000);
     };
 
     const handleAccept = async (id) => {
         try {
-            await api.post(`/friends/accept/${id}`);
+            await friendService.acceptInvitation(id);
+            toast.success('Friend request accepted!');
             fetchData();
         } catch (error) {
-            console.error("Failed to accept", error);
+            console.error('Failed to accept', error);
+            toast.error('Failed to accept invitation. Please try again.');
         }
     };
 
     const handleDecline = async (id) => {
         try {
-            await api.post(`/friends/decline/${id}`);
+            await friendService.declineInvitation(id);
+            toast.info('Invitation declined.');
             fetchData();
         } catch (error) {
-            console.error("Failed to decline", error);
+            console.error('Failed to decline', error);
+            toast.error('Failed to decline invitation. Please try again.');
         }
     };
 
     const handleRemove = async (id) => {
-        if (window.confirm("Are you sure you want to remove this friend?")) {
-            try {
-                await api.delete(`/friends/${id}`);
-                fetchData();
-            } catch (error) {
-                console.error("Failed to remove", error);
-            }
+        if (!window.confirm('Are you sure you want to remove this friend?')) return;
+        try {
+            await friendService.removeFriend(id);
+            toast.success('Friend removed.');
+            fetchData();
+        } catch (error) {
+            console.error('Failed to remove', error);
+            toast.error('Failed to remove friend. Please try again.');
         }
     };
 
@@ -79,8 +85,8 @@ export default function Friends() {
 
     return (
         <div className="max-w-5xl mx-auto py-8">
-            <h1 className="text-3xl font-bold mb-8" style={{ color: 'var(--brand-brown-800)' }}>Friends & Connections</h1>
-            
+            <h1 className="text-3xl font-bold mb-8" style={{ color: 'var(--brand-brown-800)' }}>Friends &amp; Connections</h1>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left Column: Friends List */}
                 <div className="lg:col-span-2 space-y-6">
@@ -91,7 +97,7 @@ export default function Friends() {
                                 My Friends ({friends.length})
                             </h2>
                         </div>
-                        
+
                         <div className="p-6">
                             {friends.length === 0 ? (
                                 <div className="text-center py-8 text-gray-500">
@@ -115,7 +121,7 @@ export default function Friends() {
                                                     <p className="text-xs text-gray-500">{friend.email}</p>
                                                 </div>
                                             </div>
-                                            <button 
+                                            <button
                                                 onClick={() => handleRemove(friend.userId)}
                                                 className="text-gray-400 hover:text-red-500 p-2 transition-colors"
                                                 title="Remove friend"
@@ -129,7 +135,7 @@ export default function Friends() {
                         </div>
                     </div>
                 </div>
-                
+
                 {/* Right Column: Invites & Requests */}
                 <div className="space-y-6">
                     {/* Add Friend Form */}
@@ -138,18 +144,12 @@ export default function Friends() {
                             <UserPlus className="w-5 h-5 mr-2 text-amber-600" />
                             Invite Friend
                         </h2>
-                        
-                        {inviteMsg.text && (
-                            <div className={`mb-4 p-3 rounded-md text-sm ${inviteMsg.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
-                                {inviteMsg.text}
-                            </div>
-                        )}
-                        
+
                         <form onSubmit={handleInvite} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                                <input 
-                                    type="email" 
+                                <input
+                                    type="email"
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
@@ -157,21 +157,21 @@ export default function Friends() {
                                     className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500"
                                 />
                             </div>
-                            <button 
-                                type="submit" 
+                            <button
+                                type="submit"
                                 className="w-full bg-amber-600 text-white font-medium py-2.5 rounded-lg hover:bg-amber-700 transition-colors shadow-sm"
                             >
                                 Send Invitation
                             </button>
                         </form>
                     </div>
-                    
+
                     {/* Pending Invitations */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                         <h2 className="text-lg font-bold text-gray-900 mb-4">
                             Pending Requests ({invitations.length})
                         </h2>
-                        
+
                         {invitations.length === 0 ? (
                             <p className="text-gray-500 text-sm text-center py-4">No pending invitations.</p>
                         ) : (
@@ -192,13 +192,13 @@ export default function Friends() {
                                             </div>
                                         </div>
                                         <div className="flex space-x-2">
-                                            <button 
+                                            <button
                                                 onClick={() => handleAccept(inv.id)}
                                                 className="flex-1 bg-amber-600 text-white text-xs font-medium py-1.5 rounded-md hover:bg-amber-700 transition-colors flex justify-center items-center"
                                             >
                                                 <Check className="w-3 h-3 mr-1" /> Accept
                                             </button>
-                                            <button 
+                                            <button
                                                 onClick={() => handleDecline(inv.id)}
                                                 className="flex-1 bg-gray-200 text-gray-700 text-xs font-medium py-1.5 rounded-md hover:bg-gray-300 transition-colors flex justify-center items-center"
                                             >

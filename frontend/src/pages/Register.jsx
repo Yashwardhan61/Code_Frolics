@@ -2,48 +2,52 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../config/firebase';
-import { User, Mail, Lock, AlertCircle } from 'lucide-react';
+import { User, Mail, Lock } from 'lucide-react';
 import { authService } from '../api/authService';
+import { useToast } from '../contexts/ToastContext';
 
 export default function Register() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const toast = useToast();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (password !== confirmPassword) {
-            return setError('Passwords do not match');
+            toast.error('Passwords do not match');
+            return;
         }
-        
+
         try {
-            setError('');
             setLoading(true);
-            
-            // Create user in Firebase
+
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            
-            // Update Firebase profile
-            await updateProfile(userCredential.user, {
-                displayName: name
-            });
-            
-            // Sync with our Spring Boot backend
+
+            await updateProfile(userCredential.user, { displayName: name });
+
             try {
                 await authService.syncUser();
             } catch (syncError) {
-                console.error("Backend sync failed, but Firebase user created", syncError);
-                // We'll proceed to dashboard anyway, the filter will sync them eventually
+                console.error('Backend sync failed, but Firebase user created', syncError);
             }
-            
+
+            toast.success('Account created! Welcome to the family.');
             navigate('/dashboard');
         } catch (err) {
-            setError('Failed to create an account. ' + err.message);
+            const msg =
+                err.code === 'auth/email-already-in-use'
+                    ? 'An account with this email already exists.'
+                    : err.code === 'auth/weak-password'
+                    ? 'Password must be at least 6 characters.'
+                    : err.code === 'auth/invalid-email'
+                    ? 'Please enter a valid email address.'
+                    : 'Failed to create an account. ' + err.message;
+            toast.error(msg);
             console.error(err);
         } finally {
             setLoading(false);
@@ -54,16 +58,11 @@ export default function Register() {
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] p-4 relative z-10 w-full">
             <div className="w-full max-w-md bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-xl border border-amber-100">
                 <div className="text-center mb-8">
-                    <h2 className="text-3xl font-bold text-gray-800 font-serif" style={{ color: 'var(--brand-brown-600)' }}>Join the Family</h2>
+                    <h2 className="text-3xl font-bold text-gray-800 font-serif" style={{ color: 'var(--brand-brown-600)' }}>
+                        Join the Family
+                    </h2>
                     <p className="text-gray-600 mt-2">Start building your legacy today</p>
                 </div>
-
-                {error && (
-                    <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-md flex items-start">
-                        <AlertCircle className="w-5 h-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-red-700">{error}</span>
-                    </div>
-                )}
 
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div>

@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { storyService } from '../api/storyService';
-import { PlusCircle, MapPin, Calendar, Clock, Image as ImageIcon } from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
+import { PlusCircle, MapPin, Calendar, Image as ImageIcon } from 'lucide-react';
 
 export default function Dashboard() {
     const { currentUser } = useAuth();
+    const toast = useToast();
     const [stories, setStories] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -15,7 +17,8 @@ export default function Dashboard() {
                 const data = await storyService.getAllStories();
                 setStories(data);
             } catch (err) {
-                console.error("Failed to fetch stories", err);
+                console.error('Failed to fetch stories', err);
+                toast.error('Could not load stories. Please refresh and try again.');
             } finally {
                 setLoading(false);
             }

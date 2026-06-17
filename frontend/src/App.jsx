@@ -17,6 +17,7 @@ import FamilyTree from './pages/FamilyTree';
 import Friends from './pages/Friends';
 import StoryCreate from './pages/StoryCreate';
 import StoryView from './pages/StoryView';
+import Gallery from './pages/Gallery';
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/family-tree" element={<FamilyTree />} />
             <Route path="/friends" element={<Friends />} />
+            <Route path="/gallery" element={<Gallery />} />
             <Route path="/story/create" element={<StoryCreate />} />
             <Route path="/story/:id" element={<StoryView />} />
           </Route>

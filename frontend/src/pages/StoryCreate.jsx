@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { storyService } from '../api/storyService';
+import { useToast } from '../contexts/ToastContext';
 import { ImageIcon, X, Loader2, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function StoryCreate() {
     const navigate = useNavigate();
+    const toast = useToast();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         title: '',
@@ -62,10 +64,11 @@ export default function StoryCreate() {
         try {
             setLoading(true);
             await storyService.createStory(formData, files);
+            toast.success('Memory saved successfully!');
             navigate('/dashboard');
         } catch (error) {
-            console.error("Failed to create story", error);
-            alert("Failed to create story: " + error.message);
+            console.error('Failed to create story', error);
+            toast.error('Failed to save memory: ' + (error.response?.data?.message || error.message));
         } finally {
             setLoading(false);
         }
