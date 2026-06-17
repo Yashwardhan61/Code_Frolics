@@ -3,9 +3,9 @@ spring:
     name: legacy-trunk
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/legacy_trunk
-    username: ${USER}
-    password:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/legacy_trunk}
+    username: ${DB_USER:${USER}}
+    password: ${DB_PASS:}
     driver-class-name: org.postgresql.Driver
 
   jpa:
