@@ -116,6 +116,52 @@ public class StoryService {
     }
 
     @Transactional
+    public StoryResponse updateStory(Long id, StoryRequest request, MultipartFile[] files) {
+        Story story = storyRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Story not found"));
+
+        User currentUser = userService.getCurrentUser();
+        if (!story.getUser().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Unauthorized to edit this story");
+        }
+
+        // Update basic fields
+        story.setTitle(request.getTitle());
+        story.setDescription(request.getDescription());
+        story.setLocation(request.getLocation());
+        story.setStoryDate(request.getStoryDate());
+
+        // Replace tags
+        story.getTags().clear();
+        if (request.getTags() != null) {
+            List<StoryTag> newTags = request.getTags().stream()
+                    .map(tag -> StoryTag.builder().story(story).tag(tag).build())
+                    .collect(Collectors.toList());
+            story.getTags().addAll(newTags);
+        }
+
+        // Handle new file uploads (append)
+        if (files != null && files.length > 0) {
+            for (MultipartFile file : files) {
+                if (file.isEmpty()) continue;
+                String fileName = mediaStorageService.storeFile(file, "story");
+                String mediaType = file.getContentType() != null ? file.getContentType() : "application/octet-stream";
+                StoryMedia media = StoryMedia.builder()
+                        .story(story)
+                        .filePath(fileName)
+                        .mediaType(mediaType)
+                        .originalFilename(file.getOriginalFilename())
+                        .fileSize(file.getSize())
+                        .build();
+                story.getMediaFiles().add(media);
+            }
+        }
+
+        Story saved = storyRepository.save(story);
+        return mapToResponse(saved);
+    }
+
+    @Transactional
     public void deleteStory(Long id) {
         Story story = storyRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Story not found"));
@@ -138,6 +184,7 @@ public class StoryService {
                 .id(story.getId())
                 .userId(story.getUser().getId())
                 .authorName(story.getUser().getDisplayName() != null ? story.getUser().getDisplayName() : story.getUser().getEmail())
+                .authorEmail(story.getUser().getEmail())
                 .authorPhotoUrl(story.getUser().getPhotoUrl())
                 .title(story.getTitle())
                 .description(story.getDescription())

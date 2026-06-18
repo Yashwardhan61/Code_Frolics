@@ -1,5 +1,4 @@
 import api from './axiosConfig';
-
 export const friendService = {
     getFriends: async () => {
         const response = await api.get('/friends');

@@ -358,3 +358,140 @@ h2.brand-title {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--brand-brown-400);
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * FAMILY TREE STYLES
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+.family-tree-page {
+    /* Paternal Theme Colors */
+    --paternal-primary: #3B5E8B;
+    --paternal-secondary: #24385D;
+    --paternal-accent: #4F7CAC;
+    --paternal-light: #D8E2EE;
+    
+    /* Maternal Theme Colors */
+    --maternal-primary: #8B5A2B;
+    --maternal-secondary: #704214;
+    --maternal-accent: #C49A72;
+    --maternal-light: #F7EFE8;
+}
+
+.family-tree-page[data-theme="paternal"] {
+    --theme-primary: var(--paternal-primary);
+    --theme-secondary: var(--paternal-secondary);
+    --theme-accent: var(--paternal-accent);
+    --theme-light: var(--paternal-light);
+    --tree-branch-color: var(--paternal-primary);
+    --tree-leaf-color-1: var(--paternal-primary);
+    --tree-leaf-color-2: var(--paternal-accent);
+}
+
+.family-tree-page[data-theme="maternal"] {
+    --theme-primary: var(--maternal-primary);
+    --theme-secondary: var(--maternal-secondary);
+    --theme-accent: var(--maternal-accent);
+    --theme-light: var(--maternal-light);
+    --tree-branch-color: var(--maternal-primary);
+    --tree-leaf-color-1: var(--maternal-primary);
+    --tree-leaf-color-2: var(--maternal-accent);
+}
+
+/* Background Overlay */
+.background-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+}
+.background-overlay img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.background-overlay::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+}
+.pattern-overlay {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.5;
+    z-index: 1;
+}
+
+/* Page Decorations */
+.page-decorations {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+.leaf {
+    position: absolute;
+    opacity: 0.4;
+    background-size: contain;
+    background-repeat: no-repeat;
+    filter: brightness(0.8) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+.leaf-1 {
+    top: 5%; left: 2%; width: 100px; height: 100px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='%23ffffff'%3E%3Cpath d='M50,0 C70,20 90,40 50,100 C10,40 30,20 50,0'/%3E%3C/svg%3E");
+    transform: rotate(45deg);
+    animation: floatLeaf 15s ease-in-out infinite;
+    --rotation: 45deg;
+}
+.leaf-2 {
+    top: 30%; right: 5%; width: 80px; height: 80px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='%23ffffff'%3E%3Cpath d='M50,0 C80,30 80,70 50,100 C20,70 20,30 50,0'/%3E%3C/svg%3E");
+    transform: rotate(-15deg);
+    animation: floatLeaf 18s ease-in-out infinite 2s;
+    --rotation: -15deg;
+}
+.leaf-3 {
+    bottom: 20%; left: 8%; width: 120px; height: 120px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='%23ffffff'%3E%3Cpath d='M0,50 C30,20 70,20 100,50 C70,80 30,80 0,50'/%3E%3C/svg%3E");
+    transform: rotate(30deg);
+    animation: floatLeaf 20s ease-in-out infinite 1s;
+    --rotation: 30deg;
+}
+.leaf-4 {
+    bottom: 40%; right: 10%; width: 90px; height: 90px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='%23ffffff'%3E%3Cpath d='M50,0 C80,40 60,80 50,100 C40,80 20,40 50,0'/%3E%3C/svg%3E");
+    transform: rotate(-60deg);
+    animation: floatLeaf 17s ease-in-out infinite 3s;
+    --rotation: -60deg;
+}
+@keyframes floatLeaf {
+    0%, 100% { transform: translate(0, 0) rotate(var(--rotation, 0)); }
+    50% { transform: translate(5px, -5px) rotate(calc(var(--rotation, 0) + 5deg)); }
+}
+
+/* Tree Typography */
+.tree-title-font {
+    font-family: 'Playfair Display', serif;
+}
+.tree-subtitle-font {
+    font-family: 'Crimson Text', serif;
+    font-style: italic;
+}
+
+/* Custom Node Styles */
+.tree-node-card {
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid var(--theme-light);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+.tree-node-card:hover {
+    border-color: var(--theme-accent);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+.tree-node-photo {
+    border: 3px solid var(--theme-light);
+}

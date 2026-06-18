@@ -34,6 +34,27 @@ export const storyService = {
         return response.data;
     },
     
+    updateStory: async (id, storyRequest, files) => {
+        const formData = new FormData();
+        
+        formData.append('story', new Blob([JSON.stringify(storyRequest)], {
+            type: 'application/json'
+        }));
+        
+        if (files && files.length > 0) {
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files', files[i]);
+            }
+        }
+        
+        const response = await api.put(`/stories/${id}`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        return response.data;
+    },
+
     deleteStory: async (id) => {
         await api.delete(`/stories/${id}`);
     }

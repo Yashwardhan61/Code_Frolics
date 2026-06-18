@@ -12,3 +12,7 @@ Thumbs.db
 .env.local
 .env.development
 .env.production
+
+# Java
+*.class
+backend/target/

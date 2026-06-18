@@ -17,7 +17,12 @@ import FamilyTree from './pages/FamilyTree';
 import Friends from './pages/Friends';
 import StoryCreate from './pages/StoryCreate';
 import StoryView from './pages/StoryView';
+import StoryEdit from './pages/StoryEdit';
 import Gallery from './pages/Gallery';
+import Welcome from './pages/Welcome';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import Feedback from './pages/Feedback';
 
 function App() {
   return (
@@ -27,8 +32,12 @@ function App() {
           {/* Public Routes */}
           <Route element={<AuthLayout />}>
             <Route path="/" element={<Home />} />
+            <Route path="/welcome" element={<Welcome />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/feedback" element={<Feedback />} />
           </Route>
 
           {/* Protected Routes */}
@@ -44,6 +53,7 @@ function App() {
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/story/create" element={<StoryCreate />} />
             <Route path="/story/:id" element={<StoryView />} />
+            <Route path="/story/:id/edit" element={<StoryEdit />} />
           </Route>
 
           {/* Fallback */}

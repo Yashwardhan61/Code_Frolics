@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { familyService } from '../api/familyService';
 import { useToast } from '../contexts/ToastContext';
-import { TreeDeciduous, Plus, X, Edit2, Trash2, Upload, User, ChevronDown } from 'lucide-react';
+import { TreeDeciduous, Plus, X, Edit2, Trash2, Upload, User, ChevronDown, Leaf, Users, GitBranch, HelpCircle, Download, Moon, Search, Printer, FileImage, FileCode, FileText } from 'lucide-react';
 
 /* ─── helpers ──────────────────────────────────────────────────────────────── */
 
@@ -24,6 +24,15 @@ function formatDate(d) {
     return new Date(d).getFullYear();
 }
 
+function getTreeDepth(nodes) {
+    if (!nodes || nodes.length === 0) return 0;
+    let maxDepth = 0;
+    for (const node of nodes) {
+        maxDepth = Math.max(maxDepth, 1 + getTreeDepth(node.children));
+    }
+    return maxDepth;
+}
+
 /* ─── TreeNode card ─────────────────────────────────────────────────────────── */
 
 function TreeNode({ node, onEdit, onDelete, onAddChild, depth = 0 }) {
@@ -34,25 +43,25 @@ function TreeNode({ node, onEdit, onDelete, onAddChild, depth = 0 }) {
         <div className="flex flex-col items-center">
             {/* Card */}
             <div
-                className="group relative bg-white border-2 border-amber-100 rounded-2xl shadow-sm hover:shadow-md hover:border-amber-300 transition-all duration-200 w-40 text-center cursor-pointer"
+                className="group relative tree-node-card w-40 text-center cursor-pointer"
                 style={{ minWidth: 140 }}
             >
                 {/* Photo */}
-                <div className="mt-4 mx-auto w-16 h-16 rounded-full overflow-hidden bg-amber-50 border-2 border-amber-200 flex items-center justify-center">
+                <div className="mt-4 mx-auto w-16 h-16 rounded-full overflow-hidden tree-node-photo flex items-center justify-center bg-white">
                     {node.photoUrl ? (
                         <img src={node.photoUrl} alt={node.name} className="w-full h-full object-cover" />
                     ) : (
-                        <User className="w-8 h-8 text-amber-300" />
+                        <User className="w-8 h-8" style={{ color: 'var(--theme-accent)' }} />
                     )}
                 </div>
 
                 <div className="px-3 pb-3 pt-2">
                     <p className="font-semibold text-gray-900 text-sm leading-tight truncate">{node.name}</p>
                     {node.relationship && (
-                        <p className="text-[11px] text-amber-600 font-medium mt-0.5">{node.relationship}</p>
+                        <p className="text-[11px] font-medium mt-0.5" style={{ color: 'var(--theme-primary)' }}>{node.relationship}</p>
                     )}
                     {(node.birthDate || node.deathDate) && (
-                        <p className="text-[10px] text-gray-400 mt-0.5">
+                        <p className="text-[10px] text-gray-500 mt-0.5">
                             {formatDate(node.birthDate)}{node.deathDate ? ` — ${formatDate(node.deathDate)}` : ''}
                         </p>
                     )}
@@ -63,7 +72,8 @@ function TreeNode({ node, onEdit, onDelete, onAddChild, depth = 0 }) {
                     <button
                         onClick={(e) => { e.stopPropagation(); onAddChild(node); }}
                         title="Add child"
-                        className="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center shadow hover:bg-amber-600 transition-colors"
+                        className="w-6 h-6 rounded-full text-white flex items-center justify-center shadow transition-colors"
+                        style={{ backgroundColor: 'var(--theme-accent)' }}
                     >
                         <Plus className="w-3 h-3" />
                     </button>
@@ -87,9 +97,10 @@ function TreeNode({ node, onEdit, onDelete, onAddChild, depth = 0 }) {
                 {hasChildren && (
                     <button
                         onClick={(e) => { e.stopPropagation(); setExpanded(p => !p); }}
-                        className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-amber-100 border border-amber-300 flex items-center justify-center shadow-sm hover:bg-amber-200 transition-colors"
+                        className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full flex items-center justify-center shadow-sm transition-transform hover:scale-110"
+                        style={{ backgroundColor: 'var(--theme-light)', border: '1px solid var(--theme-accent)' }}
                     >
-                        <ChevronDown className={`w-3 h-3 text-amber-700 transition-transform ${expanded ? '' : '-rotate-90'}`} />
+                        <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? '' : '-rotate-90'}`} style={{ color: 'var(--theme-primary)' }} />
                     </button>
                 )}
             </div>
@@ -98,26 +109,27 @@ function TreeNode({ node, onEdit, onDelete, onAddChild, depth = 0 }) {
             {hasChildren && expanded && (
                 <div className="relative mt-6">
                     {/* Vertical line down from card */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px bg-amber-200" style={{ height: 24 }} />
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px" style={{ height: 24, backgroundColor: 'var(--tree-branch-color)' }} />
 
                     <div className="flex items-start gap-8 relative" style={{ paddingTop: 24 }}>
                         {/* Horizontal connector bar */}
                         {node.children.length > 1 && (
                             <div
-                                className="absolute bg-amber-200"
+                                className="absolute"
                                 style={{
                                     top: 24,
                                     left: `calc(50% - ${(node.children.length - 1) * 0}px)`,
-                                    height: 1,
+                                    height: 2,
                                     width: `calc(100% - 80px)`,
-                                    marginLeft: 40
+                                    marginLeft: 40,
+                                    backgroundColor: 'var(--tree-branch-color)'
                                 }}
                             />
                         )}
                         {node.children.map((child, i) => (
                             <div key={child.id} className="flex flex-col items-center relative">
                                 {/* Vertical line to child */}
-                                <div className="w-px bg-amber-200 mb-2" style={{ height: 20 }} />
+                                <div className="w-px mb-2" style={{ height: 20, backgroundColor: 'var(--tree-branch-color)' }} />
                                 <TreeNode
                                     node={child}
                                     onEdit={onEdit}
@@ -359,6 +371,8 @@ export default function FamilyTree() {
     const [modal, setModal] = useState(null);
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [photoTarget, setPhotoTarget] = useState(null);
+    const [showHelp, setShowHelp] = useState(false);
+    const [showExportOptions, setShowExportOptions] = useState(false);
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -407,67 +421,89 @@ export default function FamilyTree() {
     };
 
     const tree = buildTree(members);
+    const depth = getTreeDepth(tree);
 
     return (
-        <div className="max-w-full py-8">
-            {/* Header */}
-            <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold" style={{ color: 'var(--brand-brown-800)' }}>Family Tree</h1>
-                    <p className="text-gray-500 mt-1 text-sm">{members.length} members in {treeType} tree</p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                    {/* Tree type tabs */}
-                    <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
-                        {['paternal', 'maternal'].map(t => (
-                            <button
-                                key={t}
-                                onClick={() => setTreeType(t)}
-                                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all capitalize ${
-                                    treeType === t ? 'bg-white shadow text-amber-700' : 'text-gray-500 hover:text-gray-700'
-                                }`}
-                            >
-                                {t}
-                            </button>
-                        ))}
-                    </div>
-
-                    <button
-                        onClick={() => setModal({ mode: 'add', initial: { parentMemberId: null } })}
-                        className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-xl text-sm transition-colors shadow-sm"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Add Member
-                    </button>
-                </div>
+        <div className="family-tree-page relative min-h-screen pb-24" data-theme={treeType} style={{ backgroundColor: 'var(--theme-primary)' }}>
+            {/* Background elements */}
+            <div className="background-overlay" aria-hidden="true">
+                <img src={`https://picsum.photos/seed/${treeType}/1600/900`} alt="Background" />
+                <div className="pattern-overlay"></div>
             </div>
 
+            <div className="page-decorations">
+                <div className="leaf leaf-1"></div>
+                <div className="leaf leaf-2"></div>
+                <div className="leaf leaf-3"></div>
+                <div className="leaf leaf-4"></div>
+            </div>
+
+            {/* Content wrapper */}
+            <div className="relative z-10 max-w-full pt-12">
+                {/* Header Section */}
+                <div className="max-w-4xl mx-auto px-4 mb-12 text-center">
+                    <div className="inline-flex items-center justify-center space-x-4 mb-4">
+                        <Leaf className="w-8 h-8 opacity-70" style={{ color: 'var(--theme-light)' }} />
+                        <h1 className="text-4xl md:text-5xl font-bold tree-title-font" style={{ color: 'white', textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+                            {treeType === 'paternal' ? 'Paternal' : 'Maternal'} Family Tree
+                        </h1>
+                        <Leaf className="w-8 h-8 opacity-70" style={{ color: 'var(--theme-light)' }} />
+                    </div>
+                    <p className="text-xl tree-subtitle-font mb-8" style={{ color: 'var(--theme-light)' }}>
+                        Trace your lineage and preserve your family heritage
+                    </p>
+
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                        {/* Theme Toggle Tabs */}
+                        <div className="flex bg-black/20 backdrop-blur-sm p-1 rounded-full border border-white/10">
+                            {['paternal', 'maternal'].map(t => (
+                                <button
+                                    key={t}
+                                    onClick={() => setTreeType(t)}
+                                    className={`px-6 py-2 rounded-full text-sm font-medium transition-all capitalize ${
+                                        treeType === t ? 'bg-white shadow-lg text-gray-900' : 'text-white/80 hover:text-white'
+                                    }`}
+                                >
+                                    {t}
+                                </button>
+                            ))}
+                        </div>
+
+                        <button
+                            onClick={() => setModal({ mode: 'add', initial: { parentMemberId: null } })}
+                            className="flex items-center gap-2 px-6 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-medium rounded-full text-sm transition-colors border border-white/30 shadow-lg"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Add Member
+                        </button>
+                    </div>
+                </div>
+
             {/* Tree canvas */}
-            <div className="w-full overflow-x-auto pb-8">
+            <div className="w-full overflow-x-auto pb-12 pt-8">
                 {loading ? (
                     <div className="flex justify-center items-center h-64">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700" />
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
                     </div>
                 ) : tree.length === 0 ? (
-                    <div className="max-w-7xl mx-auto px-4">
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-16 text-center">
-                            <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <TreeDeciduous className="w-10 h-10 text-amber-300" />
+                    <div className="max-w-3xl mx-auto px-4">
+                        <div className="bg-white/10 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 p-12 text-center">
+                            <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <TreeDeciduous className="w-10 h-10 text-white" />
                             </div>
-                            <h3 className="text-xl font-medium text-gray-700 mb-2">No members yet</h3>
-                            <p className="text-gray-400 text-sm mb-6">Start building your {treeType} family tree.</p>
+                            <h3 className="text-2xl font-bold text-white mb-3">Your Family Tree Journey Begins</h3>
+                            <p className="text-white/80 text-base mb-8 max-w-lg mx-auto">Begin documenting your {treeType} heritage by adding your oldest known ancestor. Create a lasting legacy for future generations.</p>
                             <button
                                 onClick={() => setModal({ mode: 'add', initial: { parentMemberId: null } })}
-                                className="inline-flex items-center gap-2 px-6 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-xl text-sm transition-colors"
+                                className="inline-flex items-center gap-2 px-8 py-3 bg-white text-gray-900 font-bold rounded-full text-base transition-transform hover:scale-105 shadow-xl"
                             >
-                                <Plus className="w-4 h-4" />
-                                Add First Member
+                                <Plus className="w-5 h-5" />
+                                Start Your Family Tree
                             </button>
                         </div>
                     </div>
                 ) : (
-                    <div className="flex gap-12 px-8 pb-4" style={{ minWidth: 'max-content' }}>
+                    <div className="flex justify-center gap-12 px-8" style={{ minWidth: 'max-content' }}>
                         {tree.map(root => (
                             <TreeNode
                                 key={root.id}
@@ -481,14 +517,39 @@ export default function FamilyTree() {
                 )}
             </div>
 
-            {/* Hint bar */}
-            {members.length > 0 && (
-                <div className="max-w-7xl mx-auto px-4 mt-2">
-                    <p className="text-xs text-gray-400 text-center">
-                        Hover a card to edit, delete, or add a child member. Click the collapse arrow to fold branches.
-                    </p>
+            </div> {/* End of z-10 content wrapper */}
+
+            {/* Footer Quick Actions Bar */}
+            <div className="fixed bottom-0 left-0 right-0 bg-black/60 backdrop-blur-md border-t border-white/20 text-white z-40 p-3 px-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div className="flex items-center gap-4">
+                    <button onClick={() => setShowHelp(true)} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors" title="Help">
+                        <HelpCircle className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => setShowExportOptions(true)} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors" title="Export">
+                        <Download className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => toast.info('Theme toggle coming soon!')} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors" title="Toggle Theme">
+                        <Moon className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => toast.info('Zoom functionality coming soon!')} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors" title="Reset Zoom">
+                        <Search className="w-5 h-5" />
+                    </button>
                 </div>
-            )}
+
+                <div className="flex items-center gap-6 text-sm font-medium">
+                    <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-white/70" />
+                        <span>{members.length} members</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <GitBranch className="w-4 h-4 text-white/70" />
+                        <span>{depth} generations</span>
+                    </div>
+                    <div className="hidden md:block opacity-60 text-xs ml-4">
+                        Yaado ka Baksa • Family Tree
+                    </div>
+                </div>
+            </div>
 
             {/* Add / Edit Modal */}
             {modal && (
@@ -529,15 +590,49 @@ export default function FamilyTree() {
                 </div>
             )}
 
-            {/* Photo upload modal */}
-            {photoTarget && (
-                <PhotoModal
-                    member={photoTarget}
-                    treeType={treeType}
-                    onClose={() => setPhotoTarget(null)}
-                    onUploaded={handlePhotoUploaded}
-                    toast={toast}
-                />
+            {/* Help Modal */}
+            {showHelp && (
+                <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setShowHelp(false)}>
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between mb-4 pb-4 border-b">
+                            <h2 className="font-bold text-gray-900 flex items-center gap-2"><HelpCircle className="w-5 h-5" /> Family Tree Help</h2>
+                            <button onClick={() => setShowHelp(false)} className="text-gray-400 hover:text-gray-700"><X className="w-5 h-5" /></button>
+                        </div>
+                        <div className="space-y-4 text-sm text-gray-600">
+                            <div>
+                                <h3 className="font-bold text-gray-800 mb-1">Getting Started</h3>
+                                <p>Click "Start Your Family Tree" to begin. Add yourself or the oldest ancestor first. Then add relatives by clicking the <Plus className="inline w-3 h-3"/> icon on a person's card.</p>
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-gray-800 mb-1">Managing Your Tree</h3>
+                                <p>Hover over any person to edit their details or delete them. Click the arrow button under a person to hide or show their children.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Export Modal (Placeholder) */}
+            {showExportOptions && (
+                <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setShowExportOptions(false)}>
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between mb-6 pb-4 border-b">
+                            <h2 className="font-bold text-gray-900 flex items-center gap-2"><Download className="w-5 h-5" /> Export Family Tree</h2>
+                            <button onClick={() => setShowExportOptions(false)} className="text-gray-400 hover:text-gray-700"><X className="w-5 h-5" /></button>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                            <button className="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-xl hover:bg-amber-50 hover:border-amber-200 transition-colors" onClick={() => {toast.info('PDF Export coming soon!'); setShowExportOptions(false)}}>
+                                <FileText className="w-8 h-8 text-amber-600 mb-2" />
+                                <span className="font-medium text-gray-800">Save as PDF</span>
+                            </button>
+                            <button className="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-xl hover:bg-amber-50 hover:border-amber-200 transition-colors" onClick={() => {toast.info('Image Export coming soon!'); setShowExportOptions(false)}}>
+                                <FileImage className="w-8 h-8 text-amber-600 mb-2" />
+                                <span className="font-medium text-gray-800">Save as Image</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

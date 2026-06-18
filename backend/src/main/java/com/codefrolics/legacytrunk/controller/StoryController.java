@@ -34,6 +34,14 @@ public class StoryController {
         return ResponseEntity.ok(storyService.createStory(request, files));
     }
 
+    @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
+    public ResponseEntity<StoryResponse> updateStory(
+            @PathVariable Long id,
+            @RequestPart("story") StoryRequest request,
+            @RequestPart(value = "files", required = false) MultipartFile[] files) {
+        return ResponseEntity.ok(storyService.updateStory(id, request, files));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteStory(@PathVariable Long id) {
         storyService.deleteStory(id);
