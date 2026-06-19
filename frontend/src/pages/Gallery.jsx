@@ -35,7 +35,7 @@ export default function Gallery() {
 
     const filtered = filter === 'ALL'
         ? allMedia
-        : allMedia.filter(m => m.mediaType === filter);
+        : allMedia.filter(m => m.mediaType?.startsWith(filter));
 
     const openLightbox = (item) => setLightbox(item);
     const closeLightbox = useCallback(() => setLightbox(null), []);
@@ -47,8 +47,8 @@ export default function Gallery() {
         return () => window.removeEventListener('keydown', handler);
     }, [closeLightbox]);
 
-    const imageCounts = allMedia.filter(m => m.mediaType === 'IMAGE').length;
-    const videoCounts = allMedia.filter(m => m.mediaType === 'VIDEO').length;
+    const imageCounts = allMedia.filter(m => m.mediaType?.startsWith('image')).length;
+    const videoCounts = allMedia.filter(m => m.mediaType?.startsWith('video')).length;
 
     return (
         <div className="max-w-7xl mx-auto py-8">
@@ -65,8 +65,8 @@ export default function Gallery() {
                 <div className="flex gap-2 bg-gray-100 p-1 rounded-xl">
                     {[
                         { key: 'ALL', label: 'All', icon: null },
-                        { key: 'IMAGE', label: 'Photos', icon: <ImageIcon className="w-4 h-4" /> },
-                        { key: 'VIDEO', label: 'Videos', icon: <Film className="w-4 h-4" /> },
+                        { key: 'image', label: 'Photos', icon: <ImageIcon className="w-4 h-4" /> },
+                        { key: 'video', label: 'Videos', icon: <Film className="w-4 h-4" /> },
                     ].map(tab => (
                         <button
                             key={tab.key}
@@ -106,7 +106,7 @@ export default function Gallery() {
                             className="break-inside-avoid group relative rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-md transition-shadow bg-gray-100"
                             onClick={() => openLightbox(item)}
                         >
-                            {item.mediaType === 'VIDEO' ? (
+                            {item.mediaType?.startsWith('video') ? (
                                 <div className="relative aspect-video bg-gray-900">
                                     <video
                                         src={item.mediaUrl}
@@ -162,7 +162,7 @@ export default function Gallery() {
                         className="relative max-w-5xl max-h-[90vh] w-full flex flex-col items-center"
                         onClick={e => e.stopPropagation()}
                     >
-                        {lightbox.mediaType === 'VIDEO' ? (
+                        {lightbox.mediaType?.startsWith('video') ? (
                             <video
                                 src={lightbox.mediaUrl}
                                 controls

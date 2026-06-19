@@ -168,7 +168,11 @@ export default function StoryCreate() {
                         <div className="flex flex-wrap gap-4 mb-4">
                             {previews.map((preview, index) => (
                                 <div key={index} className="relative w-32 h-32 rounded-xl overflow-hidden border border-gray-200 group">
-                                    <img src={preview} alt={`Preview ${index}`} className="w-full h-full object-cover" />
+                                    {files[index]?.type?.startsWith('video') ? (
+                                        <video src={preview} className="w-full h-full object-cover" muted />
+                                    ) : (
+                                        <img src={preview} alt={`Preview ${index}`} className="w-full h-full object-cover" />
+                                    )}
                                     <button 
                                         type="button"
                                         onClick={() => removeFile(index)}
