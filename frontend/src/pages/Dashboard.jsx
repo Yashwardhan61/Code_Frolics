@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { storyService } from '../api/storyService';
 import { useToast } from '../contexts/ToastContext';
+<<<<<<< HEAD
 import {
     PlusCircle, MapPin, Image as ImageIcon, Clock, Heart,
     MessageCircle, ChevronLeft, ChevronRight, BookOpen, Users,
@@ -191,6 +192,9 @@ function ReactionButton({ storyId }) {
 /* ====================================================================
    MAIN DASHBOARD
    ==================================================================== */
+=======
+import { PlusCircle, MapPin, Calendar, Image as ImageIcon, Play } from 'lucide-react';
+>>>>>>> Editing
 
 export default function Dashboard() {
     const { currentUser } = useAuth();
@@ -359,6 +363,7 @@ export default function Dashboard() {
                     </Link>
                 </div>
             ) : (
+<<<<<<< HEAD
                 <div className="space-y-16">
 
                     {/* ── 2. "On This Day" Card ── */}
@@ -372,6 +377,38 @@ export default function Dashboard() {
                                             <path d="M100 0 C60 0, 0 40, 0 100" stroke="currentColor" strokeWidth="2" className="text-amber-700"/>
                                             <path d="M100 20 C70 20, 20 60, 20 100" stroke="currentColor" strokeWidth="1.5" className="text-amber-500"/>
                                         </svg>
+=======
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {stories.map(story => (
+                        <Link key={story.id} to={`/story/${story.id}`} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group">
+                            {/* Cover Image */}
+                            <div className="h-48 bg-gray-200 relative overflow-hidden">
+                                {story.mediaFiles && story.mediaFiles.length > 0 ? (
+                                    story.mediaFiles[0].mediaType?.startsWith('video') ? (
+                                        <div className="relative w-full h-full">
+                                            <video 
+                                                src={story.mediaFiles[0].mediaUrl} 
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                muted
+                                                preload="metadata"
+                                            />
+                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center">
+                                                    <Play className="w-5 h-5 text-white ml-0.5" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <img 
+                                            src={story.mediaFiles[0].mediaUrl} 
+                                            alt={story.title} 
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                        />
+                                    )
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100">
+                                        <ImageIcon className="w-12 h-12 text-amber-300" />
+>>>>>>> Editing
                                     </div>
 
                                     <div className="flex flex-col md:flex-row items-start md:items-center gap-6">

@@ -210,7 +210,11 @@ export default function StoryEdit() {
                             <div className="flex flex-wrap gap-4">
                                 {existingMedia.map((media) => (
                                     <div key={media.id} className="relative w-32 h-32 rounded-xl overflow-hidden border border-gray-200">
-                                        <img src={media.mediaUrl} alt="" className="w-full h-full object-cover" />
+                                        {media.mediaType?.startsWith('video') ? (
+                                            <video src={media.mediaUrl} className="w-full h-full object-cover" muted />
+                                        ) : (
+                                            <img src={media.mediaUrl} alt="" className="w-full h-full object-cover" />
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -223,7 +227,11 @@ export default function StoryEdit() {
                         <div className="flex flex-wrap gap-4">
                             {newPreviews.map((preview, index) => (
                                 <div key={index} className="relative w-32 h-32 rounded-xl overflow-hidden border border-gray-200 group">
-                                    <img src={preview} alt={`New ${index}`} className="w-full h-full object-cover" />
+                                    {newFiles[index]?.type?.startsWith('video') ? (
+                                        <video src={preview} className="w-full h-full object-cover" muted />
+                                    ) : (
+                                        <img src={preview} alt={`New ${index}`} className="w-full h-full object-cover" />
+                                    )}
                                     <button 
                                         type="button"
                                         onClick={() => removeNewFile(index)}

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { storyService } from '../api/storyService';
 import { useToast } from '../contexts/ToastContext';
-import { ArrowLeft, MapPin, Calendar, Trash2, Pencil } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Trash2, Pencil, Play } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function StoryView() {
@@ -98,11 +98,20 @@ export default function StoryView() {
                 {/* Media Gallery Header */}
                 {story.mediaFiles && story.mediaFiles.length > 0 && (
                     <div className="relative bg-black h-96 md:h-[500px] flex items-center justify-center">
-                        <img 
-                            src={story.mediaFiles[activeMedia].mediaUrl} 
-                            alt={`${story.title} - Media ${activeMedia + 1}`}
-                            className="max-w-full max-h-full object-contain"
-                        />
+                        {story.mediaFiles[activeMedia].mediaType?.startsWith('video') ? (
+                            <video 
+                                key={activeMedia}
+                                src={story.mediaFiles[activeMedia].mediaUrl} 
+                                controls
+                                className="max-w-full max-h-full object-contain"
+                            />
+                        ) : (
+                            <img 
+                                src={story.mediaFiles[activeMedia].mediaUrl} 
+                                alt={`${story.title} - Media ${activeMedia + 1}`}
+                                className="max-w-full max-h-full object-contain"
+                            />
+                        )}
                         
                         {/* Gallery Thumbnails */}
                         {story.mediaFiles.length > 1 && (
@@ -113,7 +122,13 @@ export default function StoryView() {
                                         onClick={() => setActiveMedia(idx)}
                                         className={`w-16 h-16 rounded-md overflow-hidden border-2 transition-all ${activeMedia === idx ? 'border-amber-500 shadow-lg scale-110' : 'border-transparent opacity-60 hover:opacity-100'}`}
                                     >
-                                        <img src={media.mediaUrl} alt="" className="w-full h-full object-cover" />
+                                        {media.mediaType?.startsWith('video') ? (
+                                            <div className="w-full h-full bg-gray-900 flex items-center justify-center">
+                                                <Play className="w-4 h-4 text-white" />
+                                            </div>
+                                        ) : (
+                                            <img src={media.mediaUrl} alt="" className="w-full h-full object-cover" />
+                                        )}
                                     </button>
                                 ))}
                             </div>
