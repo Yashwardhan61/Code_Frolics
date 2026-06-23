@@ -495,3 +495,185 @@ h2.brand-title {
 .tree-node-photo {
     border: 3px solid var(--theme-light);
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * VINTAGE SCRAPBOOK & PARCHMENT JOURNAL THEME
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+.vintage-paper-container {
+    background-color: #fcf9f2;
+    border: 1px solid #e8dec9;
+    box-shadow: 
+        0 20px 40px rgba(43, 30, 20, 0.12),
+        inset 0 0 80px rgba(139, 90, 43, 0.05);
+    border-radius: 28px;
+    overflow: hidden;
+}
+
+.vintage-desk {
+    background-color: #271a10;
+    background-image: 
+        linear-gradient(rgba(0, 0, 0, 0.25) 1px, transparent 1px),
+        radial-gradient(rgba(218, 165, 32, 0.05) 1px, transparent 1px);
+    background-size: 100% 4px, 24px 24px;
+    box-shadow: inset -15px 0 30px rgba(0, 0, 0, 0.5);
+}
+
+.vintage-journal-page {
+    background-color: #fbf8f0;
+    background-image: 
+        radial-gradient(rgba(139, 90, 43, 0.02) 1px, transparent 1px),
+        linear-gradient(to right, rgba(139, 90, 43, 0.04) 1px, transparent 1px);
+    background-size: 20px 20px, 100% 100%;
+    box-shadow: 
+        -8px 0 20px rgba(0, 0, 0, 0.04),
+        inset 24px 0 32px rgba(139, 90, 43, 0.03);
+    position: relative;
+}
+
+/* Red vertical margin line common in vintage notebooks */
+.vintage-journal-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 40px;
+    bottom: 0;
+    width: 1px;
+    background-color: rgba(196, 79, 79, 0.25);
+    pointer-events: none;
+    z-index: 10;
+}
+
+.vintage-input-title {
+    font-family: 'Playfair Display', 'Georgia', serif;
+    color: #2e1c0c;
+    border-bottom: 2px dashed rgba(139, 90, 43, 0.2) !important;
+    background: transparent !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    padding-bottom: 8px !important;
+    transition: all 0.3s ease;
+}
+
+.vintage-input-title:focus {
+    border-bottom: 2px solid #8b5628 !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.vintage-textarea-description {
+    font-family: 'Playfair Display', 'Georgia', serif;
+    font-size: 0.95rem !important;
+    color: #3e2715;
+    line-height: 2rem !important;
+    padding-left: 20px !important;
+    background: repeating-linear-gradient(
+        transparent,
+        transparent 31px,
+        rgba(139, 90, 43, 0.08) 31px,
+        rgba(139, 90, 43, 0.08) 32px
+    ) !important;
+    background-attachment: local !important;
+    border: none !important;
+    resize: none !important;
+    transition: all 0.3s ease;
+}
+
+.vintage-textarea-description:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.vintage-label {
+    font-family: 'Playfair Display', 'Georgia', serif;
+    color: #704214;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.vintage-card-shadow {
+    box-shadow: 0 10px 25px -5px rgba(112, 66, 20, 0.1), 0 8px 10px -6px rgba(112, 66, 20, 0.1);
+}
+
+.scrapbook-photo-slot {
+    background-color: #f7f3e8;
+    border: 1px solid #e5dbbe;
+    padding: 10px;
+    box-shadow: 
+        0 8px 18px rgba(0, 0, 0, 0.3),
+        inset 0 0 15px rgba(139, 90, 43, 0.05);
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+/* Vintage photo corners */
+.photo-corner-tl {
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    width: 20px;
+    height: 20px;
+    border-top: 3px solid #704214;
+    border-left: 3px solid #704214;
+    pointer-events: none;
+}
+.photo-corner-tr {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 20px;
+    height: 20px;
+    border-top: 3px solid #704214;
+    border-right: 3px solid #704214;
+    pointer-events: none;
+}
+.photo-corner-bl {
+    position: absolute;
+    bottom: -5px;
+    left: -5px;
+    width: 20px;
+    height: 20px;
+    border-bottom: 3px solid #704214;
+    border-left: 3px solid #704214;
+    pointer-events: none;
+}
+.photo-corner-br {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    width: 20px;
+    height: 20px;
+    border-bottom: 3px solid #704214;
+    border-right: 3px solid #704214;
+    pointer-events: none;
+}
+
+/* Paper clip asset */
+.paperclip-decoration {
+    position: absolute;
+    top: -12px;
+    right: 40px;
+    width: 28px;
+    height: 60px;
+    border: 3px solid #9c8e77;
+    border-radius: 12px;
+    background: transparent;
+    box-shadow: 2px 4px 6px rgba(0,0,0,0.15);
+    z-index: 50;
+    pointer-events: none;
+    transform: rotate(-10deg);
+}
+
+.paperclip-decoration::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 4px;
+    right: 4px;
+    bottom: 8px;
+    border: 2px solid #9c8e77;
+    border-radius: 8px;
+}
+

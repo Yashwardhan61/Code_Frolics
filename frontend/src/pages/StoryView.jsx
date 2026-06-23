@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { storyService } from '../api/storyService';
 import { useToast } from '../contexts/ToastContext';
-import { ArrowLeft, MapPin, Calendar, Trash2, Pencil } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Trash2, Pencil, Music, Film } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function StoryView() {
@@ -96,24 +96,77 @@ export default function StoryView() {
                 {/* Media Gallery Header */}
                 {story.mediaFiles && story.mediaFiles.length > 0 && (
                     <div className="relative bg-black h-96 md:h-[500px] flex items-center justify-center">
-                        <img 
-                            src={story.mediaFiles[activeMedia].mediaUrl} 
-                            alt={`${story.title} - Media ${activeMedia + 1}`}
-                            className="max-w-full max-h-full object-contain"
-                        />
+                        {(() => {
+                            const currentMedia = story.mediaFiles[activeMedia];
+                            const isAudio = currentMedia.mediaType?.startsWith('audio/') || currentMedia.mediaUrl?.endsWith('.webm') || currentMedia.mediaUrl?.endsWith('.wav') || currentMedia.mediaUrl?.endsWith('.mp3');
+                            const isVideo = currentMedia.mediaType?.startsWith('video/');
+
+                            if (isAudio) {
+                                return (
+                                    <div className="w-full max-w-md p-8 bg-amber-50 rounded-2xl border border-amber-200 flex flex-col items-center gap-4 text-center z-10 mx-4 shadow-xl">
+                                        <div className="w-16 h-16 bg-amber-700 text-white rounded-full flex items-center justify-center shadow-lg">
+                                            <Music className="w-8 h-8 animate-bounce" style={{ animationDuration: '3s' }} />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-bold text-amber-950 font-serif">Voice Record / Audio Memory</h3>
+                                            <p className="text-xs text-amber-800 mt-1">Audio Recording</p>
+                                        </div>
+                                        <audio 
+                                            src={currentMedia.mediaUrl} 
+                                            controls 
+                                            className="w-full mt-2"
+                                        />
+                                    </div>
+                                );
+                            }
+
+                            if (isVideo) {
+                                return (
+                                    <video 
+                                        src={currentMedia.mediaUrl} 
+                                        controls 
+                                        className="max-w-full max-h-full object-contain"
+                                    />
+                                );
+                            }
+
+                            return (
+                                <img 
+                                    src={currentMedia.mediaUrl} 
+                                    alt={`${story.title} - Media ${activeMedia + 1}`}
+                                    className="max-w-full max-h-full object-contain"
+                                />
+                            );
+                        })()}
                         
                         {/* Gallery Thumbnails */}
                         {story.mediaFiles.length > 1 && (
-                            <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 px-4">
-                                {story.mediaFiles.map((media, idx) => (
-                                    <button 
-                                        key={media.id}
-                                        onClick={() => setActiveMedia(idx)}
-                                        className={`w-16 h-16 rounded-md overflow-hidden border-2 transition-all ${activeMedia === idx ? 'border-amber-500 shadow-lg scale-110' : 'border-transparent opacity-60 hover:opacity-100'}`}
-                                    >
-                                        <img src={media.mediaUrl} alt="" className="w-full h-full object-cover" />
-                                    </button>
-                                ))}
+                            <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 px-4 z-10 bg-black/40 py-2">
+                                {story.mediaFiles.map((media, idx) => {
+                                    const thumbIsAudio = media.mediaType?.startsWith('audio/') || media.mediaUrl?.endsWith('.webm') || media.mediaUrl?.endsWith('.wav') || media.mediaUrl?.endsWith('.mp3');
+                                    const thumbIsVideo = media.mediaType?.startsWith('video/');
+                                    return (
+                                        <button 
+                                            key={media.id}
+                                            onClick={() => setActiveMedia(idx)}
+                                            className={`w-16 h-16 rounded-md overflow-hidden border-2 transition-all flex items-center justify-center bg-gray-900 ${activeMedia === idx ? 'border-amber-500 shadow-lg scale-110' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                                        >
+                                            {thumbIsAudio ? (
+                                                <div className="w-full h-full flex flex-col items-center justify-center bg-amber-50 p-1">
+                                                    <Music className="w-6 h-6 text-amber-700" />
+                                                    <span className="text-[8px] text-amber-800 font-medium truncate w-full text-center">Audio</span>
+                                                </div>
+                                            ) : thumbIsVideo ? (
+                                                <div className="w-full h-full flex flex-col items-center justify-center bg-slate-800 p-1">
+                                                    <Film className="w-6 h-6 text-white" />
+                                                    <span className="text-[8px] text-white/80 font-medium truncate w-full text-center">Video</span>
+                                                </div>
+                                            ) : (
+                                                <img src={media.mediaUrl} alt="" className="w-full h-full object-cover" />
+                                            )}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>

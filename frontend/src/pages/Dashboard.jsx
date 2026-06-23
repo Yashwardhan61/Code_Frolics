@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { storyService } from '../api/storyService';
 import { useToast } from '../contexts/ToastContext';
-import { PlusCircle, MapPin, Calendar, Image as ImageIcon } from 'lucide-react';
+import { PlusCircle, MapPin, Calendar, Image as ImageIcon, Music, Film } from 'lucide-react';
 
 export default function Dashboard() {
     const { currentUser } = useAuth();
@@ -73,11 +73,44 @@ export default function Dashboard() {
                             {/* Cover Image */}
                             <div className="h-48 bg-gray-200 relative overflow-hidden">
                                 {story.mediaFiles && story.mediaFiles.length > 0 ? (
-                                    <img 
-                                        src={story.mediaFiles[0].mediaUrl} 
-                                        alt={story.title} 
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                    />
+                                    (() => {
+                                        const firstMedia = story.mediaFiles[0];
+                                        const isAudio = firstMedia.mediaType?.startsWith('audio/') || firstMedia.mediaUrl?.endsWith('.webm') || firstMedia.mediaUrl?.endsWith('.wav') || firstMedia.mediaUrl?.endsWith('.mp3');
+                                        const isVideo = firstMedia.mediaType?.startsWith('video/');
+                                        
+                                        if (isAudio) {
+                                            return (
+                                                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100/60 p-4 border-b border-gray-100">
+                                                    <Music className="w-10 h-10 text-amber-700 mb-2 group-hover:scale-110 transition-transform duration-300" />
+                                                    <span className="text-xs text-amber-800 font-semibold font-serif text-center">Voice Recording Included</span>
+                                                </div>
+                                            );
+                                        }
+                                        
+                                        if (isVideo) {
+                                            return (
+                                                <div className="w-full h-full relative">
+                                                    <video 
+                                                        src={firstMedia.mediaUrl} 
+                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                        muted
+                                                        preload="metadata"
+                                                    />
+                                                    <div className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1.5 shadow z-10">
+                                                        <Film className="w-3.5 h-3.5" />
+                                                    </div>
+                                                </div>
+                                            );
+                                        }
+
+                                        return (
+                                            <img 
+                                                src={firstMedia.mediaUrl} 
+                                                alt={story.title} 
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            />
+                                        );
+                                    })()
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100">
                                         <ImageIcon className="w-12 h-12 text-amber-300" />

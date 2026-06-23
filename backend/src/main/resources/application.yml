@@ -4,8 +4,8 @@ spring:
 
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/legacy_trunk}
-    username: ${DB_USER:${USER}}
-    password: ${DB_PASS:}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASS:2442}
     driver-class-name: org.postgresql.Driver
 
   jpa:

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { storyService } from '../api/storyService';
 import { useToast } from '../contexts/ToastContext';
-import { X, ZoomIn, Film, Image as ImageIcon, Play } from 'lucide-react';
+import { X, ZoomIn, Film, Image as ImageIcon, Play, Music } from 'lucide-react';
 
 export default function Gallery() {
     const [allMedia, setAllMedia] = useState([]);
@@ -11,6 +11,15 @@ export default function Gallery() {
     const toast = useToast();
 
     useEffect(() => {
+        const getNormalizedType = (mime) => {
+            if (!mime) return 'IMAGE';
+            const lowerMime = mime.toLowerCase();
+            if (lowerMime.startsWith('image/') || lowerMime === 'image') return 'IMAGE';
+            if (lowerMime.startsWith('video/') || lowerMime === 'video') return 'VIDEO';
+            if (lowerMime.startsWith('audio/') || lowerMime === 'audio') return 'AUDIO';
+            return 'IMAGE';
+        };
+
         const load = async () => {
             try {
                 const stories = await storyService.getAllStories();
@@ -19,7 +28,7 @@ export default function Gallery() {
                         ...m,
                         storyTitle: story.title,
                         storyId: story.id,
-                        mediaType: m.mediaType || 'IMAGE'
+                        mediaType: getNormalizedType(m.mediaType)
                     }))
                 );
                 setAllMedia(media);
@@ -49,6 +58,7 @@ export default function Gallery() {
 
     const imageCounts = allMedia.filter(m => m.mediaType === 'IMAGE').length;
     const videoCounts = allMedia.filter(m => m.mediaType === 'VIDEO').length;
+    const audioCounts = allMedia.filter(m => m.mediaType === 'AUDIO').length;
 
     return (
         <div className="max-w-7xl mx-auto py-8">
@@ -57,7 +67,7 @@ export default function Gallery() {
                 <div>
                     <h1 className="text-3xl font-bold" style={{ color: 'var(--brand-brown-800)' }}>Media Gallery</h1>
                     <p className="text-gray-500 mt-1 text-sm">
-                        {allMedia.length} items &mdash; {imageCounts} photos, {videoCounts} videos
+                        {allMedia.length} items &mdash; {imageCounts} photos, {videoCounts} videos, {audioCounts} audios
                     </p>
                 </div>
 
@@ -67,6 +77,7 @@ export default function Gallery() {
                         { key: 'ALL', label: 'All', icon: null },
                         { key: 'IMAGE', label: 'Photos', icon: <ImageIcon className="w-4 h-4" /> },
                         { key: 'VIDEO', label: 'Videos', icon: <Film className="w-4 h-4" /> },
+                        { key: 'AUDIO', label: 'Audio', icon: <Music className="w-4 h-4" /> },
                     ].map(tab => (
                         <button
                             key={tab.key}
@@ -95,7 +106,7 @@ export default function Gallery() {
                         <ImageIcon className="w-10 h-10 text-amber-300" />
                     </div>
                     <h3 className="text-lg font-medium text-gray-700 mb-1">No media found</h3>
-                    <p className="text-gray-400 text-sm">Upload photos or videos to a story to see them here.</p>
+                    <p className="text-gray-400 text-sm">Upload photos, videos, or audio to a story to see them here.</p>
                 </div>
             ) : (
                 /* Masonry-style columns */
@@ -119,6 +130,11 @@ export default function Gallery() {
                                             <Play className="w-5 h-5 text-white ml-0.5" />
                                         </div>
                                     </div>
+                                </div>
+                            ) : item.mediaType === 'AUDIO' ? (
+                                <div className="p-5 bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 rounded-xl flex flex-col items-center justify-center gap-2 h-36">
+                                    <Music className="w-8 h-8 text-amber-700 animate-bounce" style={{ animationDuration: '4s' }} />
+                                    <span className="text-xs text-amber-900 font-serif font-semibold text-center truncate w-full px-1">Audio Memory</span>
                                 </div>
                             ) : (
                                 <img
@@ -159,7 +175,7 @@ export default function Gallery() {
                     </button>
 
                     <div
-                        className="relative max-w-5xl max-h-[90vh] w-full flex flex-col items-center"
+                        className="relative max-w-5xl max-h-[90vh] w-full flex flex-col items-center animate-fadeIn"
                         onClick={e => e.stopPropagation()}
                     >
                         {lightbox.mediaType === 'VIDEO' ? (
@@ -169,6 +185,22 @@ export default function Gallery() {
                                 autoPlay
                                 className="max-h-[80vh] rounded-xl shadow-2xl"
                             />
+                        ) : lightbox.mediaType === 'AUDIO' ? (
+                            <div className="w-full max-w-md p-8 bg-amber-50 rounded-2xl border border-amber-200 flex flex-col items-center gap-4 text-center mx-4 shadow-2xl z-10">
+                                <div className="w-16 h-16 bg-amber-700 text-white rounded-full flex items-center justify-center shadow-lg">
+                                    <Music className="w-8 h-8 animate-bounce" style={{ animationDuration: '3s' }} />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-amber-950 font-serif">{lightbox.storyTitle}</h3>
+                                    <p className="text-xs text-amber-800 mt-1">Audio Memory</p>
+                                </div>
+                                <audio 
+                                    src={lightbox.mediaUrl} 
+                                    controls 
+                                    autoPlay
+                                    className="w-full mt-2"
+                                />
+                            </div>
                         ) : (
                             <img
                                 src={lightbox.mediaUrl}
