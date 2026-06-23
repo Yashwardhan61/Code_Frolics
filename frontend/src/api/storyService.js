@@ -10,6 +10,11 @@ export const storyService = {
         const response = await api.get(`/stories/${id}`);
         return response.data;
     },
+
+    getStoriesByMember: async (memberId) => {
+        const response = await api.get(`/stories/member/${memberId}`);
+        return response.data;
+    },
     
     createStory: async (storyRequest, files) => {
         const formData = new FormData();

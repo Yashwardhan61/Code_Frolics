@@ -18,4 +18,5 @@ public class StoryRequest {
     private LocalDate storyDate;
     private List<String> tags;
     private List<Long> sharedWithUserIds;
+    private Long familyMemberId;
 }

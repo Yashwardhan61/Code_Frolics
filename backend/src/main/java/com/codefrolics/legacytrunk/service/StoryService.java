@@ -22,6 +22,7 @@ public class StoryService {
     private final UserRepository userRepository;
     private final UserService userService;
     private final MediaStorageService mediaStorageService;
+    private final com.codefrolics.legacytrunk.repository.FamilyMemberRepository familyMemberRepository;
 
     @Transactional(readOnly = true)
     public List<StoryResponse> getAllStoriesForCurrentUser() {
@@ -60,6 +61,12 @@ public class StoryService {
         return mapToResponse(story);
     }
 
+    @Transactional(readOnly = true)
+    public List<StoryResponse> getStoriesByFamilyMember(Long familyMemberId) {
+        List<Story> stories = storyRepository.findByFamilyMemberIdOrderByCreatedAtDesc(familyMemberId);
+        return stories.stream().map(this::mapToResponse).collect(Collectors.toList());
+    }
+
     @Transactional
     public StoryResponse createStory(StoryRequest request, MultipartFile[] files) {
         User currentUser = userService.getCurrentUser();
@@ -71,6 +78,12 @@ public class StoryService {
                 .location(request.getLocation())
                 .storyDate(request.getStoryDate())
                 .build();
+                
+        if (request.getFamilyMemberId() != null) {
+            FamilyMember member = familyMemberRepository.findById(request.getFamilyMemberId())
+                    .orElseThrow(() -> new RuntimeException("Family member not found"));
+            story.setFamilyMember(member);
+        }
                 
         // Add tags
         if (request.getTags() != null) {
@@ -130,6 +143,14 @@ public class StoryService {
         story.setDescription(request.getDescription());
         story.setLocation(request.getLocation());
         story.setStoryDate(request.getStoryDate());
+
+        if (request.getFamilyMemberId() != null) {
+            FamilyMember member = familyMemberRepository.findById(request.getFamilyMemberId())
+                    .orElseThrow(() -> new RuntimeException("Family member not found"));
+            story.setFamilyMember(member);
+        } else {
+            story.setFamilyMember(null);
+        }
 
         // Replace tags
         story.getTags().clear();
@@ -199,6 +220,8 @@ public class StoryService {
                         .build()
                 ).collect(Collectors.toList()))
                 .createdAt(story.getCreatedAt())
+                .familyMemberId(story.getFamilyMember() != null ? story.getFamilyMember().getId() : null)
+                .familyMemberName(story.getFamilyMember() != null ? story.getFamilyMember().getName() : null)
                 .build();
     }
 }

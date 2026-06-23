@@ -27,6 +27,11 @@ public class StoryController {
         return ResponseEntity.ok(storyService.getStoryById(id));
     }
 
+    @GetMapping("/member/{memberId}")
+    public ResponseEntity<List<StoryResponse>> getStoriesByMember(@PathVariable Long memberId) {
+        return ResponseEntity.ok(storyService.getStoriesByFamilyMember(memberId));
+    }
+
     @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<StoryResponse> createStory(
             @RequestPart("story") StoryRequest request,
