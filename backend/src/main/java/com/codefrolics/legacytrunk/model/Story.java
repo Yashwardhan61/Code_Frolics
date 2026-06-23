@@ -20,6 +20,10 @@ public class Story {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "family_member_id")
+    private FamilyMember familyMember;
+
     @Column(nullable = false, length = 500)
     private String title;
 

@@ -2,17 +2,37 @@
 
 /* Global styles for consistent branding across all pages */
 :root {
-    --brand-brown-50: #f7efe8;
-    --brand-brown-100: #e9d8c8;
-    --brand-brown-200: #d6b89a;
+    /* Core Brand -- warm walnut-to-sienna spectrum */
+    --brand-brown-50:  #faf6f1;
+    --brand-brown-100: #f0e6d8;
+    --brand-brown-200: #dcc5a8;
     --brand-brown-300: #c49a75;
     --brand-brown-400: #a5683f;
     --brand-brown-500: #8b5628;
     --brand-brown-600: #704214;
     --brand-brown-700: #5a3509;
-    --brand-brown-800: #4a2800;
-    --brand-accent: #8B4513;
-    --brand-beige: #f5d0a0;
+    --brand-brown-800: #3d2106;
+    --brand-accent:    #8B4513;
+    --brand-beige:     #f5d0a0;
+
+    /* Accent palette -- copper-rose for CTAs & interactive warmth */
+    --accent-copper:   #c06c3e;
+    --accent-copper-hover: #a85a30;
+    --accent-rose:     #b5545b;
+    --accent-rose-soft:#f2e0e0;
+
+    /* Surface & page tones */
+    --page-bg:         #f9f5ef;
+    --card-bg:         #ffffff;
+    --card-border:     #ece3d5;
+    --text-primary:    #2e1f0f;
+    --text-secondary:  #6b5744;
+    --text-muted:      #9a8b7a;
+
+    /* Deep navbar tone */
+    --nav-bg:          #3d2106;
+    --nav-text:        #f0e6d8;
+    --nav-text-active: #f5d0a0;
 }
 
 /* Global brand font styling */
@@ -38,6 +58,11 @@ h2.brand-title {
 /* Utility classes to mirror a few Tailwind-like utilities used in markup */
 .brand-text {
     color: var(--brand-brown-600) !important;
+}
+
+/* Page background */
+body {
+    background-color: var(--page-bg);
 }
 
 .nav-link {
@@ -349,14 +374,14 @@ h2.brand-title {
     height: 8px;
 }
 ::-webkit-scrollbar-track {
-    background: var(--brand-brown-50);
+    background: var(--page-bg);
 }
 ::-webkit-scrollbar-thumb {
-    background: var(--brand-brown-300);
+    background: var(--brand-brown-200);
     border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--brand-brown-400);
+    background: var(--brand-brown-300);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────

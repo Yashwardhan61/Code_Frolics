@@ -12,6 +12,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import MemberPortal from './pages/MemberPortal';
 import Profile from './pages/Profile';
 import FamilyTree from './pages/FamilyTree';
 import Friends from './pages/Friends';
@@ -41,12 +42,13 @@ function App() {
           </Route>
 
           {/* Protected Routes */}
-          <Route element={
+            <Route element={
             <ProtectedRoute>
               <MainLayout />
             </ProtectedRoute>
           }>
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/member/:id/stories" element={<MemberPortal />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/family-tree" element={<FamilyTree />} />
             <Route path="/friends" element={<Friends />} />

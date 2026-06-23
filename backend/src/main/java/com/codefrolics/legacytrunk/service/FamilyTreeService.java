@@ -34,6 +34,18 @@ public class FamilyTreeService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public FamilyMemberResponse getMemberById(Long id) {
+        User currentUser = userService.getCurrentUser();
+        FamilyMember member = familyMemberRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Member not found"));
+        
+        if (!member.getUser().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+        return mapToResponse(member);
+    }
+
     @Transactional
     public FamilyMemberResponse addMember(String treeType, FamilyMemberRequest request) {
         if (!"maternal".equals(treeType) && !"paternal".equals(treeType)) {

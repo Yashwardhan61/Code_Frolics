@@ -95,15 +95,15 @@ export default function MainLayout() {
     const isActive = (path) => location.pathname === path;
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
-            <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md">
+        <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--page-bg)' }}>
+            <nav className="fixed top-0 left-0 right-0 z-50 shadow-lg" style={{ backgroundColor: 'var(--nav-bg)' }}>
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="flex justify-between items-center h-16">
                         <Link to="/dashboard" className="flex-shrink-0 flex items-center">
                             <div className="w-10 h-10 rounded-lg overflow-hidden">
                                 <img src="/logo.jpeg" alt="Yaado ka baksa" className="w-full h-full object-cover" />
                             </div>
-                            <span className="ml-2 text-xl font-semibold brand-title" style={{ color: 'var(--brand-brown-600)' }}>Yaado ka baksa</span>
+                            <span className="ml-2 text-xl font-semibold brand-title" style={{ color: 'var(--nav-text-active)' }}>Yaado ka baksa</span>
                         </Link>
 
                         {/* Desktop Menu */}
@@ -114,8 +114,8 @@ export default function MainLayout() {
                                     to={link.path}
                                     className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                                         isActive(link.path)
-                                            ? 'bg-amber-50 text-amber-700'
-                                            : 'text-gray-600 hover:text-amber-700 hover:bg-amber-50/50'
+                                            ? 'bg-white/10 text-amber-200'
+                                            : 'text-amber-100/70 hover:text-amber-100 hover:bg-white/5'
                                     }`}
                                 >
                                     {link.icon}
@@ -128,7 +128,7 @@ export default function MainLayout() {
                                 <button
                                     id="notif-bell"
                                     onClick={() => setIsNotifOpen(!isNotifOpen)}
-                                    className="relative p-2 rounded-lg text-gray-600 hover:text-amber-700 hover:bg-amber-50/50 transition-all"
+                                    className="relative p-2 rounded-lg text-amber-100/70 hover:text-amber-100 hover:bg-white/5 transition-all"
                                 >
                                     <Bell className="w-5 h-5" />
                                     {unreadCount > 0 && (
@@ -199,7 +199,7 @@ export default function MainLayout() {
                             <button
                                 id="logout-btn"
                                 onClick={handleLogout}
-                                className="flex items-center ml-2 px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 transition-all"
+                                className="flex items-center ml-2 px-3 py-2 rounded-lg text-sm font-medium text-red-300 hover:text-red-200 hover:bg-red-900/20 transition-all"
                             >
                                 <LogOut className="w-5 h-5 mr-2" />
                                 Logout
@@ -211,7 +211,7 @@ export default function MainLayout() {
                             {/* Mobile Bell */}
                             <button
                                 onClick={() => setIsNotifOpen(!isNotifOpen)}
-                                className="relative p-2 text-gray-600"
+                                className="relative p-2 text-amber-100/70"
                             >
                                 <Bell className="w-5 h-5" />
                                 {unreadCount > 0 && (
@@ -220,7 +220,7 @@ export default function MainLayout() {
                                     </span>
                                 )}
                             </button>
-                            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-gray-700 focus:outline-none">
+                            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-amber-100/80 focus:outline-none">
                                 {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                             </button>
                         </div>
@@ -229,7 +229,7 @@ export default function MainLayout() {
 
                 {/* Mobile Menu */}
                 {isMobileMenuOpen && (
-                    <div className="md:hidden bg-white border-t border-gray-200">
+                    <div className="md:hidden border-t border-white/10" style={{ backgroundColor: 'var(--nav-bg)' }}>
                         <div className="px-2 pt-2 pb-3 space-y-1">
                             {navLinks.map((link) => (
                                 <Link
@@ -238,8 +238,8 @@ export default function MainLayout() {
                                     onClick={() => setIsMobileMenuOpen(false)}
                                     className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors ${
                                         isActive(link.path)
-                                            ? 'bg-amber-50 text-amber-700'
-                                            : 'text-gray-700 hover:text-amber-700 hover:bg-gray-50'
+                                            ? 'bg-white/10 text-amber-200'
+                                            : 'text-amber-100/70 hover:text-amber-100 hover:bg-white/5'
                                     }`}
                                 >
                                     {link.icon}
@@ -248,7 +248,7 @@ export default function MainLayout() {
                             ))}
                             <button
                                 onClick={() => { setIsMobileMenuOpen(false); handleLogout(); }}
-                                className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50"
+                                className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-red-300 hover:text-red-200 hover:bg-red-900/20"
                             >
                                 <LogOut className="w-5 h-5 mr-2" />
                                 Logout

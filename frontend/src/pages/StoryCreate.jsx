@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { storyService } from '../api/storyService';
 import { useToast } from '../contexts/ToastContext';
 import { ImageIcon, X, Loader2, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
 export default function StoryCreate() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const memberId = searchParams.get('memberId');
     const toast = useToast();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -63,9 +64,11 @@ export default function StoryCreate() {
         e.preventDefault();
         try {
             setLoading(true);
-            await storyService.createStory(formData, files);
+            const payload = { ...formData };
+            if (memberId) payload.familyMemberId = memberId;
+            await storyService.createStory(payload, files);
             toast.success('Memory saved successfully!');
-            navigate('/dashboard');
+            navigate(memberId ? `/member/${memberId}/stories` : '/dashboard');
         } catch (error) {
             console.error('Failed to create story', error);
             toast.error('Failed to save memory: ' + (error.response?.data?.message || error.message));
@@ -77,9 +80,12 @@ export default function StoryCreate() {
     return (
         <div className="max-w-4xl mx-auto py-8">
             <div className="mb-6 flex items-center">
-                <Link to="/dashboard" className="text-gray-500 hover:text-amber-700 transition-colors mr-4">
+                <button 
+                    onClick={() => navigate(memberId ? `/member/${memberId}/stories` : '/dashboard')} 
+                    className="text-gray-500 hover:text-amber-700 transition-colors mr-4"
+                >
                     <ArrowLeft className="w-6 h-6" />
-                </Link>
+                </button>
                 <h1 className="text-3xl font-bold" style={{ color: 'var(--brand-brown-800)' }}>Create New Memory</h1>
             </div>
 

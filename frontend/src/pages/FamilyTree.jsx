@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { familyService } from '../api/familyService';
 import { useToast } from '../contexts/ToastContext';
 import { TreeDeciduous, Plus, X, Edit2, Trash2, Upload, User, ChevronDown, Leaf, Users, GitBranch, HelpCircle, Download, Moon, Search, Printer, FileImage, FileCode, FileText } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 /* ─── helpers ──────────────────────────────────────────────────────────────── */
 
@@ -35,7 +36,7 @@ function getTreeDepth(nodes) {
 
 /* ─── TreeNode card ─────────────────────────────────────────────────────────── */
 
-function TreeNode({ node, onEdit, onDelete, onAddChild, depth = 0 }) {
+function TreeNode({ node, onNodeClick, onEdit, onDelete, onAddChild, depth = 0 }) {
     const [expanded, setExpanded] = useState(true);
     const hasChildren = node.children && node.children.length > 0;
 
@@ -43,7 +44,8 @@ function TreeNode({ node, onEdit, onDelete, onAddChild, depth = 0 }) {
         <div className="flex flex-col items-center">
             {/* Card */}
             <div
-                className="group relative tree-node-card w-40 text-center cursor-pointer"
+                onClick={() => onNodeClick(node.id)}
+                className="group relative tree-node-card w-40 text-center cursor-pointer hover:shadow-xl transition-shadow"
                 style={{ minWidth: 140 }}
             >
                 {/* Photo */}
@@ -132,6 +134,7 @@ function TreeNode({ node, onEdit, onDelete, onAddChild, depth = 0 }) {
                                 <div className="w-px mb-2" style={{ height: 20, backgroundColor: 'var(--tree-branch-color)' }} />
                                 <TreeNode
                                     node={child}
+                                    onNodeClick={onNodeClick}
                                     onEdit={onEdit}
                                     onDelete={onDelete}
                                     onAddChild={onAddChild}
@@ -367,6 +370,7 @@ export default function FamilyTree() {
     const [members, setMembers] = useState([]);
     const [loading, setLoading] = useState(true);
     const toast = useToast();
+    const navigate = useNavigate();
 
     const [modal, setModal] = useState(null);
     const [deleteTarget, setDeleteTarget] = useState(null);
@@ -508,6 +512,7 @@ export default function FamilyTree() {
                             <TreeNode
                                 key={root.id}
                                 node={root}
+                                onNodeClick={(id) => navigate(`/member/${id}/stories`)}
                                 onEdit={(node) => setModal({ mode: 'edit', initial: node })}
                                 onDelete={(node) => setDeleteTarget(node)}
                                 onAddChild={(node) => setModal({ mode: 'add', initial: { parentMemberId: node.id } })}

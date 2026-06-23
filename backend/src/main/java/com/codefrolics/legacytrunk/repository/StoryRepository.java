@@ -13,4 +13,6 @@ public interface StoryRepository extends JpaRepository<Story, Long> {
     
     @Query("SELECT s FROM Story s JOIN s.shares sh WHERE sh.sharedWithUser.id = :userId ORDER BY s.createdAt DESC")
     List<Story> findSharedWithUserOrderByCreatedAtDesc(Long userId);
+
+    List<Story> findByFamilyMemberIdOrderByCreatedAtDesc(Long familyMemberId);
 }

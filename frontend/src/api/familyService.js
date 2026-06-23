@@ -6,6 +6,11 @@ export const familyService = {
         return response.data;
     },
 
+    getMemberById: async (id) => {
+        const response = await api.get(`/family-tree/member/${id}`);
+        return response.data;
+    },
+
     addMember: async (type, memberRequest) => {
         const response = await api.post(`/family-tree/${type}`, memberRequest);
         return response.data;
