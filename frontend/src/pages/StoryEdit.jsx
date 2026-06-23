@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { storyService } from '../api/storyService';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
-import { ImageIcon, X, Loader2, ArrowLeft, Trash2 } from 'lucide-react';
+import { ImageIcon, X, Loader2, ArrowLeft, Trash2, Mic, Square, Play, Music, Film } from 'lucide-react';
 
 export default function StoryEdit() {
     const { id } = useParams();
@@ -23,6 +23,96 @@ export default function StoryEdit() {
     const [existingMedia, setExistingMedia] = useState([]);
     const [newFiles, setNewFiles] = useState([]);
     const [newPreviews, setNewPreviews] = useState([]);
+
+    // Audio recording state
+    const [showRecorder, setShowRecorder] = useState(false);
+    const [isRecording, setIsRecording] = useState(false);
+    const [mediaRecorder, setMediaRecorder] = useState(null);
+    const [recordingTime, setRecordingTime] = useState(0);
+    const [timerInterval, setTimerInterval] = useState(null);
+    const [audioBlob, setAudioBlob] = useState(null);
+    const [audioUrl, setAudioUrl] = useState(null);
+
+    // Clean up timers on unmount
+    useEffect(() => {
+        return () => {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+        };
+    }, [timerInterval]);
+
+    const startRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const recorder = new MediaRecorder(stream);
+            const chunks = [];
+
+            recorder.ondataavailable = (e) => {
+                if (e.data.size > 0) chunks.push(e.data);
+            };
+
+            recorder.onstop = () => {
+                const blob = new Blob(chunks, { type: 'audio/webm' });
+                const url = URL.createObjectURL(blob);
+                setAudioBlob(blob);
+                setAudioUrl(url);
+                stream.getTracks().forEach(track => track.stop());
+            };
+
+            recorder.start();
+            setMediaRecorder(recorder);
+            setIsRecording(true);
+            setRecordingTime(0);
+
+            const interval = setInterval(() => {
+                setRecordingTime(prev => prev + 1);
+            }, 1000);
+            setTimerInterval(interval);
+        } catch (err) {
+            console.error('Failed to start recording', err);
+            toast.error('Could not access microphone. Please check permissions.');
+        }
+    };
+
+    const stopRecording = () => {
+        if (mediaRecorder && isRecording) {
+            mediaRecorder.stop();
+            setIsRecording(false);
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                setTimerInterval(null);
+            }
+        }
+    };
+
+    const discardRecording = () => {
+        if (audioUrl) {
+            URL.revokeObjectURL(audioUrl);
+        }
+        setAudioBlob(null);
+        setAudioUrl(null);
+        setRecordingTime(0);
+    };
+
+    const addRecordedAudio = () => {
+        if (audioBlob) {
+            const audioFile = new File([audioBlob], `voice_memory_${Date.now()}.webm`, { type: 'audio/webm' });
+            setNewFiles(prev => [...prev, audioFile]);
+            setNewPreviews(prev => [...prev, audioUrl]);
+            setAudioBlob(null);
+            setAudioUrl(null);
+            setRecordingTime(0);
+            setShowRecorder(false);
+            toast.success('Voice memory added successfully!');
+        }
+    };
+
+    const formatTime = (secs) => {
+        const mins = Math.floor(secs / 60);
+        const remainingSecs = secs % 60;
+        return `${mins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')}`;
+    };
 
     useEffect(() => {
         const fetchStory = async () => {
@@ -151,18 +241,7 @@ export default function StoryEdit() {
                         />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Date */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                            <input 
-                                type="date" 
-                                value={formData.storyDate}
-                                onChange={(e) => setFormData({...formData, storyDate: e.target.value})}
-                                className="w-full p-3 border border-gray-300 rounded-xl focus:ring-amber-500 focus:border-amber-500"
-                            />
-                        </div>
-
+                    <div className="grid grid-cols-1 gap-6">
                         {/* Location */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
@@ -208,52 +287,153 @@ export default function StoryEdit() {
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Current Media</label>
                             <div className="flex flex-wrap gap-4">
-                                {existingMedia.map((media) => (
-                                    <div key={media.id} className="relative w-32 h-32 rounded-xl overflow-hidden border border-gray-200">
-                                        {media.mediaType?.startsWith('video') ? (
-                                            <video src={media.mediaUrl} className="w-full h-full object-cover" muted />
-                                        ) : (
-                                            <img src={media.mediaUrl} alt="" className="w-full h-full object-cover" />
-                                        )}
-                                    </div>
-                                ))}
+                                {existingMedia.map((media) => {
+                                    const isAudio = media.mediaType?.startsWith('audio/') || media.mediaUrl?.endsWith('.webm') || media.mediaUrl?.endsWith('.wav') || media.mediaUrl?.endsWith('.mp3');
+                                    const isVideo = media.mediaType?.startsWith('video/');
+                                    return (
+                                        <div key={media.id} className="relative w-32 h-32 rounded-xl overflow-hidden border border-gray-200 flex items-center justify-center bg-gray-50">
+                                            {isAudio ? (
+                                                <div className="flex flex-col items-center justify-center p-2 text-center h-full w-full bg-amber-50">
+                                                    <Music className="w-8 h-8 text-amber-700 mb-1" />
+                                                    <span className="text-[10px] text-gray-600 font-medium truncate w-full px-1">Audio Memory</span>
+                                                </div>
+                                            ) : isVideo ? (
+                                                <div className="flex flex-col items-center justify-center p-2 text-center h-full w-full bg-slate-50">
+                                                    <Film className="w-8 h-8 text-slate-700 mb-1" />
+                                                    <span className="text-[10px] text-gray-600 font-medium truncate w-full px-1">Video Memory</span>
+                                                </div>
+                                            ) : (
+                                                <img src={media.mediaUrl} alt="" className="w-full h-full object-cover" />
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
 
                     {/* Add New Media */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Add More Media</label>
-                        <div className="flex flex-wrap gap-4">
-                            {newPreviews.map((preview, index) => (
-                                <div key={index} className="relative w-32 h-32 rounded-xl overflow-hidden border border-gray-200 group">
-                                    {newFiles[index]?.type?.startsWith('video') ? (
-                                        <video src={preview} className="w-full h-full object-cover" muted />
-                                    ) : (
-                                        <img src={preview} alt={`New ${index}`} className="w-full h-full object-cover" />
-                                    )}
-                                    <button 
-                                        type="button"
-                                        onClick={() => removeNewFile(index)}
-                                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                    >
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            ))}
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Add More Media (Photos/Videos/Audio)</label>
+                        <div className="flex flex-wrap gap-4 mb-4">
+                            {newPreviews.map((preview, index) => {
+                                const file = newFiles[index];
+                                const isAudio = file?.type?.startsWith('audio/') || file?.name?.endsWith('.webm') || file?.name?.endsWith('.wav') || file?.name?.endsWith('.mp3');
+                                const isVideo = file?.type?.startsWith('video/');
+
+                                return (
+                                    <div key={index} className="relative w-32 h-32 rounded-xl overflow-hidden border border-gray-200 group flex items-center justify-center bg-gray-50">
+                                        {isAudio ? (
+                                            <div className="flex flex-col items-center justify-center p-2 text-center h-full w-full bg-amber-50">
+                                                <Music className="w-8 h-8 text-amber-700 mb-1" />
+                                                <span className="text-[10px] text-gray-600 font-medium truncate w-full px-1">{file?.name || 'Audio Record'}</span>
+                                            </div>
+                                        ) : isVideo ? (
+                                            <div className="flex flex-col items-center justify-center p-2 text-center h-full w-full bg-slate-50">
+                                                <Film className="w-8 h-8 text-slate-700 mb-1" />
+                                                <span className="text-[10px] text-gray-600 font-medium truncate w-full px-1">{file?.name || 'Video File'}</span>
+                                            </div>
+                                        ) : (
+                                            <img src={preview} alt={`New ${index}`} className="w-full h-full object-cover" />
+                                        )}
+                                        <button 
+                                            type="button"
+                                            onClick={() => removeNewFile(index)}
+                                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                );
+                            })}
                             
                             <label className="w-32 h-32 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:bg-gray-50 hover:border-amber-500 transition-colors">
                                 <ImageIcon className="w-8 h-8 text-gray-400 mb-2" />
-                                <span className="text-xs text-gray-500 font-medium">Add Media</span>
+                                <span className="text-xs text-gray-500 font-medium text-center">Upload Files</span>
                                 <input 
                                     type="file" 
                                     multiple 
-                                    accept="image/*,video/*"
+                                    accept="image/*,video/*,audio/*"
                                     onChange={handleFileChange}
                                     className="hidden"
                                 />
                             </label>
+
+                            <button
+                                type="button"
+                                onClick={() => setShowRecorder(true)}
+                                className="w-32 h-32 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:bg-gray-50 hover:border-amber-500 transition-colors text-gray-500"
+                            >
+                                <Mic className="w-8 h-8 text-amber-700 mb-2" />
+                                <span className="text-xs text-gray-500 font-medium text-center">Record Audio</span>
+                            </button>
                         </div>
+
+                        {/* Audio Recorder Panel */}
+                        {showRecorder && (
+                            <div className="mt-4 p-4 border border-amber-100 bg-amber-50/40 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 animate-fadeIn">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-3.5 h-3.5 rounded-full bg-red-600 ${isRecording ? 'animate-ping' : ''}`} />
+                                    <div>
+                                        <h4 className="font-semibold text-amber-900 text-sm">
+                                            {isRecording ? 'Recording Voice Memory...' : 'Voice Recorder'}
+                                        </h4>
+                                        <p className="text-xs text-amber-700">
+                                            {isRecording ? `Duration: ${formatTime(recordingTime)}` : audioUrl ? 'Recording complete!' : 'Ready to record audio memory'}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                    {isRecording ? (
+                                        <button
+                                            type="button"
+                                            onClick={stopRecording}
+                                            className="flex items-center gap-1.5 px-4 py-2 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition-colors"
+                                        >
+                                            <Square className="w-3.5 h-3.5" />
+                                            Stop Recording
+                                        </button>
+                                    ) : audioUrl ? (
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <audio src={audioUrl} controls className="h-9 max-w-[200px] border border-amber-200 rounded-lg" />
+                                            <button
+                                                type="button"
+                                                onClick={addRecordedAudio}
+                                                className="px-3 py-1.5 bg-amber-700 text-white text-xs font-semibold rounded-lg hover:bg-amber-800 transition-colors"
+                                            >
+                                                Add to Memory
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={discardRecording}
+                                                className="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+                                            >
+                                                Discard
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={startRecording}
+                                                className="flex items-center gap-1.5 px-4 py-2 bg-amber-700 text-white text-xs font-semibold rounded-lg hover:bg-amber-800 transition-colors"
+                                            >
+                                                <Mic className="w-3.5 h-3.5" />
+                                                Start Recording
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowRecorder(false)}
+                                                className="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+                                            >
+                                                Close
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Buttons */}
