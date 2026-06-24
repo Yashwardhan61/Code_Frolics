@@ -6,8 +6,20 @@ import { useToast } from '../contexts/ToastContext';
 import {
     PlusCircle, MapPin, Image as ImageIcon, Clock, Heart,
     MessageCircle, ChevronLeft, ChevronRight, BookOpen, Users,
-    CalendarDays, Globe
+    CalendarDays, Globe, Music, Film
 } from 'lucide-react';
+
+/* -- Media type detection helpers -- */
+function isAudioMedia(media) {
+    return media.mediaType?.startsWith('audio/') ||
+        media.mediaUrl?.endsWith('.webm') ||
+        media.mediaUrl?.endsWith('.wav') ||
+        media.mediaUrl?.endsWith('.mp3');
+}
+
+function isVideoMedia(media) {
+    return media.mediaType?.startsWith('video/');
+}
 
 /* ====================================================================
    SUB-COMPONENTS
@@ -111,16 +123,49 @@ function MediaCarousel({ mediaFiles, alt, className = '' }) {
              onMouseEnter={() => { if (timerRef.current) clearInterval(timerRef.current); }}
              onMouseLeave={resetTimer}
         >
-            {mediaFiles.map((media, i) => (
-                <img
-                    key={media.id || i}
-                    src={media.mediaUrl}
-                    alt={`${alt} ${i + 1}`}
-                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out ${
-                        i === current ? 'opacity-100 z-10' : 'opacity-0 z-0'
-                    }`}
-                />
-            ))}
+            {mediaFiles.map((media, i) => {
+                const isActive = i === current;
+                const visibilityClass = `transition-opacity duration-700 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0'}`;
+
+                if (isAudioMedia(media)) {
+                    return (
+                        <div
+                            key={media.id || i}
+                            className={`absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-50 via-amber-100 to-orange-50 ${visibilityClass}`}
+                        >
+                            <div className="w-16 h-16 rounded-full bg-amber-700/90 flex items-center justify-center shadow-lg mb-3">
+                                <Music className="w-8 h-8 text-white" />
+                            </div>
+                            <span className="text-sm font-serif font-semibold text-amber-900">Voice Memory</span>
+                            <span className="text-xs text-amber-700/70 mt-1">Audio Recording</span>
+                        </div>
+                    );
+                }
+
+                if (isVideoMedia(media)) {
+                    return (
+                        <div
+                            key={media.id || i}
+                            className={`absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-800 via-slate-900 to-gray-900 ${visibilityClass}`}
+                        >
+                            <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur flex items-center justify-center shadow-lg mb-3 border border-white/20">
+                                <Film className="w-8 h-8 text-white" />
+                            </div>
+                            <span className="text-sm font-serif font-semibold text-white">Video Memory</span>
+                            <span className="text-xs text-white/50 mt-1">Video Recording</span>
+                        </div>
+                    );
+                }
+
+                return (
+                    <img
+                        key={media.id || i}
+                        src={media.mediaUrl}
+                        alt={`${alt} ${i + 1}`}
+                        className={`absolute inset-0 w-full h-full object-cover ${visibilityClass}`}
+                    />
+                );
+            })}
 
             {total > 1 && (
                 <>
@@ -378,11 +423,23 @@ export default function Dashboard() {
                                         {/* Thumbnail */}
                                         {onThisDayStory.mediaFiles?.length > 0 && (
                                             <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden border-2 border-white shadow-md flex-shrink-0">
-                                                <img
-                                                    src={onThisDayStory.mediaFiles[0].mediaUrl}
-                                                    alt={onThisDayStory.title}
-                                                    className="w-full h-full object-cover"
-                                                />
+                                                {isAudioMedia(onThisDayStory.mediaFiles[0]) ? (
+                                                    <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100">
+                                                        <Music className="w-8 h-8 text-amber-700" />
+                                                        <span className="text-[9px] text-amber-800 font-medium mt-1">Audio</span>
+                                                    </div>
+                                                ) : isVideoMedia(onThisDayStory.mediaFiles[0]) ? (
+                                                    <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-700 to-slate-900">
+                                                        <Film className="w-8 h-8 text-white" />
+                                                        <span className="text-[9px] text-white/70 font-medium mt-1">Video</span>
+                                                    </div>
+                                                ) : (
+                                                    <img
+                                                        src={onThisDayStory.mediaFiles[0].mediaUrl}
+                                                        alt={onThisDayStory.title}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                )}
                                             </div>
                                         )}
 
