@@ -387,21 +387,43 @@ export default function Dashboard() {
             )}
 
             {stories.length === 0 ? (
-                <div className="bg-white rounded-3xl shadow-sm border border-amber-100 p-16 text-center max-w-2xl mx-auto">
-                    <div className="mx-auto w-24 h-24 bg-amber-50 rounded-full flex items-center justify-center mb-6">
-                        <ImageIcon className="w-12 h-12 text-amber-300" />
+                <div className="bg-white/80 backdrop-blur-md rounded-3xl shadow-xl border border-amber-100/50 p-10 md:p-16 text-center max-w-3xl mx-auto relative overflow-hidden">
+                    <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-amber-100 rounded-full opacity-50 blur-3xl"></div>
+                    <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-orange-100 rounded-full opacity-50 blur-3xl"></div>
+                    
+                    <div className="relative z-10">
+                        <div className="mx-auto w-24 h-24 bg-gradient-to-br from-amber-50 to-orange-50 rounded-full flex items-center justify-center mb-6 shadow-sm border border-amber-100">
+                            <BookOpen className="w-10 h-10 text-amber-500" />
+                        </div>
+                        <h3 className="text-3xl font-bold text-gray-900 mb-4 font-serif">Your Chronicle Awaits</h3>
+                        <p className="text-gray-600 mb-10 text-lg max-w-xl mx-auto leading-relaxed">
+                            Every great legacy starts with a single step. Begin by writing down a cherished memory or growing your family tree.
+                        </p>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                            <Link
+                                to="/story/create"
+                                className="group relative flex flex-col items-center justify-center p-8 bg-white border border-amber-100 rounded-2xl hover:border-amber-300 hover:shadow-lg transition-all"
+                            >
+                                <div className="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <PlusCircle className="w-6 h-6 text-amber-600" />
+                                </div>
+                                <h4 className="text-lg font-semibold text-gray-900 mb-2">Write a Memory</h4>
+                                <p className="text-sm text-gray-500">Capture a moment, recipe, or tradition to preserve forever.</p>
+                            </Link>
+                            
+                            <Link
+                                to="/family-tree"
+                                className="group relative flex flex-col items-center justify-center p-8 bg-white border border-amber-100 rounded-2xl hover:border-amber-300 hover:shadow-lg transition-all"
+                            >
+                                <div className="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <Users className="w-6 h-6 text-orange-600" />
+                                </div>
+                                <h4 className="text-lg font-semibold text-gray-900 mb-2">Grow the Tree</h4>
+                                <p className="text-sm text-gray-500">Add parents, grandparents, and children to trace your roots.</p>
+                            </Link>
+                        </div>
                     </div>
-                    <h3 className="text-2xl font-medium text-gray-900 mb-3 font-serif">The Pages are Empty</h3>
-                    <p className="text-gray-500 mb-8 text-lg">
-                        Your memory chest is ready. Start filling these pages with your precious family stories to share with generations.
-                    </p>
-                    <Link
-                        to="/story/create"
-                        className="inline-flex items-center text-amber-700 bg-amber-50 border border-amber-200 px-8 py-3 rounded-xl hover:bg-amber-100 transition-colors font-medium text-lg shadow-sm"
-                    >
-                        <PlusCircle className="w-5 h-5 mr-2" />
-                        Write the First Chapter
-                    </Link>
                 </div>
             ) : (
                 <div className="space-y-16">

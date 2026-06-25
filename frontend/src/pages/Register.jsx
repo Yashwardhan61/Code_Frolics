@@ -37,7 +37,7 @@ export default function Register() {
             }
 
             toast.success('Account created! Welcome to the family.');
-            navigate('/dashboard');
+            navigate('/onboarding');
         } catch (err) {
             const msg =
                 err.code === 'auth/email-already-in-use'

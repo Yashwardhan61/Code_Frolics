@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Home, User, Users, Menu, X, TreeDeciduous, Images, Bell, Trash2, BookOpen } from 'lucide-react';
+import { LogOut, Home, User, Users, Menu, X, TreeDeciduous, Images, Bell, Trash2, BookOpen, Gem } from 'lucide-react';
 import { notificationService } from '../api/notificationService';
 
 export default function MainLayout() {
@@ -88,6 +88,7 @@ export default function MainLayout() {
         { name: 'Dashboard', path: '/dashboard', icon: <Home className="w-5 h-5 mr-2" /> },
         { name: 'Family Tree', path: '/family-tree', icon: <TreeDeciduous className="w-5 h-5 mr-2" /> },
         { name: 'Gallery', path: '/gallery', icon: <Images className="w-5 h-5 mr-2" /> },
+        { name: 'Heritage', path: '/heritage', icon: <Gem className="w-5 h-5 mr-2" /> },
         { name: 'Friends', path: '/friends', icon: <Users className="w-5 h-5 mr-2" /> },
         { name: 'Profile', path: '/profile', icon: <User className="w-5 h-5 mr-2" /> },
     ];

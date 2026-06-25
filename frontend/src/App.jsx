@@ -12,6 +12,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import Onboarding from './pages/Onboarding';
 import MemberPortal from './pages/MemberPortal';
 import Profile from './pages/Profile';
 import FamilyTree from './pages/FamilyTree';
@@ -19,6 +20,11 @@ import Friends from './pages/Friends';
 import StoryCreate from './pages/StoryCreate';
 import StoryView from './pages/StoryView';
 import StoryEdit from './pages/StoryEdit';
+import Heritage from './pages/Heritage';
+import RecipeCreate from './pages/RecipeCreate';
+import RecipeView from './pages/RecipeView';
+import HeirloomCreate from './pages/HeirloomCreate';
+import HeirloomView from './pages/HeirloomView';
 import Gallery from './pages/Gallery';
 import Welcome from './pages/Welcome';
 import About from './pages/About';
@@ -47,6 +53,7 @@ function App() {
               <MainLayout />
             </ProtectedRoute>
           }>
+            <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/member/:id/stories" element={<MemberPortal />} />
             <Route path="/profile" element={<Profile />} />
@@ -56,6 +63,11 @@ function App() {
             <Route path="/story/create" element={<StoryCreate />} />
             <Route path="/story/:id" element={<StoryView />} />
             <Route path="/story/:id/edit" element={<StoryEdit />} />
+            <Route path="/heritage" element={<Heritage />} />
+            <Route path="/recipe/create" element={<RecipeCreate />} />
+            <Route path="/recipe/:id" element={<RecipeView />} />
+            <Route path="/heirloom/create" element={<HeirloomCreate />} />
+            <Route path="/heirloom/:id" element={<HeirloomView />} />
           </Route>
 
           {/* Fallback */}

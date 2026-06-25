@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { storyService } from '../api/storyService';
 import { useToast } from '../contexts/ToastContext';
-import { ArrowLeft, MapPin, Calendar, Trash2, Pencil, Play, Music, Film } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Trash2, Pencil, Music, Film } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import AudioWaveformPlayer from '../components/AudioWaveformPlayer';
 
 export default function StoryView() {
     const { id } = useParams();
@@ -113,11 +114,7 @@ export default function StoryView() {
                                             <h3 className="text-lg font-bold text-amber-950 font-serif">Voice Record / Audio Memory</h3>
                                             <p className="text-xs text-amber-800 mt-1">Audio Recording</p>
                                         </div>
-                                        <audio 
-                                            src={currentMedia.mediaUrl} 
-                                            controls 
-                                            className="w-full mt-2"
-                                        />
+                                        <AudioWaveformPlayer audioUrl={currentMedia.mediaUrl} />
                                     </div>
                                 );
                             }

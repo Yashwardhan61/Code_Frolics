@@ -490,18 +490,23 @@ export default function FamilyTree() {
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
                     </div>
                 ) : tree.length === 0 ? (
-                    <div className="max-w-3xl mx-auto px-4">
-                        <div className="bg-white/10 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 p-12 text-center">
-                            <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <TreeDeciduous className="w-10 h-10 text-white" />
+                    <div className="max-w-3xl mx-auto px-4 relative">
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl pointer-events-none"></div>
+                        <div className="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-12 md:p-16 text-center relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
+                            <div className="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-8 relative">
+                                <div className="absolute inset-0 bg-white/20 rounded-full animate-ping opacity-20" style={{ animationDuration: '3s' }}></div>
+                                <TreeDeciduous className="w-12 h-12 text-white drop-shadow-md" />
                             </div>
-                            <h3 className="text-2xl font-bold text-white mb-3">Your Family Tree Journey Begins</h3>
-                            <p className="text-white/80 text-base mb-8 max-w-lg mx-auto">Begin documenting your {treeType} heritage by adding your oldest known ancestor. Create a lasting legacy for future generations.</p>
+                            <h3 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight drop-shadow-md font-serif">Plant the First Seed</h3>
+                            <p className="text-white/80 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
+                                Your {treeType} family history is waiting to be written. Begin by adding yourself or your oldest known ancestor and watch your legacy grow.
+                            </p>
                             <button
                                 onClick={() => setModal({ mode: 'add', initial: { parentMemberId: null } })}
-                                className="inline-flex items-center gap-2 px-8 py-3 bg-white text-gray-900 font-bold rounded-full text-base transition-transform hover:scale-105 shadow-xl"
+                                className="inline-flex items-center gap-3 px-8 py-4 bg-white text-gray-900 font-bold rounded-full text-lg transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]"
                             >
-                                <Plus className="w-5 h-5" />
+                                <Plus className="w-6 h-6" />
                                 Start Your Family Tree
                             </button>
                         </div>
