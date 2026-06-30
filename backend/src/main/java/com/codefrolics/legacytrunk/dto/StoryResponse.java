@@ -24,6 +24,7 @@ public class StoryResponse {
     private LocalDate storyDate;
     private List<String> tags;
     private List<StoryMediaDto> mediaFiles;
+    private Integer views;
     private LocalDateTime createdAt;
     
     @Data

@@ -6,7 +6,7 @@ import { friendService } from '../api/friendService';
 import { useToast } from '../contexts/ToastContext';
 import { 
     ImageIcon, X, Loader2, ArrowLeft, Mic, Square, Music, Film, 
-    MapPin, Users, Hash, ChevronRight, ChevronLeft, Plus, 
+    MapPin, Calendar, Users, Hash, ChevronRight, ChevronLeft, Plus, 
     ChevronDown, Check, User, Sparkles
 } from 'lucide-react';
 
@@ -251,7 +251,7 @@ export default function StoryCreate() {
             const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format in local timezone
             const storyData = {
                 ...formData,
-                storyDate: today
+                storyDate: formData.storyDate || today
             };
             await storyService.createStory(storyData, files);
             toast.success('Memory saved successfully!');
@@ -592,6 +592,17 @@ export default function StoryCreate() {
                                 onChange={(e) => setFormData({...formData, description: e.target.value})}
                                 placeholder="Write the description or story here..."
                                 className="w-full text-sm text-amber-900 placeholder:text-amber-800/40 vintage-textarea-description pl-10 focus:ring-0 p-0 resize-none h-36 focus:outline-none"
+                            />
+                        </div>
+
+                        {/* Date of Memory Row */}
+                        <div className="flex items-center gap-3 py-3 border-t border-amber-900/10 text-amber-850 pl-10">
+                            <Calendar className="w-4 h-4 text-amber-700/60 flex-shrink-0" />
+                            <input 
+                                type="date" 
+                                value={formData.storyDate}
+                                onChange={(e) => setFormData({...formData, storyDate: e.target.value})}
+                                className="w-full text-xs border-none outline-none focus:ring-0 p-0 text-amber-900 bg-transparent cursor-pointer"
                             />
                         </div>
 
