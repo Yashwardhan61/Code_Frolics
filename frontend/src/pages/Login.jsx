@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebase';
+import { authService } from '../api/authService';
 import { Mail, Lock } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 
@@ -9,8 +10,27 @@ export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [resetLoading, setResetLoading] = useState(false);
     const navigate = useNavigate();
     const toast = useToast();
+
+    const handleForgotPassword = async () => {
+        if (!email.trim()) {
+            toast.error('Please enter your email address first.');
+            return;
+        }
+        try {
+            setResetLoading(true);
+            await authService.forgotPassword(email.trim().toLowerCase());
+            toast.success('Password reset email sent! Check your inbox.');
+        } catch (err) {
+            const msg = err.response?.data?.error || 'Failed to send reset email. Please try again.';
+            toast.error(msg);
+            console.error(err);
+        } finally {
+            setResetLoading(false);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -74,6 +94,16 @@ export default function Login() {
                                 className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:ring-amber-500 focus:border-amber-500 bg-white/50 transition-colors"
                                 placeholder="••••••••"
                             />
+                        </div>
+                        <div className="flex justify-end mt-1.5">
+                            <button
+                                type="button"
+                                onClick={handleForgotPassword}
+                                disabled={resetLoading}
+                                className="text-sm text-amber-600 hover:text-amber-500 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {resetLoading ? 'Sending...' : 'Forgot Password?'}
+                            </button>
                         </div>
                     </div>
 

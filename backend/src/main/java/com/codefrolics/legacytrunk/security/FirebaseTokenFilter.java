@@ -48,13 +48,7 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
                     log.warn("Firebase Admin not initialized! Using unsafe manual token decoding for local dev.");
                     String[] parts = token.split("\\.");
                     if (parts.length == 3) {
-                        String base64 = parts[1];
-                        // Add padding if necessary
-                        int padding = 4 - (base64.length() % 4);
-                        if (padding > 0 && padding < 4) {
-                            base64 += "====".substring(0, padding);
-                        }
-                        String payload = new String(java.util.Base64.getUrlDecoder().decode(base64));
+                        String payload = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
                         com.fasterxml.jackson.databind.JsonNode json = new com.fasterxml.jackson.databind.ObjectMapper().readTree(payload);
                         parsedUid = json.has("user_id") ? json.get("user_id").asText() : json.get("sub").asText();
                         parsedEmail = json.has("email") ? json.get("email").asText() : "dummy@example.com";
@@ -71,13 +65,23 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
 
                 // Find user in local DB, or create if first time (sync from Firebase)
                 User user = userRepository.findByFirebaseUid(uid).orElseGet(() -> {
-                    log.info("Creating new user from Firebase token: {}", email);
-                    User newUser = User.builder()
-                            .firebaseUid(uid)
-                            .email(email)
-                            .displayName(name)
-                            .build();
-                    return userRepository.save(newUser);
+                    // Check if a user with this email already exists (e.g. UID changed or race condition)
+                    return userRepository.findByEmail(email).map(existingUser -> {
+                        log.info("Found existing user by email {}, updating firebaseUid", email);
+                        existingUser.setFirebaseUid(uid);
+                        if (name != null && existingUser.getDisplayName() == null) {
+                            existingUser.setDisplayName(name);
+                        }
+                        return userRepository.save(existingUser);
+                    }).orElseGet(() -> {
+                        log.info("Creating new user from Firebase token: {}", email);
+                        User newUser = User.builder()
+                                .firebaseUid(uid)
+                                .email(email)
+                                .displayName(name)
+                                .build();
+                        return userRepository.save(newUser);
+                    });
                 });
 
                 FirebaseUserDetails userDetails = new FirebaseUserDetails(user);
@@ -89,10 +93,10 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (FirebaseAuthException e) {
-            log.error("Firebase Auth Exception: {}", e.getMessage());
+            log.error("Firebase Auth Exception: {}", e.getMessage(), e);
             // SecurityContextHolder will be empty, Spring Security will reject requests requiring auth
         } catch (Exception e) {
-            log.error("Internal server error during auth filter: {}", e.getMessage());
+            log.error("Internal server error during auth filter: {}", e.getMessage(), e);
         }
 
         filterChain.doFilter(request, response);
