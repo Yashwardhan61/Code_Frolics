@@ -20,6 +20,7 @@ public class FamilyTreeService {
     private final FamilyMemberRepository familyMemberRepository;
     private final UserService userService;
     private final MediaStorageService mediaStorageService;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public List<FamilyMemberResponse> getTree(String treeType) {
@@ -75,8 +76,19 @@ public class FamilyTreeService {
                 .bio(request.getBio())
                 .parentMember(parent)
                 .build();
+                
+        FamilyMember savedMember = familyMemberRepository.save(member);
+        
+        notificationService.createNotification(
+                currentUser,
+                "family_milestone",
+                "Family tree growing",
+                "You added " + request.getName() + " to your " + treeType + " family tree.",
+                null,
+                "/family-tree"
+        );
 
-        return mapToResponse(familyMemberRepository.save(member));
+        return mapToResponse(savedMember);
     }
 
     @Transactional

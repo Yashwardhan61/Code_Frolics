@@ -17,6 +17,7 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final UserService userService;
+    private final EmailService emailService;
 
     @Transactional(readOnly = true)
     public List<NotificationResponse> getNotifications() {
@@ -49,6 +50,12 @@ public class NotificationService {
     }
 
     @Transactional
+    public void markAllAsRead() {
+        User currentUser = userService.getCurrentUser();
+        notificationRepository.markAllAsRead(currentUser.getId());
+    }
+
+    @Transactional
     public void deleteNotification(Long id) {
         User currentUser = userService.getCurrentUser();
         
@@ -62,6 +69,22 @@ public class NotificationService {
         notificationRepository.delete(notification);
     }
 
+    @Transactional
+    public void createNotification(User user, String type, String title, String message, com.codefrolics.legacytrunk.model.Story story, String actionUrl) {
+        Notification notification = Notification.builder()
+                .user(user)
+                .type(type)
+                .title(title)
+                .message(message)
+                .story(story)
+                .actionUrl(actionUrl)
+                .build();
+        notificationRepository.save(notification);
+
+        // Send email alert
+        emailService.sendNotificationEmail(user.getEmail(), title, message, actionUrl);
+    }
+
     private NotificationResponse mapToResponse(Notification notification) {
         return NotificationResponse.builder()
                 .id(notification.getId())
@@ -69,6 +92,7 @@ public class NotificationService {
                 .title(notification.getTitle())
                 .message(notification.getMessage())
                 .storyId(notification.getStory() != null ? notification.getStory().getId() : null)
+                .actionUrl(notification.getActionUrl())
                 .isRead(notification.getIsRead())
                 .createdAt(notification.getCreatedAt())
                 .build();

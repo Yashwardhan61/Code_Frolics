@@ -144,9 +144,20 @@ export default function MainLayout() {
                                     <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
                                         <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                                             <h3 className="font-semibold text-gray-900 text-sm">Notifications</h3>
-                                            {unreadCount > 0 && (
-                                                <span className="text-xs text-amber-600 font-medium">{unreadCount} unread</span>
-                                            )}
+                                            <div className="flex items-center gap-3">
+                                                {unreadCount > 0 && (
+                                                    <span className="text-xs text-amber-600 font-medium">{unreadCount} unread</span>
+                                                )}
+                                                {unreadCount > 0 && (
+                                                    <button onClick={async () => {
+                                                        try {
+                                                            await notificationService.markAllAsRead();
+                                                            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+                                                            setUnreadCount(0);
+                                                        } catch (e) { console.error(e); }
+                                                    }} className="text-xs text-amber-500 hover:text-amber-600 font-medium">Mark all read</button>
+                                                )}
+                                            </div>
                                         </div>
 
                                         <div className="max-h-80 overflow-y-auto divide-y divide-gray-50">
@@ -163,7 +174,16 @@ export default function MainLayout() {
                                                             !notif.isRead ? 'bg-amber-50/60' : 'hover:bg-gray-50'
                                                         }`}
                                                     >
-                                                        <div className="flex-1 min-w-0">
+                                                        <div 
+                                                            className={`flex-1 min-w-0 ${notif.actionUrl ? 'cursor-pointer hover:opacity-80' : ''}`}
+                                                            onClick={() => {
+                                                                if (!notif.isRead) handleMarkRead(notif.id);
+                                                                if (notif.actionUrl) {
+                                                                    setIsNotifOpen(false);
+                                                                    navigate(notif.actionUrl);
+                                                                }
+                                                            }}
+                                                        >
                                                             {!notif.isRead && (
                                                                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5 mb-0.5 align-middle" />
                                                             )}
@@ -261,14 +281,35 @@ export default function MainLayout() {
                 {/* Mobile notification panel */}
                 {isNotifOpen && (
                     <div className="md:hidden bg-white border-t border-gray-100 max-h-64 overflow-y-auto divide-y divide-gray-50">
+                        {unreadCount > 0 && (
+                            <div className="px-4 py-2 border-b border-gray-100 flex justify-end">
+                                <button onClick={async () => {
+                                    try {
+                                        await notificationService.markAllAsRead();
+                                        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+                                        setUnreadCount(0);
+                                    } catch (e) { console.error(e); }
+                                }} className="text-xs text-amber-500 hover:text-amber-600 font-medium">Mark all read</button>
+                            </div>
+                        )}
                         {notifications.length === 0 ? (
                             <div className="px-4 py-6 text-center text-sm text-gray-400">No notifications yet</div>
                         ) : (
                             notifications.map(notif => (
                                 <div key={notif.id} className={`px-4 py-3 flex items-start gap-3 ${!notif.isRead ? 'bg-amber-50/60' : ''}`}>
-                                    <div className="flex-1">
+                                    <div 
+                                        className={`flex-1 ${notif.actionUrl ? 'cursor-pointer hover:opacity-80' : ''}`}
+                                        onClick={() => {
+                                            if (!notif.isRead) handleMarkRead(notif.id);
+                                            if (notif.actionUrl) {
+                                                setIsNotifOpen(false);
+                                                navigate(notif.actionUrl);
+                                            }
+                                        }}
+                                    >
                                         <p className="text-xs font-semibold text-gray-800">{notif.title}</p>
                                         <p className="text-xs text-gray-500 mt-0.5">{notif.message}</p>
+                                        <p className="text-[10px] text-gray-400 mt-1">{formatTimeAgo(notif.createdAt)}</p>
                                     </div>
                                     <div className="flex gap-1">
                                         {!notif.isRead && (

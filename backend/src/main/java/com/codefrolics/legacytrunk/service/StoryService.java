@@ -23,6 +23,7 @@ public class StoryService {
     private final UserService userService;
     private final MediaStorageService mediaStorageService;
     private final com.codefrolics.legacytrunk.repository.FamilyMemberRepository familyMemberRepository;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public List<StoryResponse> getAllStoriesForCurrentUser() {
@@ -125,6 +126,21 @@ public class StoryService {
         }
         
         Story savedStory = storyRepository.save(story);
+        
+        // Notify shared users
+        if (savedStory.getShares() != null) {
+            for (StoryShare share : savedStory.getShares()) {
+                notificationService.createNotification(
+                        share.getSharedWithUser(),
+                        "story_shared",
+                        "New memory shared with you",
+                        currentUser.getDisplayName() + " shared '" + savedStory.getTitle() + "' with you.",
+                        savedStory,
+                        "/story/" + savedStory.getId()
+                );
+            }
+        }
+        
         return mapToResponse(savedStory);
     }
 

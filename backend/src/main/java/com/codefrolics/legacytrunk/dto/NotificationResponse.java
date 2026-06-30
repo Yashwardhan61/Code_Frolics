@@ -16,6 +16,7 @@ public class NotificationResponse {
     private String title;
     private String message;
     private Long storyId;
+    private String actionUrl;
     private Boolean isRead;
     private LocalDateTime createdAt;
 }

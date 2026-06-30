@@ -30,6 +30,9 @@ public class Notification {
     @JoinColumn(name = "story_id")
     private Story story;
 
+    @Column(name = "action_url")
+    private String actionUrl;
+
     @Column(name = "is_read")
     @Builder.Default
     private Boolean isRead = false;
