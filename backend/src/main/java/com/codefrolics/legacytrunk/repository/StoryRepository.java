@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface StoryRepository extends JpaRepository<Story, Long> {
+public interface StoryRepository extends JpaRepository<Story, Long>, StoryRepositoryCustom {
     List<Story> findByUserIdOrderByCreatedAtDesc(Long userId);
     
     @Query("SELECT s FROM Story s JOIN s.shares sh WHERE sh.sharedWithUser.id = :userId ORDER BY s.createdAt DESC")

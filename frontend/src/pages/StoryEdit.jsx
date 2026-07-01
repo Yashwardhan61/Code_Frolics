@@ -241,7 +241,17 @@ export default function StoryEdit() {
                         />
                     </div>
 
-                    <div className="grid grid-cols-1 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Date */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Date of Memory</label>
+                            <input 
+                                type="date" 
+                                value={formData.storyDate}
+                                onChange={(e) => setFormData({...formData, storyDate: e.target.value})}
+                                className="w-full p-3 border border-gray-300 rounded-xl focus:ring-amber-500 focus:border-amber-500 cursor-pointer"
+                            />
+                        </div>
                         {/* Location */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>

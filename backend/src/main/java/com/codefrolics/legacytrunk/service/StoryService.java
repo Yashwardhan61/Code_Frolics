@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,7 +44,7 @@ public class StoryService {
         return allStories.stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public StoryResponse getStoryById(Long id) {
         Story story = storyRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Story not found"));
@@ -58,6 +59,11 @@ public class StoryService {
                 throw new RuntimeException("Unauthorized to view this story");
             }
         }
+        
+        // Increment views safely
+        int currentViews = story.getViews() != null ? story.getViews() : 0;
+        story.setViews(currentViews + 1);
+        storyRepository.save(story);
         
         return mapToResponse(story);
     }
@@ -216,6 +222,35 @@ public class StoryService {
         storyRepository.delete(story);
     }
 
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<StoryResponse> searchStories(
+            String query,
+            LocalDate startDate,
+            LocalDate endDate,
+            Long authorId,
+            String mediaType,
+            List<String> tags,
+            String location,
+            String sort,
+            org.springframework.data.domain.Pageable pageable) {
+        
+        User currentUser = userService.getCurrentUser();
+        org.springframework.data.domain.Page<Story> page = storyRepository.searchStories(
+                currentUser.getId(),
+                query,
+                startDate,
+                endDate,
+                authorId,
+                mediaType,
+                tags,
+                location,
+                sort,
+                pageable
+        );
+        
+        return page.map(this::mapToResponse);
+    }
+
     private StoryResponse mapToResponse(Story story) {
         return StoryResponse.builder()
                 .id(story.getId())
@@ -235,6 +270,7 @@ public class StoryService {
                         .mediaType(m.getMediaType())
                         .build()
                 ).collect(Collectors.toList()))
+                .views(story.getViews() != null ? story.getViews() : 0)
                 .createdAt(story.getCreatedAt())
                 .familyMemberId(story.getFamilyMember() != null ? story.getFamilyMember().getId() : null)
                 .familyMemberName(story.getFamilyMember() != null ? story.getFamilyMember().getName() : null)
