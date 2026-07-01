@@ -15,6 +15,10 @@ export const notificationService = {
         await api.put(`/notifications/${id}/read`);
     },
 
+    markAllAsRead: async () => {
+        await api.put('/notifications/mark-all-read');
+    },
+
     deleteNotification: async (id) => {
         await api.delete(`/notifications/${id}`);
     }

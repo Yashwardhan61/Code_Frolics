@@ -23,6 +23,11 @@ public class FamilyTreeController {
         return ResponseEntity.ok(familyTreeService.getTree(type));
     }
 
+    @GetMapping("/member/{id}")
+    public ResponseEntity<FamilyMemberResponse> getMemberById(@PathVariable Long id) {
+        return ResponseEntity.ok(familyTreeService.getMemberById(id));
+    }
+
     @PostMapping("/{type}")
     public ResponseEntity<FamilyMemberResponse> addMember(
             @PathVariable String type,

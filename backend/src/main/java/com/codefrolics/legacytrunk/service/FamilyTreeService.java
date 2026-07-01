@@ -20,6 +20,7 @@ public class FamilyTreeService {
     private final FamilyMemberRepository familyMemberRepository;
     private final UserService userService;
     private final MediaStorageService mediaStorageService;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public List<FamilyMemberResponse> getTree(String treeType) {
@@ -32,6 +33,18 @@ public class FamilyTreeService {
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public FamilyMemberResponse getMemberById(Long id) {
+        User currentUser = userService.getCurrentUser();
+        FamilyMember member = familyMemberRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Member not found"));
+        
+        if (!member.getUser().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+        return mapToResponse(member);
     }
 
     @Transactional
@@ -63,8 +76,19 @@ public class FamilyTreeService {
                 .bio(request.getBio())
                 .parentMember(parent)
                 .build();
+                
+        FamilyMember savedMember = familyMemberRepository.save(member);
+        
+        notificationService.createNotification(
+                currentUser,
+                "family_milestone",
+                "Family tree growing",
+                "You added " + request.getName() + " to your " + treeType + " family tree.",
+                null,
+                "/family-tree"
+        );
 
-        return mapToResponse(familyMemberRepository.save(member));
+        return mapToResponse(savedMember);
     }
 
     @Transactional

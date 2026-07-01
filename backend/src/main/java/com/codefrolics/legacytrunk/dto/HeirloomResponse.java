@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -12,28 +11,27 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class StoryResponse {
+public class HeirloomResponse {
     private Long id;
     private Long userId;
     private String authorName;
-    private String authorEmail;
     private String authorPhotoUrl;
-    private String title;
+    private String name;
     private String description;
-    private String location;
-    private LocalDate storyDate;
-    private List<String> tags;
-    private List<StoryMediaDto> mediaFiles;
+    private String currentOwner;
+    private String nextOwner;
+    private String estimatedYear;
     private Long familyMemberId;
     private String familyMemberName;
-    private Integer views;
+    private List<String> tags;
+    private List<MediaDto> mediaFiles;
     private LocalDateTime createdAt;
-    
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class StoryMediaDto {
+    public static class MediaDto {
         private Long id;
         private String mediaUrl;
         private String mediaType;

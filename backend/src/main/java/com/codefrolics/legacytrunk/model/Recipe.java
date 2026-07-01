@@ -2,19 +2,14 @@ package com.codefrolics.legacytrunk.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "stories", indexes = {
-    @Index(name = "idx_stories_story_date", columnList = "story_date"),
-    @Index(name = "idx_stories_created_at", columnList = "created_at"),
-    @Index(name = "idx_stories_views", columnList = "views")
-})
+@Table(name = "recipes")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class Story {
+public class Recipe {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,27 +29,29 @@ public class Story {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(length = 500)
-    private String location;
+    @Column(name = "cooking_time", length = 100)
+    private String cookingTime;
 
-    @Column(name = "story_date")
-    private LocalDate storyDate;
+    @Column(length = 100)
+    private String servings;
 
-    @OneToMany(mappedBy = "story", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<StoryTag> tags = new ArrayList<>();
+    @OrderBy("sortOrder ASC")
+    private List<RecipeIngredient> ingredients = new ArrayList<>();
 
-    @OneToMany(mappedBy = "story", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<StoryMedia> mediaFiles = new ArrayList<>();
+    @OrderBy("stepNumber ASC")
+    private List<RecipeStep> steps = new ArrayList<>();
 
-    @OneToMany(mappedBy = "story", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<StoryShare> shares = new ArrayList<>();
+    private List<RecipeMedia> mediaFiles = new ArrayList<>();
 
-    @Column(name = "views")
+    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private Integer views = 0;
+    private List<RecipeTag> tags = new ArrayList<>();
 
     @Column(name = "created_at")
     @Builder.Default

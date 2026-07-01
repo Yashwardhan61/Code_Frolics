@@ -1,53 +1,25 @@
 import api from './axiosConfig';
 
-export const storyService = {
-    getAllStories: async () => {
-        const response = await api.get('/stories');
+export const recipeService = {
+    getAllRecipes: async () => {
+        const response = await api.get('/recipes');
         return response.data;
     },
     
-    searchStories: async (params) => {
-        const response = await api.get('/memories/search', { params });
-        return response.data;
-    },
-    
-    getStoryById: async (id) => {
-        const response = await api.get(`/stories/${id}`);
+    getRecipeById: async (id) => {
+        const response = await api.get(`/recipes/${id}`);
         return response.data;
     },
 
-    getStoriesByMember: async (memberId) => {
-        const response = await api.get(`/stories/member/${memberId}`);
+    getRecipesByMember: async (memberId) => {
+        const response = await api.get(`/recipes/member/${memberId}`);
         return response.data;
     },
     
-    createStory: async (storyRequest, files) => {
+    createRecipe: async (recipeRequest, files) => {
         const formData = new FormData();
         
-        // Append JSON data as a blob
-        formData.append('story', new Blob([JSON.stringify(storyRequest)], {
-            type: 'application/json'
-        }));
-        
-        // Append files
-        if (files && files.length > 0) {
-            for (let i = 0; i < files.length; i++) {
-                formData.append('files', files[i]);
-            }
-        }
-        
-        const response = await api.post('/stories', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        });
-        return response.data;
-    },
-    
-    updateStory: async (id, storyRequest, files) => {
-        const formData = new FormData();
-        
-        formData.append('story', new Blob([JSON.stringify(storyRequest)], {
+        formData.append('recipe', new Blob([JSON.stringify(recipeRequest)], {
             type: 'application/json'
         }));
         
@@ -57,7 +29,28 @@ export const storyService = {
             }
         }
         
-        const response = await api.put(`/stories/${id}`, formData, {
+        const response = await api.post('/recipes', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        return response.data;
+    },
+    
+    updateRecipe: async (id, recipeRequest, files) => {
+        const formData = new FormData();
+        
+        formData.append('recipe', new Blob([JSON.stringify(recipeRequest)], {
+            type: 'application/json'
+        }));
+        
+        if (files && files.length > 0) {
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files', files[i]);
+            }
+        }
+        
+        const response = await api.put(`/recipes/${id}`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }
@@ -65,7 +58,7 @@ export const storyService = {
         return response.data;
     },
 
-    deleteStory: async (id) => {
-        await api.delete(`/stories/${id}`);
+    deleteRecipe: async (id) => {
+        await api.delete(`/recipes/${id}`);
     }
 };

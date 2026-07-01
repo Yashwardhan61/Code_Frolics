@@ -28,6 +28,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/media/**").permitAll() // Allow public access to media
+                        .requestMatchers("/api/notifications/test-email").permitAll() // Allow test email endpoint
                         .requestMatchers("/api/**").authenticated()   // All other API endpoints require auth
                         .anyRequest().permitAll()                     // Allow static resources
                 )
