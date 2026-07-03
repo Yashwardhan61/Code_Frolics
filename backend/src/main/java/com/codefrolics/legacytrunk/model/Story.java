@@ -48,6 +48,9 @@ public class Story {
     @Builder.Default
     private List<StoryShare> shares = new ArrayList<>();
 
+    @Column(name = "unlock_date_time")
+    private LocalDateTime unlockDateTime;
+
     @Column(name = "created_at")
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();

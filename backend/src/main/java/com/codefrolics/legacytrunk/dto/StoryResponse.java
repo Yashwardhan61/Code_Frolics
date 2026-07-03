@@ -27,6 +27,8 @@ public class StoryResponse {
     private Long familyMemberId;
     private String familyMemberName;
     private LocalDateTime createdAt;
+    private LocalDateTime unlockDateTime;
+    private Boolean isLocked;
     
     @Data
     @NoArgsConstructor

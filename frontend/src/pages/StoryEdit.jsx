@@ -19,6 +19,9 @@ export default function StoryEdit() {
         location: '',
         tags: []
     });
+    const [isTimeCapsule, setIsTimeCapsule] = useState(false);
+    const [unlockDate, setUnlockDate] = useState('');
+    const [unlockTime, setUnlockTime] = useState('');
     const [tagInput, setTagInput] = useState('');
     const [existingMedia, setExistingMedia] = useState([]);
     const [newFiles, setNewFiles] = useState([]);
@@ -134,6 +137,12 @@ export default function StoryEdit() {
                     tags: story.tags || []
                 });
                 setExistingMedia(story.mediaFiles || []);
+                if (story.unlockDateTime) {
+                    setIsTimeCapsule(true);
+                    const [d, t] = story.unlockDateTime.split('T');
+                    setUnlockDate(d);
+                    setUnlockTime(t ? t.substring(0, 5) : '');
+                }
             } catch (error) {
                 console.error('Failed to fetch story', error);
                 toast.error('Could not load story for editing.');
@@ -185,9 +194,24 @@ export default function StoryEdit() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (isTimeCapsule) {
+            if (!unlockDate || !unlockTime) {
+                toast.error('Please specify both unlock date and time for the Time Capsule.');
+                return;
+            }
+            const unlockDateTime = `${unlockDate}T${unlockTime}:00`;
+            if (new Date(unlockDateTime) <= new Date()) {
+                toast.error('Unlock time must be in the future.');
+                return;
+            }
+        }
         try {
             setSaving(true);
-            await storyService.updateStory(id, formData, newFiles);
+            const payload = {
+                ...formData,
+                unlockDateTime: isTimeCapsule ? `${unlockDate}T${unlockTime}:00` : null
+            };
+            await storyService.updateStory(id, payload, newFiles);
             toast.success('Memory updated successfully!');
             navigate(`/story/${id}`);
         } catch (error) {
@@ -431,6 +455,53 @@ export default function StoryEdit() {
                                             </button>
                                         </div>
                                     )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    {/* Time Capsule Settings */}
+                    <div className="border-t border-gray-100 pt-6">
+                        <div className="flex items-center justify-between mb-3">
+                            <label className="flex items-center gap-3 text-gray-700 font-semibold text-sm cursor-pointer select-none">
+                                <input 
+                                    type="checkbox" 
+                                    checked={isTimeCapsule}
+                                    onChange={(e) => setIsTimeCapsule(e.target.checked)}
+                                    className="rounded border-gray-300 text-amber-600 focus:ring-amber-500 h-4 w-4 bg-transparent"
+                                />
+                                <span className="flex items-center gap-1.5">
+                                    🔒 Seal in a Time Capsule
+                                </span>
+                            </label>
+                            {isTimeCapsule && (
+                                <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full font-medium">
+                                    Locked until set time
+                                </span>
+                            )}
+                        </div>
+
+                        {isTimeCapsule && (
+                            <div className="grid grid-cols-2 gap-4 mt-3 max-w-md animate-fadeIn">
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-600 mb-1">Unlock Date</label>
+                                    <input 
+                                        type="date"
+                                        required={isTimeCapsule}
+                                        value={unlockDate}
+                                        onChange={(e) => setUnlockDate(e.target.value)}
+                                        min={new Date().toLocaleDateString('en-CA')}
+                                        className="w-full text-sm p-2.5 rounded-xl border border-gray-300 bg-transparent text-gray-900 focus:ring-amber-500 focus:border-amber-500 focus:outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-600 mb-1">Unlock Time</label>
+                                    <input 
+                                        type="time"
+                                        required={isTimeCapsule}
+                                        value={unlockTime}
+                                        onChange={(e) => setUnlockTime(e.target.value)}
+                                        className="w-full text-sm p-2.5 rounded-xl border border-gray-300 bg-transparent text-gray-900 focus:ring-amber-500 focus:border-amber-500 focus:outline-none"
+                                    />
                                 </div>
                             </div>
                         )}

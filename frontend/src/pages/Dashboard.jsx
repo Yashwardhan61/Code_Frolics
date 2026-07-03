@@ -6,7 +6,7 @@ import { useToast } from '../contexts/ToastContext';
 import {
     PlusCircle, MapPin, Image as ImageIcon, Clock, Heart,
     MessageCircle, ChevronLeft, ChevronRight, BookOpen, Users,
-    CalendarDays, Globe, Music, Film
+    CalendarDays, Globe, Music, Film, Lock
 } from 'lucide-react';
 
 /* -- Media type detection helpers -- */
@@ -86,7 +86,7 @@ function ScrollReveal({ children, delay = 0 }) {
 }
 
 /* -- Media Carousel (auto-advances every 4s, with arrows) -- */
-function MediaCarousel({ mediaFiles, alt, className = '' }) {
+function MediaCarousel({ mediaFiles, alt, className = '', isLocked = false, unlockDateTime }) {
     const [current, setCurrent] = useState(0);
     const timerRef = useRef(null);
     const total = mediaFiles?.length || 0;
@@ -109,6 +109,22 @@ function MediaCarousel({ mediaFiles, alt, className = '' }) {
         setCurrent(prev => (prev + dir + total) % total);
         resetTimer();
     };
+
+    if (isLocked) {
+        return (
+            <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900/10 to-amber-955/5 p-4 text-center select-none ${className}`}>
+                <div className="w-12 h-12 rounded-full bg-amber-800/10 flex items-center justify-center mb-3">
+                    <Lock className="w-6 h-6 text-amber-800" />
+                </div>
+                <span className="text-xs font-bold text-amber-950 uppercase tracking-widest">Time Capsule Locked</span>
+                {unlockDateTime && (
+                    <span className="text-[10px] text-amber-850 mt-1 font-mono">
+                        Opens {new Date(unlockDateTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' })}
+                    </span>
+                )}
+            </div>
+        );
+    }
 
     if (!mediaFiles || total === 0) {
         return (
@@ -503,9 +519,16 @@ export default function Dashboard() {
                                         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 font-serif leading-tight">
                                             {spotlightStory.title}
                                         </h2>
-                                        <p className="text-gray-600 mb-6 line-clamp-3 text-lg leading-relaxed">
-                                            {spotlightStory.description}
-                                        </p>
+                                        {spotlightStory.isLocked ? (
+                                            <p className="text-amber-800/60 text-xs italic mb-6 leading-relaxed flex items-center gap-1.5 bg-[#faf5e6] p-3 rounded-lg border border-amber-900/5">
+                                                <Lock className="w-4 h-4" />
+                                                This memory is locked in a time capsule.
+                                            </p>
+                                        ) : (
+                                            <p className="text-gray-600 mb-6 line-clamp-3 text-lg leading-relaxed">
+                                                {spotlightStory.description}
+                                            </p>
+                                        )}
 
                                         <div className="flex items-center justify-between mt-auto pt-6 border-t border-amber-50">
                                             <div className="flex items-center space-x-3">
@@ -531,6 +554,8 @@ export default function Dashboard() {
                                             mediaFiles={spotlightStory.mediaFiles}
                                             alt={spotlightStory.title}
                                             className="absolute inset-0"
+                                            isLocked={spotlightStory.isLocked}
+                                            unlockDateTime={spotlightStory.unlockDateTime}
                                         />
                                     </div>
                                 </div>
@@ -569,12 +594,22 @@ export default function Dashboard() {
                                                                 <MediaCarousel
                                                                     mediaFiles={story.mediaFiles}
                                                                     alt={story.title}
+                                                                    isLocked={story.isLocked}
+                                                                    unlockDateTime={story.unlockDateTime}
                                                                 />
 
                                                                 {/* Family Member Tag */}
                                                                 {story.familyMemberName && (
                                                                     <div className="absolute top-3 left-3 z-30 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-semibold text-amber-800 shadow-sm">
                                                                         {story.familyMemberName}
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Time Capsule Lock Tag */}
+                                                                {story.isLocked && (
+                                                                    <div className="absolute top-3 right-3 z-30 bg-amber-900/90 backdrop-blur px-2.5 py-1 rounded-full text-[10px] font-bold text-white shadow-sm flex items-center gap-1">
+                                                                        <Lock className="w-3 h-3 text-amber-400" />
+                                                                        Capsule
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -593,13 +628,20 @@ export default function Dashboard() {
                                                                     )}
                                                                 </div>
 
-                                                                <h3 className="text-xl font-bold text-gray-900 mb-2 font-serif group-hover:text-amber-700 transition-colors">
+                                                                <h3 className="text-xl font-bold text-gray-900 mb-2 font-serif group-hover:text-amber-700 transition-colors flex items-center gap-1.5">
                                                                     {story.title}
                                                                 </h3>
 
-                                                                <p className="text-gray-600 text-sm line-clamp-2 mb-4 leading-relaxed">
-                                                                    {story.description}
-                                                                </p>
+                                                                {story.isLocked ? (
+                                                                    <p className="text-amber-800/60 text-xs italic mb-4 leading-relaxed flex items-center gap-1.5 bg-[#faf5e6] p-2 rounded-lg border border-amber-900/5">
+                                                                        <Lock className="w-3.5 h-3.5 text-amber-800" />
+                                                                        This memory is locked in a time capsule.
+                                                                    </p>
+                                                                ) : (
+                                                                    <p className="text-gray-600 text-sm line-clamp-2 mb-4 leading-relaxed">
+                                                                        {story.description}
+                                                                    </p>
+                                                                )}
 
                                                                 {/* Interaction Footer */}
                                                                 <div className="flex items-center justify-between pt-3 border-t border-dashed border-gray-200">

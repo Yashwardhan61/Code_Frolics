@@ -54,6 +54,9 @@ export default function StoryCreate() {
         tags: [],
         sharedWithUserIds: []
     });
+    const [isTimeCapsule, setIsTimeCapsule] = useState(false);
+    const [unlockDate, setUnlockDate] = useState('');
+    const [unlockTime, setUnlockTime] = useState('');
     const [tagInput, setTagInput] = useState('');
     const [files, setFiles] = useState([]);
     const [previews, setPreviews] = useState([]);
@@ -245,13 +248,25 @@ export default function StoryCreate() {
             toast.error('Title is required.');
             return;
         }
+        if (isTimeCapsule) {
+            if (!unlockDate || !unlockTime) {
+                toast.error('Please specify both unlock date and time for the Time Capsule.');
+                return;
+            }
+            const unlockDateTime = `${unlockDate}T${unlockTime}:00`;
+            if (new Date(unlockDateTime) <= new Date()) {
+                toast.error('Unlock time must be in the future.');
+                return;
+            }
+        }
         try {
             setLoading(true);
             // Capture the current system date at the exact time of upload
             const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format in local timezone
             const storyData = {
                 ...formData,
-                storyDate: today
+                storyDate: today,
+                unlockDateTime: isTimeCapsule ? `${unlockDate}T${unlockTime}:00` : null
             };
             await storyService.createStory(storyData, files);
             toast.success('Memory saved successfully!');
@@ -711,6 +726,54 @@ export default function StoryCreate() {
                                 </div>
                             )}
                         </div>
+                    </div>
+
+                    {/* Time Capsule Settings */}
+                    <div className="border-t border-amber-900/10 py-4 pl-10 mb-2">
+                        <div className="flex items-center justify-between mb-3">
+                            <label className="flex items-center gap-3 text-amber-800 font-semibold text-xs cursor-pointer select-none">
+                                <input 
+                                    type="checkbox" 
+                                    checked={isTimeCapsule}
+                                    onChange={(e) => setIsTimeCapsule(e.target.checked)}
+                                    className="rounded border-amber-900/30 text-amber-800 focus:ring-amber-500 h-4 w-4 bg-transparent"
+                                />
+                                <span className="flex items-center gap-1.5">
+                                    🔒 Seal in a Time Capsule
+                                </span>
+                            </label>
+                            {isTimeCapsule && (
+                                <span className="text-[10px] text-amber-700/60 bg-[#faf5e6] border border-amber-900/20 px-2 py-0.5 rounded-full font-medium">
+                                    Locked until set time
+                                </span>
+                            )}
+                        </div>
+
+                        {isTimeCapsule && (
+                            <div className="grid grid-cols-2 gap-3 mt-3 animate-fadeIn">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-amber-800/80 mb-1">Unlock Date</label>
+                                    <input 
+                                        type="date"
+                                        required={isTimeCapsule}
+                                        value={unlockDate}
+                                        onChange={(e) => setUnlockDate(e.target.value)}
+                                        min={new Date().toLocaleDateString('en-CA')}
+                                        className="w-full text-xs p-2 rounded-lg border border-amber-900/20 bg-transparent text-amber-900 focus:ring-amber-500 focus:border-amber-500 focus:outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-amber-800/80 mb-1">Unlock Time</label>
+                                    <input 
+                                        type="time"
+                                        required={isTimeCapsule}
+                                        value={unlockTime}
+                                        onChange={(e) => setUnlockTime(e.target.value)}
+                                        className="w-full text-xs p-2 rounded-lg border border-amber-900/20 bg-transparent text-amber-900 focus:ring-amber-500 focus:border-amber-500 focus:outline-none"
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-amber-900/10 select-none pl-10">

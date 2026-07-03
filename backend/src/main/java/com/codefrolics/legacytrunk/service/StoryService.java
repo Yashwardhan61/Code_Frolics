@@ -77,6 +77,7 @@ public class StoryService {
                 .description(request.getDescription())
                 .location(request.getLocation())
                 .storyDate(request.getStoryDate())
+                .unlockDateTime(request.getUnlockDateTime())
                 .build();
                 
         if (request.getFamilyMemberId() != null) {
@@ -143,6 +144,7 @@ public class StoryService {
         story.setDescription(request.getDescription());
         story.setLocation(request.getLocation());
         story.setStoryDate(request.getStoryDate());
+        story.setUnlockDateTime(request.getUnlockDateTime());
 
         if (request.getFamilyMemberId() != null) {
             FamilyMember member = familyMemberRepository.findById(request.getFamilyMemberId())
@@ -201,6 +203,8 @@ public class StoryService {
     }
 
     private StoryResponse mapToResponse(Story story) {
+        boolean isLocked = story.getUnlockDateTime() != null && java.time.LocalDateTime.now().isBefore(story.getUnlockDateTime());
+
         return StoryResponse.builder()
                 .id(story.getId())
                 .userId(story.getUser().getId())
@@ -208,11 +212,11 @@ public class StoryService {
                 .authorEmail(story.getUser().getEmail())
                 .authorPhotoUrl(story.getUser().getPhotoUrl())
                 .title(story.getTitle())
-                .description(story.getDescription())
+                .description(isLocked ? null : story.getDescription())
                 .location(story.getLocation())
                 .storyDate(story.getStoryDate())
                 .tags(story.getTags().stream().map(StoryTag::getTag).collect(Collectors.toList()))
-                .mediaFiles(story.getMediaFiles().stream().map(m -> 
+                .mediaFiles(isLocked ? java.util.Collections.emptyList() : story.getMediaFiles().stream().map(m -> 
                     StoryResponse.StoryMediaDto.builder()
                         .id(m.getId())
                         .mediaUrl("/api/media/" + m.getFilePath())
@@ -222,6 +226,8 @@ public class StoryService {
                 .createdAt(story.getCreatedAt())
                 .familyMemberId(story.getFamilyMember() != null ? story.getFamilyMember().getId() : null)
                 .familyMemberName(story.getFamilyMember() != null ? story.getFamilyMember().getName() : null)
+                .unlockDateTime(story.getUnlockDateTime())
+                .isLocked(isLocked)
                 .build();
     }
 }
