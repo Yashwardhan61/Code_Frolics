@@ -15,4 +15,5 @@ public interface StoryRepository extends JpaRepository<Story, Long> {
     List<Story> findSharedWithUserOrderByCreatedAtDesc(Long userId);
 
     List<Story> findByFamilyMemberIdOrderByCreatedAtDesc(Long familyMemberId);
+    List<Story> findByUnlockDateTimeBetween(java.time.LocalDateTime start, java.time.LocalDateTime end);
 }
