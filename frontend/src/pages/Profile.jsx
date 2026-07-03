@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { profileService } from '../api/profileService';
 import { useToast } from '../contexts/ToastContext';
-import { User, Image as ImageIcon, CheckCircle, Edit2, Save, X } from 'lucide-react';
+import { User, Image as ImageIcon, CheckCircle, Edit2, Save, X, Key, Eye, EyeOff, Lock } from 'lucide-react';
+import { auth } from '../config/firebase';
+import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 
 export default function Profile() {
     const [profile, setProfile] = useState(null);
@@ -10,7 +12,52 @@ export default function Profile() {
     const [formData, setFormData] = useState({ displayName: '', username: '', description: '' });
     const [saving, setSaving] = useState(false);
     const [photoFile, setPhotoFile] = useState(null);
+    const [showPasswordForm, setShowPasswordForm] = useState(false);
+    const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    const [passwordLoading, setPasswordLoading] = useState(false);
+    const [showCurrentPw, setShowCurrentPw] = useState(false);
+    const [showNewPw, setShowNewPw] = useState(false);
+    const [showConfirmPw, setShowConfirmPw] = useState(false);
     const toast = useToast();
+
+    const handlePasswordReset = async () => {
+        const { currentPassword, newPassword, confirmPassword } = passwordData;
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            toast.error('Please fill in all password fields.');
+            return;
+        }
+        if (newPassword.length < 6) {
+            toast.error('New password must be at least 6 characters.');
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            toast.error('New passwords do not match.');
+            return;
+        }
+        try {
+            setPasswordLoading(true);
+            const user = auth.currentUser;
+            const credential = EmailAuthProvider.credential(user.email, currentPassword);
+            await reauthenticateWithCredential(user, credential);
+            await updatePassword(user, newPassword);
+            toast.success('Password updated successfully!');
+            setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+            setShowPasswordForm(false);
+        } catch (err) {
+            console.error('Failed to update password', err);
+            let msg = 'Failed to update password.';
+            if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+                msg = 'Current password is incorrect.';
+            } else if (err.code === 'auth/too-many-requests') {
+                msg = 'Too many attempts. Please try again later.';
+            } else if (err.code === 'auth/weak-password') {
+                msg = 'New password is too weak. Use at least 6 characters.';
+            }
+            toast.error(msg);
+        } finally {
+            setPasswordLoading(false);
+        }
+    };
 
     const fetchProfile = async () => {
         try {
@@ -189,6 +236,71 @@ export default function Profile() {
                                         <span className="text-amber-600 font-medium">Pending</span>
                                     )}
                                 </div>
+                            </div>
+
+                            <div className="pt-4 border-t border-gray-200 mt-4">
+                                {!showPasswordForm ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPasswordForm(true)}
+                                        className="w-full flex items-center justify-center text-sm font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 py-2.5 px-4 rounded-xl transition-colors"
+                                    >
+                                        <Key className="w-4 h-4 mr-2" />
+                                        Reset Password
+                                    </button>
+                                ) : (
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <h4 className="text-sm font-semibold text-gray-800 flex items-center"><Lock className="w-3.5 h-3.5 mr-1.5" />Change Password</h4>
+                                            <button onClick={() => { setShowPasswordForm(false); setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' }); }} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+                                        </div>
+                                        <div className="relative">
+                                            <input
+                                                type={showCurrentPw ? 'text' : 'password'}
+                                                placeholder="Current Password"
+                                                value={passwordData.currentPassword}
+                                                onChange={e => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                                                className="w-full p-2 pr-9 text-sm border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500"
+                                            />
+                                            <button type="button" onClick={() => setShowCurrentPw(!showCurrentPw)} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                                {showCurrentPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                            </button>
+                                        </div>
+                                        <div className="relative">
+                                            <input
+                                                type={showNewPw ? 'text' : 'password'}
+                                                placeholder="New Password"
+                                                value={passwordData.newPassword}
+                                                onChange={e => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                                                className="w-full p-2 pr-9 text-sm border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500"
+                                            />
+                                            <button type="button" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                                {showNewPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                            </button>
+                                        </div>
+                                        <div className="relative">
+                                            <input
+                                                type={showConfirmPw ? 'text' : 'password'}
+                                                placeholder="Confirm New Password"
+                                                value={passwordData.confirmPassword}
+                                                onChange={e => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                                                className="w-full p-2 pr-9 text-sm border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500"
+                                            />
+                                            <button type="button" onClick={() => setShowConfirmPw(!showConfirmPw)} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                                {showConfirmPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                            </button>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={handlePasswordReset}
+                                            disabled={passwordLoading}
+                                            className="w-full flex items-center justify-center text-sm font-semibold text-white bg-amber-600 hover:bg-amber-700 py-2.5 px-4 rounded-xl transition-colors disabled:opacity-50"
+                                        >
+                                            <Key className="w-4 h-4 mr-2" />
+                                            {passwordLoading ? 'Updating...' : 'Update Password'}
+                                        </button>
+                                    </div>
+                                )}
                             </div>
 
                             <h3 className="font-semibold text-gray-900 mt-6 mb-4 pb-2 border-b border-gray-200">Stats</h3>

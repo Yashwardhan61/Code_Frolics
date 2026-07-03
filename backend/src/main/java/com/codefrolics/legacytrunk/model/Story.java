@@ -8,7 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "stories")
+@Table(name = "stories", indexes = {
+    @Index(name = "idx_stories_story_date", columnList = "story_date"),
+    @Index(name = "idx_stories_created_at", columnList = "created_at"),
+    @Index(name = "idx_stories_views", columnList = "views")
+})
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Story {
 
@@ -47,6 +51,13 @@ public class Story {
     @OneToMany(mappedBy = "story", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<StoryShare> shares = new ArrayList<>();
+
+    @Column(name = "views")
+    @Builder.Default
+    private Integer views = 0;
+
+    @Column(name = "unlock_date_time")
+    private LocalDateTime unlockDateTime;
 
     @Column(name = "created_at")
     @Builder.Default

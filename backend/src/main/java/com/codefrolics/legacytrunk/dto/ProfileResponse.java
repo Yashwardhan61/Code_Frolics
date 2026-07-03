@@ -19,6 +19,7 @@ public class ProfileResponse {
     private String photoUrl;
     private Boolean hasChangedUsername;
     private Boolean profileSetupComplete;
+    private String role;
     private LocalDateTime createdAt;
     
     // Stats

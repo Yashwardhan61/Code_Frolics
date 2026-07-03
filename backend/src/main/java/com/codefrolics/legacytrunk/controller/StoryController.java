@@ -5,6 +5,7 @@ import com.codefrolics.legacytrunk.dto.StoryResponse;
 import com.codefrolics.legacytrunk.service.StoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,6 +34,7 @@ public class StoryController {
     }
 
     @PostMapping(consumes = {"multipart/form-data"})
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
     public ResponseEntity<StoryResponse> createStory(
             @RequestPart("story") StoryRequest request,
             @RequestPart(value = "files", required = false) MultipartFile[] files) {
@@ -40,6 +42,7 @@ public class StoryController {
     }
 
     @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
     public ResponseEntity<StoryResponse> updateStory(
             @PathVariable Long id,
             @RequestPart("story") StoryRequest request,
@@ -48,6 +51,7 @@ public class StoryController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
     public ResponseEntity<Void> deleteStory(@PathVariable Long id) {
         storyService.deleteStory(id);
         return ResponseEntity.noContent().build();

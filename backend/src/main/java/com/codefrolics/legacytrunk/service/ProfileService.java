@@ -44,6 +44,7 @@ public class ProfileService {
                 .photoUrl(user.getPhotoUrl())
                 .hasChangedUsername(user.getHasChangedUsername())
                 .profileSetupComplete(user.getProfileSetupComplete())
+                .role(user.getRole().name())
                 .createdAt(user.getCreatedAt())
                 .storyCount(storyCount)
                 .friendCount(friendCount)

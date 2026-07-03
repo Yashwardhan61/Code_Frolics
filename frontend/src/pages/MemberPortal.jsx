@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { storyService } from '../api/storyService';
 import { familyService } from '../api/familyService';
 import { useToast } from '../contexts/ToastContext';
-import { PlusCircle, MapPin, Calendar, Image as ImageIcon, ArrowLeft } from 'lucide-react';
+import { PlusCircle, MapPin, Calendar, Image as ImageIcon, ArrowLeft, Lock } from 'lucide-react';
 
 export default function MemberPortal() {
     const { id } = useParams();
@@ -132,10 +132,20 @@ export default function MemberPortal() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {stories.map(story => (
-                        <Link key={story.id} to={`/story/${story.id}`} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group">
+                        <Link key={story.id} to={`/story/${story.id}`} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group relative">
                             {/* Cover Image */}
                             <div className="h-48 bg-gray-200 relative overflow-hidden">
-                                {story.mediaFiles && story.mediaFiles.length > 0 ? (
+                                {story.isLocked ? (
+                                    <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900/10 to-amber-955/5 text-center p-3 select-none">
+                                        <Lock className="w-8 h-8 text-amber-800 mb-2" />
+                                        <span className="text-[10px] font-bold text-amber-955 uppercase tracking-wider">Time Capsule Locked</span>
+                                        {story.unlockDateTime && (
+                                            <span className="text-[9px] text-amber-800/80 mt-1 font-mono">
+                                                Opens {new Date(story.unlockDateTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' })}
+                                            </span>
+                                        )}
+                                    </div>
+                                ) : story.mediaFiles && story.mediaFiles.length > 0 ? (
                                     <img 
                                         src={story.mediaFiles[0].mediaUrl} 
                                         alt={story.title} 
@@ -150,13 +160,20 @@ export default function MemberPortal() {
                             
                             {/* Content */}
                             <div className="p-5">
-                                <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-amber-700 transition-colors line-clamp-1">
+                                <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-amber-700 transition-colors line-clamp-1 flex items-center gap-1.5">
                                     {story.title}
                                 </h3>
                                 
-                                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                                    {story.description}
-                                </p>
+                                {story.isLocked ? (
+                                    <p className="text-amber-800/60 text-xs italic mb-4 leading-relaxed flex items-center gap-1.5 bg-[#faf5e6] p-2 rounded-lg border border-amber-900/5">
+                                        <Lock className="w-3.5 h-3.5 text-amber-800" />
+                                        This memory is locked in a time capsule.
+                                    </p>
+                                ) : (
+                                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                                        {story.description}
+                                    </p>
+                                )}
                                 
                                 <div className="flex items-center text-xs text-gray-500 space-x-4">
                                     {story.storyDate && (

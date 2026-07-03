@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,6 +24,7 @@ public class StoryService {
     private final UserService userService;
     private final MediaStorageService mediaStorageService;
     private final com.codefrolics.legacytrunk.repository.FamilyMemberRepository familyMemberRepository;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public List<StoryResponse> getAllStoriesForCurrentUser() {
@@ -42,7 +44,7 @@ public class StoryService {
         return allStories.stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public StoryResponse getStoryById(Long id) {
         Story story = storyRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Story not found"));
@@ -57,6 +59,11 @@ public class StoryService {
                 throw new RuntimeException("Unauthorized to view this story");
             }
         }
+        
+        // Increment views safely
+        int currentViews = story.getViews() != null ? story.getViews() : 0;
+        story.setViews(currentViews + 1);
+        storyRepository.save(story);
         
         return mapToResponse(story);
     }
@@ -77,6 +84,7 @@ public class StoryService {
                 .description(request.getDescription())
                 .location(request.getLocation())
                 .storyDate(request.getStoryDate())
+                .unlockDateTime(request.getUnlockDateTime())
                 .build();
                 
         if (request.getFamilyMemberId() != null) {
@@ -125,6 +133,21 @@ public class StoryService {
         }
         
         Story savedStory = storyRepository.save(story);
+        
+        // Notify shared users
+        if (savedStory.getShares() != null) {
+            for (StoryShare share : savedStory.getShares()) {
+                notificationService.createNotification(
+                        share.getSharedWithUser(),
+                        "story_shared",
+                        "New memory shared with you",
+                        currentUser.getDisplayName() + " shared '" + savedStory.getTitle() + "' with you.",
+                        savedStory,
+                        "/story/" + savedStory.getId()
+                );
+            }
+        }
+        
         return mapToResponse(savedStory);
     }
 
@@ -143,6 +166,7 @@ public class StoryService {
         story.setDescription(request.getDescription());
         story.setLocation(request.getLocation());
         story.setStoryDate(request.getStoryDate());
+        story.setUnlockDateTime(request.getUnlockDateTime());
 
         if (request.getFamilyMemberId() != null) {
             FamilyMember member = familyMemberRepository.findById(request.getFamilyMemberId())
@@ -188,7 +212,8 @@ public class StoryService {
                 .orElseThrow(() -> new RuntimeException("Story not found"));
                 
         User currentUser = userService.getCurrentUser();
-        if (!story.getUser().getId().equals(currentUser.getId())) {
+        if (!story.getUser().getId().equals(currentUser.getId()) 
+                && currentUser.getRole() != com.codefrolics.legacytrunk.model.Role.ADMIN) {
             throw new RuntimeException("Unauthorized to delete this story");
         }
         
@@ -200,7 +225,38 @@ public class StoryService {
         storyRepository.delete(story);
     }
 
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<StoryResponse> searchStories(
+            String query,
+            LocalDate startDate,
+            LocalDate endDate,
+            Long authorId,
+            String mediaType,
+            List<String> tags,
+            String location,
+            String sort,
+            org.springframework.data.domain.Pageable pageable) {
+        
+        User currentUser = userService.getCurrentUser();
+        org.springframework.data.domain.Page<Story> page = storyRepository.searchStories(
+                currentUser.getId(),
+                query,
+                startDate,
+                endDate,
+                authorId,
+                mediaType,
+                tags,
+                location,
+                sort,
+                pageable
+        );
+        
+        return page.map(this::mapToResponse);
+    }
+
     private StoryResponse mapToResponse(Story story) {
+        boolean isLocked = story.getUnlockDateTime() != null && java.time.LocalDateTime.now().isBefore(story.getUnlockDateTime());
+
         return StoryResponse.builder()
                 .id(story.getId())
                 .userId(story.getUser().getId())
@@ -208,20 +264,23 @@ public class StoryService {
                 .authorEmail(story.getUser().getEmail())
                 .authorPhotoUrl(story.getUser().getPhotoUrl())
                 .title(story.getTitle())
-                .description(story.getDescription())
+                .description(isLocked ? null : story.getDescription())
                 .location(story.getLocation())
                 .storyDate(story.getStoryDate())
                 .tags(story.getTags().stream().map(StoryTag::getTag).collect(Collectors.toList()))
-                .mediaFiles(story.getMediaFiles().stream().map(m -> 
+                .mediaFiles(isLocked ? java.util.Collections.emptyList() : story.getMediaFiles().stream().map(m -> 
                     StoryResponse.StoryMediaDto.builder()
                         .id(m.getId())
                         .mediaUrl("/api/media/" + m.getFilePath())
                         .mediaType(m.getMediaType())
                         .build()
                 ).collect(Collectors.toList()))
+                .views(story.getViews() != null ? story.getViews() : 0)
                 .createdAt(story.getCreatedAt())
                 .familyMemberId(story.getFamilyMember() != null ? story.getFamilyMember().getId() : null)
                 .familyMemberName(story.getFamilyMember() != null ? story.getFamilyMember().getName() : null)
+                .unlockDateTime(story.getUnlockDateTime())
+                .isLocked(isLocked)
                 .build();
     }
 }

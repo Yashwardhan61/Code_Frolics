@@ -4,8 +4,8 @@ spring:
 
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/legacy_trunk}
-    username: ${DB_USER:${USER}}
-    password: ${DB_PASS:}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASS:2442}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -22,12 +22,25 @@ spring:
       max-file-size: 50MB
       max-request-size: 100MB
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 server:
   port: 8080
 
 # Application-specific configuration
 app:
   upload-dir: ${user.home}/legacy-trunk-uploads
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
   firebase:
     # Set to path of your Firebase service account JSON, or "none" to skip
     service-account-path: ${FIREBASE_SERVICE_ACCOUNT:none}

@@ -23,6 +23,7 @@ public class FriendService {
     private final FriendInvitationRepository invitationRepository;
     private final UserRepository userRepository;
     private final UserService userService;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public List<FriendResponse> getFriends() {
@@ -69,6 +70,15 @@ public class FriendService {
                 .build();
                 
         invitationRepository.save(invitation);
+
+        notificationService.createNotification(
+                toUser,
+                "friend_request",
+                "New friend request",
+                currentUser.getDisplayName() + " sent you a friend request.",
+                null,
+                "/friends"
+        );
     }
 
     @Transactional
@@ -95,6 +105,15 @@ public class FriendService {
         
         friendRepository.save(friend1);
         friendRepository.save(friend2);
+
+        notificationService.createNotification(
+                invitation.getFromUser(),
+                "friend_accepted",
+                "Friend request accepted",
+                currentUser.getDisplayName() + " accepted your friend request.",
+                null,
+                "/friends"
+        );
     }
 
     @Transactional

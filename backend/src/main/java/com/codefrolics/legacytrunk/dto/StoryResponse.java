@@ -26,7 +26,10 @@ public class StoryResponse {
     private List<StoryMediaDto> mediaFiles;
     private Long familyMemberId;
     private String familyMemberName;
+    private Integer views;
     private LocalDateTime createdAt;
+    private LocalDateTime unlockDateTime;
+    private Boolean isLocked;
     
     @Data
     @NoArgsConstructor

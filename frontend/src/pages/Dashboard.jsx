@@ -3,12 +3,23 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { storyService } from '../api/storyService';
 import { useToast } from '../contexts/ToastContext';
-<<<<<<< HEAD
 import {
     PlusCircle, MapPin, Image as ImageIcon, Clock, Heart,
     MessageCircle, ChevronLeft, ChevronRight, BookOpen, Users,
-    CalendarDays, Globe
+    CalendarDays, Globe, Music, Film, Lock
 } from 'lucide-react';
+
+/* -- Media type detection helpers -- */
+function isAudioMedia(media) {
+    return media.mediaType?.startsWith('audio/') ||
+        media.mediaUrl?.endsWith('.webm') ||
+        media.mediaUrl?.endsWith('.wav') ||
+        media.mediaUrl?.endsWith('.mp3');
+}
+
+function isVideoMedia(media) {
+    return media.mediaType?.startsWith('video/');
+}
 
 /* ====================================================================
    SUB-COMPONENTS
@@ -75,7 +86,7 @@ function ScrollReveal({ children, delay = 0 }) {
 }
 
 /* -- Media Carousel (auto-advances every 4s, with arrows) -- */
-function MediaCarousel({ mediaFiles, alt, className = '' }) {
+function MediaCarousel({ mediaFiles, alt, className = '', isLocked = false, unlockDateTime }) {
     const [current, setCurrent] = useState(0);
     const timerRef = useRef(null);
     const total = mediaFiles?.length || 0;
@@ -99,6 +110,22 @@ function MediaCarousel({ mediaFiles, alt, className = '' }) {
         resetTimer();
     };
 
+    if (isLocked) {
+        return (
+            <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900/10 to-amber-955/5 p-4 text-center select-none ${className}`}>
+                <div className="w-12 h-12 rounded-full bg-amber-800/10 flex items-center justify-center mb-3">
+                    <Lock className="w-6 h-6 text-amber-800" />
+                </div>
+                <span className="text-xs font-bold text-amber-950 uppercase tracking-widest">Time Capsule Locked</span>
+                {unlockDateTime && (
+                    <span className="text-[10px] text-amber-850 mt-1 font-mono">
+                        Opens {new Date(unlockDateTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' })}
+                    </span>
+                )}
+            </div>
+        );
+    }
+
     if (!mediaFiles || total === 0) {
         return (
             <div className={`w-full h-full flex items-center justify-center bg-amber-50 ${className}`}>
@@ -112,16 +139,49 @@ function MediaCarousel({ mediaFiles, alt, className = '' }) {
              onMouseEnter={() => { if (timerRef.current) clearInterval(timerRef.current); }}
              onMouseLeave={resetTimer}
         >
-            {mediaFiles.map((media, i) => (
-                <img
-                    key={media.id || i}
-                    src={media.mediaUrl}
-                    alt={`${alt} ${i + 1}`}
-                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out ${
-                        i === current ? 'opacity-100 z-10' : 'opacity-0 z-0'
-                    }`}
-                />
-            ))}
+            {mediaFiles.map((media, i) => {
+                const isActive = i === current;
+                const visibilityClass = `transition-opacity duration-700 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0'}`;
+
+                if (isAudioMedia(media)) {
+                    return (
+                        <div
+                            key={media.id || i}
+                            className={`absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-50 via-amber-100 to-orange-50 ${visibilityClass}`}
+                        >
+                            <div className="w-16 h-16 rounded-full bg-amber-700/90 flex items-center justify-center shadow-lg mb-3">
+                                <Music className="w-8 h-8 text-white" />
+                            </div>
+                            <span className="text-sm font-serif font-semibold text-amber-900">Voice Memory</span>
+                            <span className="text-xs text-amber-700/70 mt-1">Audio Recording</span>
+                        </div>
+                    );
+                }
+
+                if (isVideoMedia(media)) {
+                    return (
+                        <div
+                            key={media.id || i}
+                            className={`absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-800 via-slate-900 to-gray-900 ${visibilityClass}`}
+                        >
+                            <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur flex items-center justify-center shadow-lg mb-3 border border-white/20">
+                                <Film className="w-8 h-8 text-white" />
+                            </div>
+                            <span className="text-sm font-serif font-semibold text-white">Video Memory</span>
+                            <span className="text-xs text-white/50 mt-1">Video Recording</span>
+                        </div>
+                    );
+                }
+
+                return (
+                    <img
+                        key={media.id || i}
+                        src={media.mediaUrl}
+                        alt={`${alt} ${i + 1}`}
+                        className={`absolute inset-0 w-full h-full object-cover ${visibilityClass}`}
+                    />
+                );
+            })}
 
             {total > 1 && (
                 <>
@@ -192,12 +252,9 @@ function ReactionButton({ storyId }) {
 /* ====================================================================
    MAIN DASHBOARD
    ==================================================================== */
-=======
-import { PlusCircle, MapPin, Calendar, Image as ImageIcon, Play } from 'lucide-react';
->>>>>>> Editing
 
 export default function Dashboard() {
-    const { currentUser } = useAuth();
+    const { currentUser, userRole } = useAuth();
     const toast = useToast();
     const [stories, setStories] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -283,14 +340,16 @@ export default function Dashboard() {
                         Preserving the moments that matter, {currentUser?.displayName?.split(' ')[0] || 'Explorer'}.
                     </p>
                 </div>
-                <Link
-                    to="/story/create"
-                    className="flex items-center text-white px-5 py-2.5 rounded-full transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                    style={{ background: 'linear-gradient(135deg, var(--accent-copper), var(--brand-brown-600))' }}
-                >
-                    <PlusCircle className="w-5 h-5 mr-2" />
-                    Add Memory
-                </Link>
+                {userRole !== 'VIEWER' && (
+                    <Link
+                        to="/story/create"
+                        className="flex items-center text-white px-5 py-2.5 rounded-full transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                        style={{ background: 'linear-gradient(135deg, var(--accent-copper), var(--brand-brown-600))' }}
+                    >
+                        <PlusCircle className="w-5 h-5 mr-2" />
+                        Add Memory
+                    </Link>
+                )}
             </div>
 
             {/* ── 1. Stats Strip ── */}
@@ -346,24 +405,47 @@ export default function Dashboard() {
             )}
 
             {stories.length === 0 ? (
-                <div className="bg-white rounded-3xl shadow-sm border border-amber-100 p-16 text-center max-w-2xl mx-auto">
-                    <div className="mx-auto w-24 h-24 bg-amber-50 rounded-full flex items-center justify-center mb-6">
-                        <ImageIcon className="w-12 h-12 text-amber-300" />
+                <div className="bg-white/80 backdrop-blur-md rounded-3xl shadow-xl border border-amber-100/50 p-10 md:p-16 text-center max-w-3xl mx-auto relative overflow-hidden">
+                    <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-amber-100 rounded-full opacity-50 blur-3xl"></div>
+                    <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-orange-100 rounded-full opacity-50 blur-3xl"></div>
+                    
+                    <div className="relative z-10">
+                        <div className="mx-auto w-24 h-24 bg-gradient-to-br from-amber-50 to-orange-50 rounded-full flex items-center justify-center mb-6 shadow-sm border border-amber-100">
+                            <BookOpen className="w-10 h-10 text-amber-500" />
+                        </div>
+                        <h3 className="text-3xl font-bold text-gray-900 mb-4 font-serif">Your Chronicle Awaits</h3>
+                        <p className="text-gray-600 mb-10 text-lg max-w-xl mx-auto leading-relaxed">
+                            Every great legacy starts with a single step. Begin by writing down a cherished memory or growing your family tree.
+                        </p>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                            {userRole !== 'VIEWER' && (
+                                <Link
+                                    to="/story/create"
+                                    className="group relative flex flex-col items-center justify-center p-8 bg-white border border-amber-100 rounded-2xl hover:border-amber-300 hover:shadow-lg transition-all"
+                                >
+                                    <div className="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                        <PlusCircle className="w-6 h-6 text-amber-600" />
+                                    </div>
+                                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Write a Memory</h4>
+                                    <p className="text-sm text-gray-500">Capture a moment, recipe, or tradition to preserve forever.</p>
+                                </Link>
+                            )}
+                            
+                            <Link
+                                to="/family-tree"
+                                className="group relative flex flex-col items-center justify-center p-8 bg-white border border-amber-100 rounded-2xl hover:border-amber-300 hover:shadow-lg transition-all"
+                            >
+                                <div className="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <Users className="w-6 h-6 text-orange-600" />
+                                </div>
+                                <h4 className="text-lg font-semibold text-gray-900 mb-2">Grow the Tree</h4>
+                                <p className="text-sm text-gray-500">Add parents, grandparents, and children to trace your roots.</p>
+                            </Link>
+                        </div>
                     </div>
-                    <h3 className="text-2xl font-medium text-gray-900 mb-3 font-serif">The Pages are Empty</h3>
-                    <p className="text-gray-500 mb-8 text-lg">
-                        Your memory chest is ready. Start filling these pages with your precious family stories to share with generations.
-                    </p>
-                    <Link
-                        to="/story/create"
-                        className="inline-flex items-center text-amber-700 bg-amber-50 border border-amber-200 px-8 py-3 rounded-xl hover:bg-amber-100 transition-colors font-medium text-lg shadow-sm"
-                    >
-                        <PlusCircle className="w-5 h-5 mr-2" />
-                        Write the First Chapter
-                    </Link>
                 </div>
             ) : (
-<<<<<<< HEAD
                 <div className="space-y-16">
 
                     {/* ── 2. "On This Day" Card ── */}
@@ -377,49 +459,29 @@ export default function Dashboard() {
                                             <path d="M100 0 C60 0, 0 40, 0 100" stroke="currentColor" strokeWidth="2" className="text-amber-700"/>
                                             <path d="M100 20 C70 20, 20 60, 20 100" stroke="currentColor" strokeWidth="1.5" className="text-amber-500"/>
                                         </svg>
-=======
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {stories.map(story => (
-                        <Link key={story.id} to={`/story/${story.id}`} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group">
-                            {/* Cover Image */}
-                            <div className="h-48 bg-gray-200 relative overflow-hidden">
-                                {story.mediaFiles && story.mediaFiles.length > 0 ? (
-                                    story.mediaFiles[0].mediaType?.startsWith('video') ? (
-                                        <div className="relative w-full h-full">
-                                            <video 
-                                                src={story.mediaFiles[0].mediaUrl} 
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                                muted
-                                                preload="metadata"
-                                            />
-                                            <div className="absolute inset-0 flex items-center justify-center">
-                                                <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center">
-                                                    <Play className="w-5 h-5 text-white ml-0.5" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <img 
-                                            src={story.mediaFiles[0].mediaUrl} 
-                                            alt={story.title} 
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                        />
-                                    )
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100">
-                                        <ImageIcon className="w-12 h-12 text-amber-300" />
->>>>>>> Editing
                                     </div>
 
                                     <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
                                         {/* Thumbnail */}
                                         {onThisDayStory.mediaFiles?.length > 0 && (
                                             <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden border-2 border-white shadow-md flex-shrink-0">
-                                                <img
-                                                    src={onThisDayStory.mediaFiles[0].mediaUrl}
-                                                    alt={onThisDayStory.title}
-                                                    className="w-full h-full object-cover"
-                                                />
+                                                {isAudioMedia(onThisDayStory.mediaFiles[0]) ? (
+                                                    <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100">
+                                                        <Music className="w-8 h-8 text-amber-700" />
+                                                        <span className="text-[9px] text-amber-800 font-medium mt-1">Audio</span>
+                                                    </div>
+                                                ) : isVideoMedia(onThisDayStory.mediaFiles[0]) ? (
+                                                    <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-700 to-slate-900">
+                                                        <Film className="w-8 h-8 text-white" />
+                                                        <span className="text-[9px] text-white/70 font-medium mt-1">Video</span>
+                                                    </div>
+                                                ) : (
+                                                    <img
+                                                        src={onThisDayStory.mediaFiles[0].mediaUrl}
+                                                        alt={onThisDayStory.title}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                )}
                                             </div>
                                         )}
 
@@ -461,9 +523,16 @@ export default function Dashboard() {
                                         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 font-serif leading-tight">
                                             {spotlightStory.title}
                                         </h2>
-                                        <p className="text-gray-600 mb-6 line-clamp-3 text-lg leading-relaxed">
-                                            {spotlightStory.description}
-                                        </p>
+                                        {spotlightStory.isLocked ? (
+                                            <p className="text-amber-800/60 text-xs italic mb-6 leading-relaxed flex items-center gap-1.5 bg-[#faf5e6] p-3 rounded-lg border border-amber-900/5">
+                                                <Lock className="w-4 h-4" />
+                                                This memory is locked in a time capsule.
+                                            </p>
+                                        ) : (
+                                            <p className="text-gray-600 mb-6 line-clamp-3 text-lg leading-relaxed">
+                                                {spotlightStory.description}
+                                            </p>
+                                        )}
 
                                         <div className="flex items-center justify-between mt-auto pt-6 border-t border-amber-50">
                                             <div className="flex items-center space-x-3">
@@ -489,6 +558,8 @@ export default function Dashboard() {
                                             mediaFiles={spotlightStory.mediaFiles}
                                             alt={spotlightStory.title}
                                             className="absolute inset-0"
+                                            isLocked={spotlightStory.isLocked}
+                                            unlockDateTime={spotlightStory.unlockDateTime}
                                         />
                                     </div>
                                 </div>
@@ -527,12 +598,22 @@ export default function Dashboard() {
                                                                 <MediaCarousel
                                                                     mediaFiles={story.mediaFiles}
                                                                     alt={story.title}
+                                                                    isLocked={story.isLocked}
+                                                                    unlockDateTime={story.unlockDateTime}
                                                                 />
 
                                                                 {/* Family Member Tag */}
                                                                 {story.familyMemberName && (
                                                                     <div className="absolute top-3 left-3 z-30 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-semibold text-amber-800 shadow-sm">
                                                                         {story.familyMemberName}
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Time Capsule Lock Tag */}
+                                                                {story.isLocked && (
+                                                                    <div className="absolute top-3 right-3 z-30 bg-amber-900/90 backdrop-blur px-2.5 py-1 rounded-full text-[10px] font-bold text-white shadow-sm flex items-center gap-1">
+                                                                        <Lock className="w-3 h-3 text-amber-400" />
+                                                                        Capsule
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -551,13 +632,20 @@ export default function Dashboard() {
                                                                     )}
                                                                 </div>
 
-                                                                <h3 className="text-xl font-bold text-gray-900 mb-2 font-serif group-hover:text-amber-700 transition-colors">
+                                                                <h3 className="text-xl font-bold text-gray-900 mb-2 font-serif group-hover:text-amber-700 transition-colors flex items-center gap-1.5">
                                                                     {story.title}
                                                                 </h3>
 
-                                                                <p className="text-gray-600 text-sm line-clamp-2 mb-4 leading-relaxed">
-                                                                    {story.description}
-                                                                </p>
+                                                                {story.isLocked ? (
+                                                                    <p className="text-amber-800/60 text-xs italic mb-4 leading-relaxed flex items-center gap-1.5 bg-[#faf5e6] p-2 rounded-lg border border-amber-900/5">
+                                                                        <Lock className="w-3.5 h-3.5 text-amber-800" />
+                                                                        This memory is locked in a time capsule.
+                                                                    </p>
+                                                                ) : (
+                                                                    <p className="text-gray-600 text-sm line-clamp-2 mb-4 leading-relaxed">
+                                                                        {story.description}
+                                                                    </p>
+                                                                )}
 
                                                                 {/* Interaction Footer */}
                                                                 <div className="flex items-center justify-between pt-3 border-t border-dashed border-gray-200">

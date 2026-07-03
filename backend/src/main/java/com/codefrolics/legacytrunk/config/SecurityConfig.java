@@ -28,6 +28,10 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/media/**").permitAll() // Allow public access to media
+                        .requestMatchers("/api/notifications/test-email").permitAll() // Allow test email endpoint
+                        .requestMatchers("/api/auth/forgot-password").permitAll()
+                        .requestMatchers("/api/auth/validate-reset-token").permitAll()
+                        .requestMatchers("/api/auth/reset-password").permitAll()
                         .requestMatchers("/api/**").authenticated()   // All other API endpoints require auth
                         .anyRequest().permitAll()                     // Allow static resources
                 )
