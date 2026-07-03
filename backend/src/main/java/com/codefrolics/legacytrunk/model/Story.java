@@ -56,6 +56,9 @@ public class Story {
     @Builder.Default
     private Integer views = 0;
 
+    @Column(name = "unlock_date_time")
+    private LocalDateTime unlockDateTime;
+
     @Column(name = "created_at")
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();

@@ -40,6 +40,7 @@ server:
 # Application-specific configuration
 app:
   upload-dir: ${user.home}/legacy-trunk-uploads
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
   firebase:
     # Set to path of your Firebase service account JSON, or "none" to skip
     service-account-path: ${FIREBASE_SERVICE_ACCOUNT:none}

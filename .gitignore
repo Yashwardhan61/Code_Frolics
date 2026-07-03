@@ -16,3 +16,4 @@ Thumbs.db
 # Java
 *.class
 backend/target/
+firebase-key.json

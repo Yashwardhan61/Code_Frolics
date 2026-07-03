@@ -28,6 +28,8 @@ public class StoryResponse {
     private String familyMemberName;
     private Integer views;
     private LocalDateTime createdAt;
+    private LocalDateTime unlockDateTime;
+    private Boolean isLocked;
     
     @Data
     @NoArgsConstructor
