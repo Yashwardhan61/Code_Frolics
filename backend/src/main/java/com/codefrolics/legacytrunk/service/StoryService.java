@@ -210,7 +210,8 @@ public class StoryService {
                 .orElseThrow(() -> new RuntimeException("Story not found"));
                 
         User currentUser = userService.getCurrentUser();
-        if (!story.getUser().getId().equals(currentUser.getId())) {
+        if (!story.getUser().getId().equals(currentUser.getId()) 
+                && currentUser.getRole() != com.codefrolics.legacytrunk.model.Role.ADMIN) {
             throw new RuntimeException("Unauthorized to delete this story");
         }
         

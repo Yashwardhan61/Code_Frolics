@@ -5,6 +5,7 @@ import com.codefrolics.legacytrunk.dto.RecipeResponse;
 import com.codefrolics.legacytrunk.service.RecipeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,6 +34,7 @@ public class RecipeController {
     }
 
     @PostMapping(consumes = {"multipart/form-data"})
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
     public ResponseEntity<RecipeResponse> createRecipe(
             @RequestPart("recipe") RecipeRequest request,
             @RequestPart(value = "files", required = false) MultipartFile[] files) {
@@ -40,6 +42,7 @@ public class RecipeController {
     }
 
     @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
     public ResponseEntity<RecipeResponse> updateRecipe(
             @PathVariable Long id,
             @RequestPart("recipe") RecipeRequest request,
@@ -48,6 +51,7 @@ public class RecipeController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
     public ResponseEntity<Void> deleteRecipe(@PathVariable Long id) {
         recipeService.deleteRecipe(id);
         return ResponseEntity.noContent().build();

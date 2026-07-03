@@ -25,6 +25,7 @@ import RecipeCreate from './pages/RecipeCreate';
 import RecipeView from './pages/RecipeView';
 import HeirloomCreate from './pages/HeirloomCreate';
 import HeirloomView from './pages/HeirloomView';
+import AdminPanel from './pages/AdminPanel';
 import Gallery from './pages/Gallery';
 import Welcome from './pages/Welcome';
 import About from './pages/About';
@@ -68,6 +69,7 @@ function App() {
             <Route path="/recipe/:id" element={<RecipeView />} />
             <Route path="/heirloom/create" element={<HeirloomCreate />} />
             <Route path="/heirloom/:id" element={<HeirloomView />} />
+            <Route path="/admin" element={<AdminPanel />} />
           </Route>
 
           {/* Fallback */}

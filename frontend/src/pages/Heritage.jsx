@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { recipeService } from '../api/recipeService';
 import { heirloomService } from '../api/heirloomService';
+import { useAuth } from '../contexts/AuthContext';
 import { Book, Gem, Plus, Clock, Users, ArrowRight } from 'lucide-react';
 
 export default function Heritage() {
     const navigate = useNavigate();
+    const { userRole } = useAuth();
     const [activeTab, setActiveTab] = useState('recipes'); // 'recipes' or 'heirlooms'
     const [recipes, setRecipes] = useState([]);
     const [heirlooms, setHeirlooms] = useState([]);
@@ -46,13 +48,15 @@ export default function Heritage() {
                     ? "Preserve the flavors of your family history. Add that special recipe before it's forgotten."
                     : "Document the physical artifacts of your family's journey. Add heirlooms and their stories."}
             </p>
-            <button
-                onClick={() => navigate(`/${type === 'recipes' ? 'recipe' : 'heirloom'}/create`)}
-                className="flex items-center gap-2 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-medium transition-all"
-            >
-                <Plus className="w-5 h-5" />
-                Add {type === 'recipes' ? 'Recipe' : 'Heirloom'}
-            </button>
+            {userRole !== 'VIEWER' && (
+                <button
+                    onClick={() => navigate(`/${type === 'recipes' ? 'recipe' : 'heirloom'}/create`)}
+                    className="flex items-center gap-2 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-medium transition-all"
+                >
+                    <Plus className="w-5 h-5" />
+                    Add {type === 'recipes' ? 'Recipe' : 'Heirloom'}
+                </button>
+            )}
         </div>
     );
 
@@ -171,13 +175,15 @@ export default function Heritage() {
                             Preserve the tastes, traditions, and physical artifacts that make your family unique.
                         </p>
                     </div>
-                    <button
-                        onClick={() => navigate(`/${activeTab === 'recipes' ? 'recipe' : 'heirloom'}/create`)}
-                        className="flex items-center gap-2 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl font-medium transition-all shadow-md shadow-amber-600/20"
-                    >
-                        <Plus className="w-5 h-5" />
-                        Add {activeTab === 'recipes' ? 'Recipe' : 'Heirloom'}
-                    </button>
+                    {userRole !== 'VIEWER' && (
+                        <button
+                            onClick={() => navigate(`/${activeTab === 'recipes' ? 'recipe' : 'heirloom'}/create`)}
+                            className="flex items-center gap-2 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl font-medium transition-all shadow-md shadow-amber-600/20"
+                        >
+                            <Plus className="w-5 h-5" />
+                            Add {activeTab === 'recipes' ? 'Recipe' : 'Heirloom'}
+                        </button>
+                    )}
                 </div>
             </div>
 

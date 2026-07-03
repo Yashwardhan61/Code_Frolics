@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 
 export default function Dashboard() {
-    const { currentUser } = useAuth();
+    const { currentUser, userRole } = useAuth();
     const toast = useToast();
 
     // Search and filter states
@@ -181,13 +181,15 @@ export default function Dashboard() {
                         Flipping through the pages of your family's history...
                     </p>
                 </div>
-                <Link 
-                    to="/story/create" 
-                    className="mt-4 md:mt-0 flex items-center bg-gradient-to-b from-amber-700 to-amber-800 hover:from-amber-800 hover:to-amber-900 text-amber-50 border border-amber-900 px-5 py-2.5 rounded-lg transition-all duration-300 shadow-md font-medium text-sm"
-                >
-                    <PlusCircle className="w-5 h-5 mr-2" />
-                    New Memory
-                </Link>
+                {userRole !== 'VIEWER' && (
+                    <Link 
+                        to="/story/create" 
+                        className="mt-4 md:mt-0 flex items-center bg-gradient-to-b from-amber-700 to-amber-800 hover:from-amber-800 hover:to-amber-900 text-amber-50 border border-amber-900 px-5 py-2.5 rounded-lg transition-all duration-300 shadow-md font-medium text-sm"
+                    >
+                        <PlusCircle className="w-5 h-5 mr-2" />
+                        New Memory
+                    </Link>
+                )}
             </div>
 
             {/* Global Search Bar */}

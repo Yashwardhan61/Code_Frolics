@@ -72,11 +72,15 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
                 // Find user in local DB, or create if first time (sync from Firebase)
                 User user = userRepository.findByFirebaseUid(uid).orElseGet(() -> {
                     log.info("Creating new user from Firebase token: {}", email);
+                    com.codefrolics.legacytrunk.model.Role assignedRole = 
+                        userRepository.count() == 0 ? com.codefrolics.legacytrunk.model.Role.ADMIN : com.codefrolics.legacytrunk.model.Role.MEMBER;
                     User newUser = User.builder()
                             .firebaseUid(uid)
                             .email(email)
                             .displayName(name)
+                            .role(assignedRole)
                             .build();
+                    log.info("Assigned role {} to new user {}", assignedRole, email);
                     return userRepository.save(newUser);
                 });
 

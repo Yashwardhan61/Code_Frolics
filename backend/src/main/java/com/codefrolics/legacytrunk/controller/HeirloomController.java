@@ -5,6 +5,7 @@ import com.codefrolics.legacytrunk.dto.HeirloomResponse;
 import com.codefrolics.legacytrunk.service.HeirloomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,6 +34,7 @@ public class HeirloomController {
     }
 
     @PostMapping(consumes = {"multipart/form-data"})
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
     public ResponseEntity<HeirloomResponse> createHeirloom(
             @RequestPart("heirloom") HeirloomRequest request,
             @RequestPart(value = "files", required = false) MultipartFile[] files) {
@@ -40,6 +42,7 @@ public class HeirloomController {
     }
 
     @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
     public ResponseEntity<HeirloomResponse> updateHeirloom(
             @PathVariable Long id,
             @RequestPart("heirloom") HeirloomRequest request,
@@ -48,6 +51,7 @@ public class HeirloomController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
     public ResponseEntity<Void> deleteHeirloom(@PathVariable Long id) {
         heirloomService.deleteHeirloom(id);
         return ResponseEntity.noContent().build();

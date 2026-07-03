@@ -9,7 +9,7 @@ import AudioWaveformPlayer from '../components/AudioWaveformPlayer';
 export default function StoryView() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { currentUser } = useAuth();
+    const { currentUser, userRole } = useAuth();
     const toast = useToast();
     const [story, setStory] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -66,6 +66,7 @@ export default function StoryView() {
     }
 
     const isAuthor = currentUser?.email === story.authorEmail;
+    const canEdit = (isAuthor || userRole === 'ADMIN') && userRole !== 'VIEWER';
 
     return (
         <div className="max-w-5xl mx-auto py-8">
@@ -75,7 +76,7 @@ export default function StoryView() {
                     Back
                 </Link>
                 
-                {isAuthor && (
+                {canEdit && (
                     <div className="flex space-x-3">
                         <button 
                             onClick={() => navigate(`/story/${id}/edit`)}

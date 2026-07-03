@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Home, User, Users, Menu, X, TreeDeciduous, Images, Bell, Trash2, BookOpen, Gem } from 'lucide-react';
+import { LogOut, Home, User, Users, Menu, X, TreeDeciduous, Images, Bell, Trash2, BookOpen, Gem, Shield } from 'lucide-react';
 import { notificationService } from '../api/notificationService';
 
 export default function MainLayout() {
-    const { logout, currentUser } = useAuth();
+    const { logout, currentUser, userRole } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -91,6 +91,7 @@ export default function MainLayout() {
         { name: 'Heritage', path: '/heritage', icon: <Gem className="w-5 h-5 mr-2" /> },
         { name: 'Friends', path: '/friends', icon: <Users className="w-5 h-5 mr-2" /> },
         { name: 'Profile', path: '/profile', icon: <User className="w-5 h-5 mr-2" /> },
+        ...(userRole === 'ADMIN' ? [{ name: 'Admin', path: '/admin', icon: <Shield className="w-5 h-5 mr-2" /> }] : []),
     ];
 
     const isActive = (path) => location.pathname === path;

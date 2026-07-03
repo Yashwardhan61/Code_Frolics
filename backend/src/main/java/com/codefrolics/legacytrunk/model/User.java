@@ -39,6 +39,11 @@ public class User {
     @Builder.Default
     private Boolean profileSetupComplete = false;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false, length = 20, columnDefinition = "varchar(20) default 'MEMBER'")
+    @Builder.Default
+    private Role role = Role.MEMBER;
+
     @Column(name = "created_at")
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();

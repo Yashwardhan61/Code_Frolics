@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { familyService } from '../api/familyService';
 import { useToast } from '../contexts/ToastContext';
+import { useAuth } from '../contexts/AuthContext';
 import { TreeDeciduous, Plus, X, Edit2, Trash2, Upload, User, ChevronDown, Leaf, Users, GitBranch, HelpCircle, Download, Moon, Search, Printer, FileImage, FileCode, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -36,7 +37,7 @@ function getTreeDepth(nodes) {
 
 /* ─── TreeNode card ─────────────────────────────────────────────────────────── */
 
-function TreeNode({ node, onNodeClick, onEdit, onDelete, onAddChild, depth = 0 }) {
+function TreeNode({ node, onNodeClick, onEdit, onDelete, onAddChild, depth = 0, canEdit = true }) {
     const [expanded, setExpanded] = useState(true);
     const hasChildren = node.children && node.children.length > 0;
 
@@ -69,31 +70,32 @@ function TreeNode({ node, onNodeClick, onEdit, onDelete, onAddChild, depth = 0 }
                     )}
                 </div>
 
-                {/* Action strip - appears on hover */}
-                <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onAddChild(node); }}
-                        title="Add child"
-                        className="w-6 h-6 rounded-full text-white flex items-center justify-center shadow transition-colors"
-                        style={{ backgroundColor: 'var(--theme-accent)' }}
-                    >
-                        <Plus className="w-3 h-3" />
-                    </button>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onEdit(node); }}
-                        title="Edit"
-                        className="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center shadow hover:bg-blue-600 transition-colors"
-                    >
-                        <Edit2 className="w-3 h-3" />
-                    </button>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onDelete(node); }}
-                        title="Delete"
-                        className="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow hover:bg-red-600 transition-colors"
-                    >
-                        <Trash2 className="w-3 h-3" />
-                    </button>
-                </div>
+                {canEdit && (
+                    <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onAddChild(node); }}
+                            title="Add child"
+                            className="w-6 h-6 rounded-full text-white flex items-center justify-center shadow transition-colors"
+                            style={{ backgroundColor: 'var(--theme-accent)' }}
+                        >
+                            <Plus className="w-3 h-3" />
+                        </button>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onEdit(node); }}
+                            title="Edit"
+                            className="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center shadow hover:bg-blue-600 transition-colors"
+                        >
+                            <Edit2 className="w-3 h-3" />
+                        </button>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onDelete(node); }}
+                            title="Delete"
+                            className="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow hover:bg-red-600 transition-colors"
+                        >
+                            <Trash2 className="w-3 h-3" />
+                        </button>
+                    </div>
+                )}
 
                 {/* Expand/collapse if has children */}
                 {hasChildren && (
@@ -139,6 +141,7 @@ function TreeNode({ node, onNodeClick, onEdit, onDelete, onAddChild, depth = 0 }
                                     onDelete={onDelete}
                                     onAddChild={onAddChild}
                                     depth={depth + 1}
+                                    canEdit={canEdit}
                                 />
                             </div>
                         ))}
@@ -371,6 +374,7 @@ export default function FamilyTree() {
     const [loading, setLoading] = useState(true);
     const toast = useToast();
     const navigate = useNavigate();
+    const { userRole } = useAuth();
 
     const [modal, setModal] = useState(null);
     const [deleteTarget, setDeleteTarget] = useState(null);
@@ -472,14 +476,15 @@ export default function FamilyTree() {
                                 </button>
                             ))}
                         </div>
-
-                        <button
-                            onClick={() => setModal({ mode: 'add', initial: { parentMemberId: null } })}
-                            className="flex items-center gap-2 px-6 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-medium rounded-full text-sm transition-colors border border-white/30 shadow-lg"
-                        >
-                            <Plus className="w-4 h-4" />
-                            Add Member
-                        </button>
+                        {userRole !== 'VIEWER' && (
+                            <button
+                                onClick={() => setModal({ mode: 'add', initial: { parentMemberId: null } })}
+                                className="flex items-center gap-2 px-6 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-medium rounded-full text-sm transition-colors border border-white/30 shadow-lg"
+                            >
+                                <Plus className="w-4 h-4" />
+                                Add Member
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -502,13 +507,15 @@ export default function FamilyTree() {
                             <p className="text-white/80 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
                                 Your {treeType} family history is waiting to be written. Begin by adding yourself or your oldest known ancestor and watch your legacy grow.
                             </p>
-                            <button
-                                onClick={() => setModal({ mode: 'add', initial: { parentMemberId: null } })}
-                                className="inline-flex items-center gap-3 px-8 py-4 bg-white text-gray-900 font-bold rounded-full text-lg transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]"
-                            >
-                                <Plus className="w-6 h-6" />
-                                Start Your Family Tree
-                            </button>
+                            {userRole !== 'VIEWER' && (
+                                <button
+                                    onClick={() => setModal({ mode: 'add', initial: { parentMemberId: null } })}
+                                    className="inline-flex items-center gap-3 px-8 py-4 bg-white text-gray-900 font-bold rounded-full text-lg transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+                                >
+                                    <Plus className="w-6 h-6" />
+                                    Start Your Family Tree
+                                </button>
+                            )}
                         </div>
                     </div>
                 ) : (
@@ -521,6 +528,7 @@ export default function FamilyTree() {
                                 onEdit={(node) => setModal({ mode: 'edit', initial: node })}
                                 onDelete={(node) => setDeleteTarget(node)}
                                 onAddChild={(node) => setModal({ mode: 'add', initial: { parentMemberId: node.id } })}
+                                canEdit={userRole !== 'VIEWER'}
                             />
                         ))}
                     </div>

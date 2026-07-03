@@ -8,7 +8,7 @@ import { useToast } from '../contexts/ToastContext';
 export default function HeirloomView() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { currentUser } = useAuth();
+    const { currentUser, userRole } = useAuth();
     const toast = useToast();
     
     const [heirloom, setHeirloom] = useState(null);
@@ -55,6 +55,7 @@ export default function HeirloomView() {
     if (!heirloom) return null;
 
     const isOwner = heirloom.userId === currentUser?.id;
+    const canDelete = (isOwner || userRole === 'ADMIN') && userRole !== 'VIEWER';
 
     return (
         <div className="max-w-5xl mx-auto pb-24">
@@ -68,7 +69,7 @@ export default function HeirloomView() {
                     Back to Heritage
                 </button>
 
-                {isOwner && (
+                {canDelete && (
                     <button
                         onClick={handleDelete}
                         className="flex items-center px-4 py-2 text-red-600 hover:text-white hover:bg-red-600 rounded-xl transition-colors border border-red-200"
