@@ -8,6 +8,7 @@ import {
     MessageCircle, ChevronLeft, ChevronRight, BookOpen, Users,
     CalendarDays, Globe, Music, Film, Lock
 } from 'lucide-react';
+import { CelebrationOverlay } from './StoryView';
 
 /* -- Media type detection helpers -- */
 function isAudioMedia(media) {
@@ -85,8 +86,68 @@ function ScrollReveal({ children, delay = 0 }) {
     );
 }
 
+function useCountdown(targetDateStr) {
+    const calculateTimeLeft = () => {
+        if (!targetDateStr) return { expired: true };
+        const difference = +new Date(targetDateStr) - +new Date();
+        let timeLeft = {};
+
+        if (difference > 0) {
+            timeLeft = {
+                days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+                hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+                minutes: Math.floor((difference / 1000 / 60) % 60),
+                seconds: Math.floor((difference / 1000) % 60),
+                expired: false
+            };
+        } else {
+            timeLeft = { expired: true };
+        }
+        return timeLeft;
+    };
+
+    const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setTimeLeft(calculateTimeLeft());
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [targetDateStr]);
+
+    return timeLeft;
+}
+
+function CapsuleCountdown({ targetDateStr, onUnlock }) {
+    const countdown = useCountdown(targetDateStr);
+
+    useEffect(() => {
+        if (countdown.expired && onUnlock) {
+            onUnlock();
+        }
+    }, [countdown.expired, onUnlock]);
+
+    if (countdown.expired) {
+        return <span className="text-emerald-700 font-bold animate-pulse text-xs">Unlocking now...</span>;
+    }
+
+    const parts = [];
+    if (countdown.days > 0) parts.push(`${countdown.days}d`);
+    parts.push(`${String(countdown.hours || 0).padStart(2, '0')}h`);
+    parts.push(`${String(countdown.minutes || 0).padStart(2, '0')}m`);
+    parts.push(`${String(countdown.seconds || 0).padStart(2, '0')}s`);
+
+    return (
+        <span className="font-mono text-xs font-bold text-amber-800 bg-[#faf5e6] px-2 py-0.5 rounded border border-amber-900/10 flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+            {parts.join(' ')}
+        </span>
+    );
+}
+
 /* -- Media Carousel (auto-advances every 4s, with arrows) -- */
-function MediaCarousel({ mediaFiles, alt, className = '', isLocked = false, unlockDateTime }) {
+function MediaCarousel({ mediaFiles, alt, className = '', isLocked = false, unlockDateTime, onUnlock }) {
     const [current, setCurrent] = useState(0);
     const timerRef = useRef(null);
     const total = mediaFiles?.length || 0;
@@ -113,15 +174,11 @@ function MediaCarousel({ mediaFiles, alt, className = '', isLocked = false, unlo
     if (isLocked) {
         return (
             <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900/10 to-amber-955/5 p-4 text-center select-none ${className}`}>
-                <div className="w-12 h-12 rounded-full bg-amber-800/10 flex items-center justify-center mb-3">
-                    <Lock className="w-6 h-6 text-amber-800" />
+                <div className="w-10 h-10 rounded-full bg-amber-800/10 flex items-center justify-center mb-2">
+                    <Lock className="w-5 h-5 text-amber-800" />
                 </div>
-                <span className="text-xs font-bold text-amber-950 uppercase tracking-widest">Time Capsule Locked</span>
-                {unlockDateTime && (
-                    <span className="text-[10px] text-amber-850 mt-1 font-mono">
-                        Opens {new Date(unlockDateTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' })}
-                    </span>
-                )}
+                <span className="text-xs font-bold text-amber-950 uppercase tracking-widest mb-2">Time Capsule Locked</span>
+                <CapsuleCountdown targetDateStr={unlockDateTime} onUnlock={onUnlock} />
             </div>
         );
     }
@@ -258,26 +315,33 @@ export default function Dashboard() {
     const toast = useToast();
     const [stories, setStories] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [showCelebration, setShowCelebration] = useState(false);
+
+    const fetchStories = useCallback(async () => {
+        try {
+            const data = await storyService.getAllStories();
+            const sortedData = data.sort((a, b) => {
+                const dateA = a.storyDate ? new Date(a.storyDate) : new Date(a.createdAt);
+                const dateB = b.storyDate ? new Date(b.storyDate) : new Date(b.createdAt);
+                return dateB - dateA;
+            });
+            setStories(sortedData);
+        } catch (err) {
+            console.error('Failed to fetch stories', err);
+            toast.error('Could not load your family chronicle.');
+        } finally {
+            setLoading(false);
+        }
+    }, [toast]);
 
     useEffect(() => {
-        const fetchStories = async () => {
-            try {
-                const data = await storyService.getAllStories();
-                const sortedData = data.sort((a, b) => {
-                    const dateA = a.storyDate ? new Date(a.storyDate) : new Date(a.createdAt);
-                    const dateB = b.storyDate ? new Date(b.storyDate) : new Date(b.createdAt);
-                    return dateB - dateA;
-                });
-                setStories(sortedData);
-            } catch (err) {
-                console.error('Failed to fetch stories', err);
-                toast.error('Could not load your family chronicle.');
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchStories();
-    }, [toast]);
+    }, [fetchStories]);
+
+    const handleUnlock = () => {
+        setShowCelebration(true);
+        fetchStories();
+    };
 
     /* -- Computed Stats -- */
     const stats = useMemo(() => {
@@ -521,13 +585,16 @@ export default function Dashboard() {
                                             <span className="text-sm font-semibold text-amber-600 uppercase tracking-widest">Memory Spotlight</span>
                                         </div>
                                         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 font-serif leading-tight">
-                                            {spotlightStory.title}
+                                            {spotlightStory.isLocked ? "🔒 Locked Time Capsule" : spotlightStory.title}
                                         </h2>
                                         {spotlightStory.isLocked ? (
-                                            <p className="text-amber-800/60 text-xs italic mb-6 leading-relaxed flex items-center gap-1.5 bg-[#faf5e6] p-3 rounded-lg border border-amber-900/5">
-                                                <Lock className="w-4 h-4" />
-                                                This memory is locked in a time capsule.
-                                            </p>
+                                            <div className="mb-6 flex flex-wrap items-center gap-3 p-3 bg-[#faf5e6] rounded-xl border border-amber-900/5">
+                                                <div className="flex items-center gap-1.5 text-amber-850 text-xs font-medium">
+                                                    <Lock className="w-4 h-4 text-amber-800" />
+                                                    Locked:
+                                                </div>
+                                                <CapsuleCountdown targetDateStr={spotlightStory.unlockDateTime} />
+                                            </div>
                                         ) : (
                                             <p className="text-gray-600 mb-6 line-clamp-3 text-lg leading-relaxed">
                                                 {spotlightStory.description}
@@ -537,19 +604,21 @@ export default function Dashboard() {
                                         <div className="flex items-center justify-between mt-auto pt-6 border-t border-amber-50">
                                             <div className="flex items-center space-x-3">
                                                 <div className="w-10 h-10 rounded-full bg-amber-100 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden">
-                                                    {spotlightStory.authorPhotoUrl ? (
+                                                    {spotlightStory.isLocked ? (
+                                                        <span className="text-amber-700 font-bold">🔒</span>
+                                                    ) : spotlightStory.authorPhotoUrl ? (
                                                         <img src={spotlightStory.authorPhotoUrl} alt="" className="w-full h-full object-cover" />
                                                     ) : (
                                                         <span className="text-amber-700 font-bold">{spotlightStory.authorName?.charAt(0) || 'U'}</span>
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-medium text-gray-900">{spotlightStory.authorName}</p>
-                                                    <p className="text-xs text-gray-500 italic">{spotlightStory.storyDate || 'Timeless'}</p>
+                                                    <p className="text-sm font-medium text-gray-900">{spotlightStory.isLocked ? "Sealed Author" : spotlightStory.authorName}</p>
+                                                    <p className="text-xs text-gray-500 italic">{spotlightStory.isLocked ? "Locked" : (spotlightStory.storyDate || 'Timeless')}</p>
                                                 </div>
                                             </div>
                                             <Link to={`/story/${spotlightStory.id}`} className="text-amber-600 hover:text-amber-800 font-medium text-sm transition-colors">
-                                                Read full story &rarr;
+                                                {spotlightStory.isLocked ? "View Countdown" : "Read full story"} &rarr;
                                             </Link>
                                         </div>
                                     </div>
@@ -560,6 +629,7 @@ export default function Dashboard() {
                                             className="absolute inset-0"
                                             isLocked={spotlightStory.isLocked}
                                             unlockDateTime={spotlightStory.unlockDateTime}
+                                            onUnlock={handleUnlock}
                                         />
                                     </div>
                                 </div>
@@ -600,10 +670,11 @@ export default function Dashboard() {
                                                                     alt={story.title}
                                                                     isLocked={story.isLocked}
                                                                     unlockDateTime={story.unlockDateTime}
+                                                                    onUnlock={handleUnlock}
                                                                 />
 
                                                                 {/* Family Member Tag */}
-                                                                {story.familyMemberName && (
+                                                                {!story.isLocked && story.familyMemberName && (
                                                                     <div className="absolute top-3 left-3 z-30 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-semibold text-amber-800 shadow-sm">
                                                                         {story.familyMemberName}
                                                                     </div>
@@ -622,9 +693,9 @@ export default function Dashboard() {
                                                             <div className="px-2">
                                                                 <div className="flex items-center justify-between mb-2">
                                                                     <span className="text-xs font-medium text-gray-500 italic flex items-center">
-                                                                        {story.storyDate || 'A timeless memory'}
+                                                                        {story.isLocked ? 'Locked Date' : (story.storyDate || 'A timeless memory')}
                                                                     </span>
-                                                                    {story.location && (
+                                                                    {!story.isLocked && story.location && (
                                                                         <span className="text-xs text-gray-400 flex items-center">
                                                                             <MapPin className="w-3 h-3 mr-1" />
                                                                             {story.location}
@@ -633,14 +704,17 @@ export default function Dashboard() {
                                                                 </div>
 
                                                                 <h3 className="text-xl font-bold text-gray-900 mb-2 font-serif group-hover:text-amber-700 transition-colors flex items-center gap-1.5">
-                                                                    {story.title}
+                                                                    {story.isLocked ? '🔒 Locked Time Capsule' : story.title}
                                                                 </h3>
 
                                                                 {story.isLocked ? (
-                                                                    <p className="text-amber-800/60 text-xs italic mb-4 leading-relaxed flex items-center gap-1.5 bg-[#faf5e6] p-2 rounded-lg border border-amber-900/5">
-                                                                        <Lock className="w-3.5 h-3.5 text-amber-800" />
-                                                                        This memory is locked in a time capsule.
-                                                                    </p>
+                                                                    <div className="mb-4 flex flex-wrap items-center gap-2 p-2 bg-[#faf5e6] rounded-lg border border-amber-900/5">
+                                                                        <div className="flex items-center gap-1.5 text-amber-850 text-xs font-medium">
+                                                                            <Lock className="w-3.5 h-3.5 text-amber-800" />
+                                                                            Locked:
+                                                                        </div>
+                                                                        <CapsuleCountdown targetDateStr={story.unlockDateTime} />
+                                                                    </div>
                                                                 ) : (
                                                                     <p className="text-gray-600 text-sm line-clamp-2 mb-4 leading-relaxed">
                                                                         {story.description}
@@ -656,7 +730,7 @@ export default function Dashboard() {
                                                                         </span>
                                                                     </div>
                                                                     <div className="text-xs font-medium text-amber-600">
-                                                                        By {story.authorName?.split(' ')[0]}
+                                                                        By {story.isLocked ? 'Sealed' : story.authorName?.split(' ')[0]}
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -674,6 +748,7 @@ export default function Dashboard() {
                     )}
                 </div>
             )}
+            {showCelebration && <CelebrationOverlay onClose={() => setShowCelebration(false)} />}
         </div>
     );
 }
