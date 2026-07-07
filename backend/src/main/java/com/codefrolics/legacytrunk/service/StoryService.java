@@ -5,6 +5,7 @@ import com.codefrolics.legacytrunk.dto.StoryResponse;
 import com.codefrolics.legacytrunk.model.*;
 import com.codefrolics.legacytrunk.repository.StoryRepository;
 import com.codefrolics.legacytrunk.repository.UserRepository;
+import com.codefrolics.legacytrunk.repository.FamilyMemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +24,7 @@ public class StoryService {
     private final UserRepository userRepository;
     private final UserService userService;
     private final MediaStorageService mediaStorageService;
-    private final com.codefrolics.legacytrunk.repository.FamilyMemberRepository familyMemberRepository;
+    private final FamilyMemberRepository familyMemberRepository;
     private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
@@ -39,7 +40,14 @@ public class StoryService {
         // Combine and sort
         List<Story> allStories = new ArrayList<>(ownStories);
         allStories.addAll(sharedStories);
-        allStories.sort((s1, s2) -> s2.getCreatedAt().compareTo(s1.getCreatedAt())); // Descending
+        allStories.sort((s1, s2) -> {
+            java.time.LocalDateTime d1 = s1.getCreatedAt();
+            java.time.LocalDateTime d2 = s2.getCreatedAt();
+            if (d1 == null && d2 == null) return 0;
+            if (d1 == null) return 1;
+            if (d2 == null) return -1;
+            return d2.compareTo(d1);
+        }); // Descending and null-safe
         
         return allStories.stream().map(this::mapToResponse).collect(Collectors.toList());
     }

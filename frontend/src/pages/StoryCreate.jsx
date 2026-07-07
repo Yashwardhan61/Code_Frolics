@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { storyService } from '../api/storyService';
 import { profileService } from '../api/profileService';
 import { friendService } from '../api/friendService';
+import { aiService } from '../api/aiService';
 import { useToast } from '../contexts/ToastContext';
 import { 
     ImageIcon, X, Loader2, ArrowLeft, Mic, Square, Music, Film, 
@@ -45,6 +46,10 @@ export default function StoryCreate() {
     const [activePreviewIndex, setActivePreviewIndex] = useState(0);
     const [showPromptsDrawer, setShowPromptsDrawer] = useState(false);
     const [expandedPromptCategory, setExpandedPromptCategory] = useState(null);
+    
+    // AI State
+    const [aiSuggestion, setAiSuggestion] = useState('');
+    const [isEnhancing, setIsEnhancing] = useState(false);
 
     const [formData, setFormData] = useState({
         title: '',
@@ -90,12 +95,57 @@ export default function StoryCreate() {
         loadData();
 
         return () => {
-            if (timerInterval) {
-                clearInterval(timerInterval);
-            }
+            if (timerInterval) clearInterval(timerInterval);
             previews.forEach(preview => URL.revokeObjectURL(preview));
         };
     }, [timerInterval]);
+
+    // AI Debounce for Suggestion
+    useEffect(() => {
+        const text = formData.description;
+        if (!text || text.length < 10 || text.endsWith(' ') || text.endsWith('\n')) {
+            setAiSuggestion('');
+            return;
+        }
+
+        const timerId = setTimeout(async () => {
+            try {
+                const suggestion = await aiService.suggestNextWords(text);
+                setAiSuggestion(suggestion);
+            } catch (e) {
+                console.error("AI Suggestion error", e);
+            }
+        }, 500); // 500ms debounce
+
+        return () => clearTimeout(timerId);
+    }, [formData.description]);
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Tab' && aiSuggestion) {
+            e.preventDefault();
+            setFormData({ ...formData, description: formData.description + ' ' + aiSuggestion });
+            setAiSuggestion('');
+        }
+    };
+
+    const handleEnhanceDescription = async () => {
+        if (!formData.description.trim()) {
+            toast.error("Please write a description first.");
+            return;
+        }
+        setIsEnhancing(true);
+        try {
+            const enhanced = await aiService.enhanceDescription(formData.description);
+            if (enhanced) {
+                setFormData(prev => ({ ...prev, description: enhanced }));
+                toast.success("Description enhanced!");
+            }
+        } catch (e) {
+            toast.error("Failed to enhance description.");
+        } finally {
+            setIsEnhancing(false);
+        }
+    };
 
     const startRecording = async () => {
         try {
@@ -248,6 +298,7 @@ export default function StoryCreate() {
             toast.error('Title is required.');
             return;
         }
+        
         if (isTimeCapsule) {
             if (!unlockDate || !unlockTime) {
                 toast.error('Please specify both unlock date and time for the Time Capsule.');
@@ -259,6 +310,7 @@ export default function StoryCreate() {
                 return;
             }
         }
+        
         try {
             setLoading(true);
             // Capture the current system date at the exact time of upload
@@ -601,13 +653,42 @@ export default function StoryCreate() {
                                 placeholder="Give this memory a title..."
                                 className="w-full text-xl font-bold text-amber-955 placeholder:text-amber-800/40 vintage-input-title pl-10 focus:ring-0 p-0 focus:outline-none"
                             />
+                            <div className="relative">
+                                <textarea 
+                                    value={formData.description}
+                                    onChange={(e) => {
+                                        setFormData({...formData, description: e.target.value});
+                                        if (aiSuggestion) setAiSuggestion('');
+                                    }}
+                                    onKeyDown={handleKeyDown}
+                                    placeholder="Write the description or story here..."
+                                    className="w-full text-sm text-amber-900 placeholder:text-amber-800/40 vintage-textarea-description pl-10 focus:ring-0 p-0 resize-none h-36 focus:outline-none relative z-10 bg-transparent"
+                                />
+                                {aiSuggestion && (
+                                    <div className="absolute inset-0 pointer-events-none pl-10 pt-[2px]">
+                                        <span className="text-sm text-transparent">{formData.description}</span>
+                                        <span className="text-sm text-amber-600/50 italic ml-1">
+                                            {aiSuggestion} <span className="text-[10px] bg-amber-200/50 text-amber-700 px-1 rounded font-bold ml-1">TAB</span>
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
                             
-                            <textarea 
-                                value={formData.description}
-                                onChange={(e) => setFormData({...formData, description: e.target.value})}
-                                placeholder="Write the description or story here..."
-                                className="w-full text-sm text-amber-900 placeholder:text-amber-800/40 vintage-textarea-description pl-10 focus:ring-0 p-0 resize-none h-36 focus:outline-none"
-                            />
+                            <div className="pl-10 flex justify-end mt-2">
+                                <button
+                                    type="button"
+                                    onClick={handleEnhanceDescription}
+                                    disabled={isEnhancing || !formData.description.trim()}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 hover:scale-105 active:scale-95 transition-all text-amber-400 text-[11px] font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                                >
+                                    {isEnhancing ? (
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    ) : (
+                                        <Sparkles className="w-3.5 h-3.5" />
+                                    )}
+                                    {isEnhancing ? 'Enhancing...' : '✨ Enhance'}
+                                </button>
+                            </div>
                         </div>
 
                         {/* Date of Memory Row */}

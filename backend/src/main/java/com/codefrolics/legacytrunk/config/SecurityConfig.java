@@ -4,6 +4,7 @@ import com.codefrolics.legacytrunk.security.FirebaseTokenFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -27,6 +28,7 @@ public class SecurityConfig {
                 .cors(cors -> {}) // Uses CorsConfig defaults
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow CORS preflight requests
                         .requestMatchers("/api/media/**").permitAll() // Allow public access to media
                         .requestMatchers("/api/notifications/test-email").permitAll() // Allow test email endpoint
                         .requestMatchers("/api/auth/forgot-password").permitAll()

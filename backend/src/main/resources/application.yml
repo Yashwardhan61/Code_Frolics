@@ -44,3 +44,5 @@ app:
   firebase:
     # Set to path of your Firebase service account JSON, or "none" to skip
     service-account-path: ${FIREBASE_SERVICE_ACCOUNT:none}
+  groq:
+    api-key: ${GROQ_API_KEY:}
