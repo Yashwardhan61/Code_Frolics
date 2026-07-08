@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../config/firebase';
-import { User, Mail, Lock } from 'lucide-react';
+import { User, Mail, Lock, Check, X } from 'lucide-react';
 import { authService } from '../api/authService';
 import { useToast } from '../contexts/ToastContext';
 
@@ -15,11 +15,30 @@ export default function Register() {
     const navigate = useNavigate();
     const toast = useToast();
 
+    const passwordRules = useMemo(() => [
+        { label: 'At least 8 characters', test: (p) => p.length >= 8 },
+        { label: 'One uppercase letter', test: (p) => /[A-Z]/.test(p) },
+        { label: 'One number', test: (p) => /[0-9]/.test(p) },
+        { label: 'One special character (!@#$%^&*)', test: (p) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p) },
+    ], []);
+
+    const allRulesPassed = passwordRules.every(rule => rule.test(password));
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        if (!allRulesPassed) {
+            toast.error('Password does not meet all requirements.');
+            return;
+        }
+
         if (password !== confirmPassword) {
             toast.error('Passwords do not match');
+            return;
+        }
+
+        if (!name.trim()) {
+            toast.error('Please enter your full name.');
             return;
         }
 
@@ -28,7 +47,11 @@ export default function Register() {
 
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 
-            await updateProfile(userCredential.user, { displayName: name });
+            // Set display name on Firebase profile
+            await updateProfile(userCredential.user, { displayName: name.trim() });
+
+            // Force token refresh so the new token carries the updated displayName
+            await userCredential.user.getIdToken(true);
 
             try {
                 await authService.syncUser();
@@ -43,7 +66,7 @@ export default function Register() {
                 err.code === 'auth/email-already-in-use'
                     ? 'An account with this email already exists.'
                     : err.code === 'auth/weak-password'
-                    ? 'Password must be at least 6 characters.'
+                    ? 'Password must be at least 8 characters with uppercase, number, and special character.'
                     : err.code === 'auth/invalid-email'
                     ? 'Please enter a valid email address.'
                     : 'Failed to create an account. ' + err.message;
@@ -112,9 +135,19 @@ export default function Register() {
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:ring-amber-500 focus:border-amber-500 bg-white/50 transition-colors"
                                 placeholder="••••••••"
-                                minLength="6"
+                                minLength="8"
                             />
                         </div>
+                        {password.length > 0 && (
+                            <div className="mt-2 space-y-1 pl-1">
+                                {passwordRules.map((rule, i) => (
+                                    <div key={i} className={`flex items-center gap-1.5 text-xs transition-colors ${rule.test(password) ? 'text-green-600' : 'text-gray-400'}`}>
+                                        {rule.test(password) ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                                        {rule.label}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     <div>
@@ -130,7 +163,7 @@ export default function Register() {
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:ring-amber-500 focus:border-amber-500 bg-white/50 transition-colors"
                                 placeholder="••••••••"
-                                minLength="6"
+                                minLength="8"
                             />
                         </div>
                     </div>
