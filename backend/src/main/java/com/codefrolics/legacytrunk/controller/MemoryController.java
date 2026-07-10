@@ -18,6 +18,11 @@ public class MemoryController {
 
     private final StoryService storyService;
 
+    @GetMapping("/statistics")
+    public ResponseEntity<com.codefrolics.legacytrunk.dto.MemoryStatisticsResponse> getMemoryStatistics() {
+        return ResponseEntity.ok(storyService.getMemoryStatistics());
+    }
+
     @GetMapping("/search")
     public ResponseEntity<Page<StoryResponse>> searchMemories(
             @RequestParam(value = "query", required = false) String query,

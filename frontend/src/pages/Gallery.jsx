@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { storyService } from '../api/storyService';
 import { useToast } from '../contexts/ToastContext';
-import { X, ZoomIn, Film, Image as ImageIcon, Play } from 'lucide-react';
+import { X, ZoomIn, Film, Image as ImageIcon, Play, Volume2 } from 'lucide-react';
 
 export default function Gallery() {
     const [allMedia, setAllMedia] = useState([]);
@@ -49,6 +49,7 @@ export default function Gallery() {
 
     const imageCounts = allMedia.filter(m => m.mediaType?.startsWith('image')).length;
     const videoCounts = allMedia.filter(m => m.mediaType?.startsWith('video')).length;
+    const audioCounts = allMedia.filter(m => m.mediaType?.startsWith('audio')).length;
 
     return (
         <div className="max-w-7xl mx-auto py-8">
@@ -57,7 +58,7 @@ export default function Gallery() {
                 <div>
                     <h1 className="text-3xl font-bold" style={{ color: 'var(--brand-brown-800)' }}>Media Gallery</h1>
                     <p className="text-gray-500 mt-1 text-sm">
-                        {allMedia.length} items &mdash; {imageCounts} photos, {videoCounts} videos
+                        {allMedia.length} items &mdash; {imageCounts} photos, {videoCounts} videos, {audioCounts} voice notes
                     </p>
                 </div>
 
@@ -67,6 +68,7 @@ export default function Gallery() {
                         { key: 'ALL', label: 'All', icon: null },
                         { key: 'image', label: 'Photos', icon: <ImageIcon className="w-4 h-4" /> },
                         { key: 'video', label: 'Videos', icon: <Film className="w-4 h-4" /> },
+                        { key: 'audio', label: 'Voice Notes', icon: <Volume2 className="w-4 h-4" /> },
                     ].map(tab => (
                         <button
                             key={tab.key}
@@ -107,17 +109,29 @@ export default function Gallery() {
                             onClick={() => openLightbox(item)}
                         >
                             {item.mediaType?.startsWith('video') ? (
-                                <div className="relative aspect-video bg-gray-900">
-                                    <video
-                                        src={item.mediaUrl}
-                                        className="w-full h-full object-cover opacity-80"
-                                        muted
-                                        preload="metadata"
-                                    />
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center">
-                                            <Play className="w-5 h-5 text-white ml-0.5" />
-                                        </div>
+                                <div className="relative aspect-video bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 flex flex-col items-center justify-center p-4 text-white select-none overflow-hidden group-hover:scale-[1.03] transition-transform duration-300">
+                                    <div className="absolute top-2 left-2 right-2 flex justify-between opacity-30 text-[8px] tracking-widest font-mono">
+                                        <span>00:00:00</span>
+                                        <span>16:9 REC</span>
+                                    </div>
+                                    <div className="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center mb-1.5 shadow-md">
+                                        <Film className="w-5 h-5 text-amber-500 animate-pulse" />
+                                    </div>
+                                    <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">Video Memory</span>
+                                </div>
+                            ) : item.mediaType?.startsWith('audio') ? (
+                                <div className="relative aspect-square bg-gradient-to-br from-amber-950 via-amber-900 to-amber-950 flex flex-col items-center justify-center p-4 text-white select-none group-hover:scale-[1.03] transition-transform duration-300">
+                                    <div className="w-10 h-10 rounded-full bg-white/15 border border-white/20 flex items-center justify-center mb-1.5 shadow-md">
+                                        <Volume2 className="w-5 h-5 text-amber-400 animate-bounce" />
+                                    </div>
+                                    <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">Voice Note</span>
+                                    
+                                    <div className="flex items-center gap-0.5 mt-2 h-3 justify-center opacity-65">
+                                        <span className="w-[1.5px] bg-amber-400 rounded-full h-2.5"></span>
+                                        <span className="w-[1.5px] bg-amber-300 rounded-full h-4"></span>
+                                        <span className="w-[1.5px] bg-amber-400 rounded-full h-5"></span>
+                                        <span className="w-[1.5px] bg-amber-300 rounded-full h-4"></span>
+                                        <span className="w-[1.5px] bg-amber-400 rounded-full h-2.5"></span>
                                     </div>
                                 </div>
                             ) : (
@@ -167,13 +181,30 @@ export default function Gallery() {
                                 src={lightbox.mediaUrl}
                                 controls
                                 autoPlay
-                                className="max-h-[80vh] rounded-xl shadow-2xl"
+                                className="max-h-[70vh] w-auto rounded-2xl shadow-2xl border border-white/15 bg-black"
                             />
+                        ) : lightbox.mediaType?.startsWith('audio') ? (
+                            <div className="bg-gradient-to-br from-amber-950 via-stone-900 to-black p-8 rounded-3xl border border-amber-900/20 shadow-2xl flex flex-col items-center justify-center w-full max-w-md text-white animate-in zoom-in-95 duration-200">
+                                <div className="w-18 h-18 rounded-full bg-amber-700/10 border border-amber-500/20 flex items-center justify-center mb-6 shadow-inner relative">
+                                    <Volume2 className="w-8 h-8 text-amber-400 animate-pulse z-10" />
+                                    <div className="absolute inset-0 rounded-full bg-amber-500/5 animate-ping opacity-60"></div>
+                                </div>
+                                
+                                <h4 className="text-lg font-bold text-amber-100 tracking-wide mb-1">Voice Memory</h4>
+                                <p className="text-amber-500/60 text-xs uppercase tracking-widest font-semibold mb-6">Audio Playback</p>
+                                
+                                <audio
+                                    src={lightbox.mediaUrl}
+                                    controls
+                                    autoPlay
+                                    className="w-full accent-amber-600 rounded-xl"
+                                />
+                            </div>
                         ) : (
                             <img
                                 src={lightbox.mediaUrl}
                                 alt={lightbox.storyTitle}
-                                className="max-h-[80vh] max-w-full rounded-xl shadow-2xl object-contain"
+                                className="max-h-[70vh] max-w-full rounded-2xl shadow-2xl object-contain border border-white/10"
                             />
                         )}
                         <p className="text-white/70 text-sm mt-3 font-medium">{lightbox.storyTitle}</p>

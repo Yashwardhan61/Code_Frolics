@@ -31,6 +31,9 @@ import Welcome from './pages/Welcome';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Feedback from './pages/Feedback';
+import ScrapbookList from './pages/ScrapbookList';
+import ScrapbookEditor from './pages/ScrapbookEditor';
+import ScrapbookScanner from './pages/ScrapbookScanner';
 
 function App() {
   return (
@@ -69,6 +72,10 @@ function App() {
             <Route path="/recipe/:id" element={<RecipeView />} />
             <Route path="/heirloom/create" element={<HeirloomCreate />} />
             <Route path="/heirloom/:id" element={<HeirloomView />} />
+            <Route path="/scrapbooks" element={<ScrapbookList />} />
+            <Route path="/scrapbook/create" element={<ScrapbookEditor />} />
+            <Route path="/scrapbook/edit/:id" element={<ScrapbookEditor />} />
+            <Route path="/scrapbook/scanner" element={<ScrapbookScanner />} />
             <Route path="/admin" element={<AdminPanel />} />
           </Route>
 

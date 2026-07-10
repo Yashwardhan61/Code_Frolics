@@ -90,6 +90,7 @@ export default function MainLayout() {
         { name: 'Gallery', path: '/gallery', icon: <Images className="w-5 h-5 mr-2" /> },
         { name: 'Heritage', path: '/heritage', icon: <Gem className="w-5 h-5 mr-2" /> },
         { name: 'Friends', path: '/friends', icon: <Users className="w-5 h-5 mr-2" /> },
+        { name: 'Scrapbook', path: '/scrapbooks', icon: <BookOpen className="w-5 h-5 mr-2" /> },
         { name: 'Profile', path: '/profile', icon: <User className="w-5 h-5 mr-2" /> },
         ...(userRole === 'ADMIN' ? [{ name: 'Admin', path: '/admin', icon: <Shield className="w-5 h-5 mr-2" /> }] : []),
     ];
