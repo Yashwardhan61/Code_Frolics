@@ -129,6 +129,13 @@ export default function StoryEdit() {
                     return;
                 }
 
+                // Check if story is locked
+                if (story.isLocked) {
+                    toast.error('This story is locked and cannot be edited.');
+                    navigate(`/story/${id}`);
+                    return;
+                }
+
                 setFormData({
                     title: story.title || '',
                     description: story.description || '',

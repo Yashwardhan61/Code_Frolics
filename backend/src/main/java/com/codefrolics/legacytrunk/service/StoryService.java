@@ -225,6 +225,9 @@ public class StoryService {
             throw new RuntimeException("Unauthorized to delete this story");
         }
         
+        // Delete associated notifications to prevent foreign key violations
+        notificationService.deleteNotificationsByStoryId(id);
+        
         // Delete physical files
         for (StoryMedia media : story.getMediaFiles()) {
             mediaStorageService.deleteFile(media.getFilePath());

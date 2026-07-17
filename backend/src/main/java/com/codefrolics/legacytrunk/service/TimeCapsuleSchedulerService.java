@@ -22,6 +22,7 @@ public class TimeCapsuleSchedulerService {
 
     private final StoryRepository storyRepository;
     private final NotificationRepository notificationRepository;
+    private final NotificationService notificationService;
 
     @Scheduled(fixedRate = 30000) // Runs every 30 seconds
     @Transactional
@@ -77,14 +78,14 @@ public class TimeCapsuleSchedulerService {
 
         if (!alreadyNotified) {
             String timeFormatted = story.getUnlockDateTime().toLocalTime().toString().substring(0, 5); // HH:mm
-            Notification notification = Notification.builder()
-                    .user(user)
-                    .type(type)
-                    .title("Time Capsule Unlocks Today! 📅")
-                    .message("Today is the day! The memory '" + story.getTitle() + "' is set to reveal itself today at " + timeFormatted + ".")
-                    .story(story)
-                    .build();
-            notificationRepository.save(notification);
+            notificationService.createNotification(
+                    user,
+                    type,
+                    "Time Capsule Unlocks Today! 📅",
+                    "Today is the day! The memory '" + story.getTitle() + "' is set to reveal itself today at " + timeFormatted + ".",
+                    story,
+                    "/story/" + story.getId()
+            );
             log.info("Created time capsule reveal day notification for user: {} and story: {}", user.getEmail(), story.getId());
         }
     }
@@ -94,14 +95,14 @@ public class TimeCapsuleSchedulerService {
         boolean alreadyNotified = notificationRepository.existsByUserIdAndStoryIdAndType(user.getId(), story.getId(), type);
 
         if (!alreadyNotified) {
-            Notification notification = Notification.builder()
-                    .user(user)
-                    .type(type)
-                    .title("Time Capsule Unlocking Soon 🔒")
-                    .message("The memory '" + story.getTitle() + "' will reveal itself in less than 2 minutes!")
-                    .story(story)
-                    .build();
-            notificationRepository.save(notification);
+            notificationService.createNotification(
+                    user,
+                    type,
+                    "Time Capsule Unlocking Soon 🔒",
+                    "The memory '" + story.getTitle() + "' will reveal itself in less than 2 minutes!",
+                    story,
+                    "/story/" + story.getId()
+            );
             log.info("Created time capsule unlock warning notification for user: {} and story: {}", user.getEmail(), story.getId());
         }
     }

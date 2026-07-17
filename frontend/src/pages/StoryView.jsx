@@ -2,9 +2,118 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { storyService } from '../api/storyService';
 import { useToast } from '../contexts/ToastContext';
-import { ArrowLeft, MapPin, Calendar, Trash2, Pencil, Music, Film, Lock } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Trash2, Pencil, Music, Film, Lock, Sparkles } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import AudioWaveformPlayer from '../components/AudioWaveformPlayer';
+
+export function CelebrationOverlay({ onClose }) {
+    const [confetti, setConfetti] = useState([]);
+
+    useEffect(() => {
+        const colors = ['#f59e0b', '#ef4444', '#3b82f6', '#10b981', '#ec4899', '#8b5cf6', '#06b6d4', '#f43f5e', '#10b981'];
+        const shapes = ['circle', 'square', 'triangle', 'star'];
+        const pieces = Array.from({ length: 140 }).map((_, i) => ({
+            id: i,
+            x: Math.random() * 100,
+            y: -10 - Math.random() * 20,
+            size: Math.random() * 10 + 6,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            shape: shapes[Math.floor(Math.random() * shapes.length)],
+            delay: Math.random() * 4,
+            duration: Math.random() * 3 + 2.5,
+            rotation: Math.random() * 360
+        }));
+        setConfetti(pieces);
+
+        const timer = setTimeout(() => {
+            onClose();
+        }, 7500);
+        return () => clearTimeout(timer);
+    }, [onClose]);
+
+    return (
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/85 overflow-hidden backdrop-blur-md">
+            {/* Confetti pieces */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                {confetti.map((c) => (
+                    <div
+                        key={c.id}
+                        className="absolute animate-fall"
+                        style={{
+                            left: `${c.x}%`,
+                            top: `${c.y}%`,
+                            width: `${c.size}px`,
+                            height: c.shape === 'triangle' ? '0' : `${c.size}px`,
+                            backgroundColor: c.shape === 'triangle' ? 'transparent' : c.color,
+                            borderLeft: c.shape === 'triangle' ? `${c.size/2}px solid transparent` : '',
+                            borderRight: c.shape === 'triangle' ? `${c.size/2}px solid transparent` : '',
+                            borderBottom: c.shape === 'triangle' ? `${c.size}px solid ${c.color}` : '',
+                            borderRadius: c.shape === 'circle' ? '50%' : '0%',
+                            opacity: 0.85,
+                            transform: `rotate(${c.rotation}deg)`,
+                            animationDelay: `${c.delay}s`,
+                            animationDuration: `${c.duration}s`,
+                            animationIterationCount: 'infinite',
+                            animationTimingFunction: 'linear'
+                        }}
+                    />
+                ))}
+            </div>
+
+            {/* Glowing Celebration Box */}
+            <div className="relative z-10 text-center max-w-sm px-8 py-12 bg-white/10 border border-white/20 rounded-3xl backdrop-blur-xl shadow-2xl scale-up-bounce flex flex-col items-center gap-6 mx-4">
+                <div className="w-20 h-20 bg-gradient-to-tr from-amber-500 via-orange-500 to-yellow-400 rounded-full flex items-center justify-center text-4xl shadow-lg shadow-orange-500/40 animate-bounce relative">
+                    <Sparkles className="absolute -top-1 -right-1 w-6 h-6 text-yellow-200 animate-pulse" />
+                    🎉
+                </div>
+                <div>
+                    <h2 className="text-3xl font-extrabold text-white font-serif tracking-wide bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-200 bg-clip-text text-transparent drop-shadow-md">
+                        Memory Unlocked!
+                    </h2>
+                    <p className="text-amber-100/90 text-sm mt-3 font-medium px-2 leading-relaxed">
+                        The wait is over! Your locked time capsule memory has just unlocked. Prepare to relive this moment!
+                    </p>
+                </div>
+
+                <button
+                    onClick={onClose}
+                    className="mt-4 px-8 py-3.5 bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-xl shadow-xl shadow-orange-500/20 hover:shadow-orange-500/40 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer text-sm tracking-wide uppercase"
+                >
+                    Reveal Memory ✨
+                </button>
+            </div>
+
+            <style dangerouslySetInnerHTML={{__html: `
+                @keyframes fall {
+                    0% {
+                        transform: translateY(0) rotate(0deg);
+                        opacity: 0;
+                    }
+                    10% {
+                        opacity: 1;
+                    }
+                    90% {
+                        opacity: 1;
+                    }
+                    100% {
+                        transform: translateY(115vh) rotate(720deg);
+                        opacity: 0;
+                    }
+                }
+                .animate-fall {
+                    animation-name: fall;
+                }
+                @keyframes scaleUp {
+                    0% { transform: scale(0.92); opacity: 0; }
+                    100% { transform: scale(1); opacity: 1; }
+                }
+                .scale-up-bounce {
+                    animation: scaleUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+                }
+            `}} />
+        </div>
+    );
+}
 
 function useCountdown(targetDateStr) {
     const calculateTimeLeft = () => {
@@ -49,11 +158,18 @@ export default function StoryView() {
     const [loading, setLoading] = useState(true);
     const [activeMedia, setActiveMedia] = useState(0);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-
+    const [showCelebration, setShowCelebration] = useState(false);
+    const [animationFinished, setAnimationFinished] = useState(false);
     const fetchStory = async () => {
         try {
             const data = await storyService.getStoryById(id);
             setStory(data);
+            
+            // Auto celebrate if unlocked and first time viewing in this browser
+            if (!data.isLocked && !localStorage.getItem(`revealed_${id}`)) {
+                setShowCelebration(true);
+                localStorage.setItem(`revealed_${id}`, 'true');
+            }
         } catch (error) {
             console.error('Failed to fetch story', error);
             toast.error('Could not load this story. Please try again.');
@@ -133,8 +249,9 @@ export default function StoryView() {
                     {isAuthor && (
                         <div className="flex space-x-3">
                             <button 
-                                onClick={() => navigate(`/story/${id}/edit`)}
-                                className="flex items-center text-amber-700 bg-amber-50 px-4 py-2 rounded-lg hover:bg-amber-100 transition-colors font-medium cursor-pointer"
+                                disabled
+                                className="flex items-center text-gray-400 bg-gray-100 px-4 py-2 rounded-lg cursor-not-allowed font-medium opacity-60"
+                                title="Editing is disabled while the time capsule is locked"
                             >
                                 <Pencil className="w-4 h-4 mr-2" />
                                 Edit
@@ -162,22 +279,9 @@ export default function StoryView() {
                         <Lock className="w-10 h-10 text-amber-800 animate-bounce" style={{ animationDuration: '3s' }} />
                     </div>
 
-                    <h1 className="text-3xl md:text-4xl font-extrabold text-amber-955 font-serif mb-4 leading-tight">
-                        {story.title}
+                    <h1 className="text-3xl md:text-4xl font-extrabold text-amber-955 font-serif mb-6 leading-tight">
+                        🔒 Sealed Time Capsule
                     </h1>
-
-                    {/* Metadata strip */}
-                    <div className="flex flex-wrap items-center justify-center text-xs text-amber-900/70 gap-4 mb-8">
-                        <span className="flex items-center">
-                            By {story.authorName}
-                        </span>
-                        {story.location && (
-                            <span className="flex items-center gap-1">
-                                <MapPin className="w-3.5 h-3.5" />
-                                {story.location}
-                            </span>
-                        )}
-                    </div>
 
                     {/* Countdown Display Card */}
                     <div className="bg-white border border-amber-900/10 rounded-2xl px-6 py-6 md:px-10 max-w-lg w-full shadow-md mb-8">
@@ -214,13 +318,7 @@ export default function StoryView() {
                     </div>
 
                     <p className="text-sm text-amber-900/80 max-w-md leading-relaxed font-serif">
-                        This story is sealed in a Time Capsule. The contents and media files will automatically unlock and reveal themselves on:
-                        <span className="block mt-2 font-bold text-amber-950 bg-[#faf5e6] border border-amber-900/10 px-4 py-2 rounded-xl text-xs max-w-fit mx-auto">
-                            {new Date(story.unlockDateTime).toLocaleString(undefined, {
-                                dateStyle: 'long',
-                                timeStyle: 'short'
-                            })}
-                        </span>
+                        This story is sealed in a Time Capsule. The contents and media files will automatically unlock and reveal themselves once the timer reaches zero.
                     </p>
                 </div>
 
@@ -260,33 +358,45 @@ export default function StoryView() {
 
     return (
         <div className="max-w-5xl mx-auto py-8">
-            <div className="mb-6 flex items-center justify-between">
-                <Link to="/dashboard" className="flex items-center text-gray-500 hover:text-amber-700 transition-colors font-medium">
-                    <ArrowLeft className="w-5 h-5 mr-2" />
-                    Back
-                </Link>
-                
-                {canEdit && (
+            {showCelebration && (
+                <CelebrationOverlay 
+                    onClose={() => {
+                        setShowCelebration(false);
+                        setAnimationFinished(true);
+                    }} 
+                />
+            )}
+            
+            <div className={`transition-all duration-1000 ${(!animationFinished && showCelebration) ? 'opacity-0 scale-95 blur-md pointer-events-none' : 'opacity-100 scale-100 blur-0'}`}>
+                <div className="mb-6 flex items-center justify-between">
+                    <Link to="/dashboard" className="flex items-center text-gray-500 hover:text-amber-700 transition-colors font-medium">
+                        <ArrowLeft className="w-5 h-5 mr-2" />
+                        Back
+                    </Link>
+                    
                     <div className="flex space-x-3">
-                        <button 
-                            onClick={() => navigate(`/story/${id}/edit`)}
-                            className="flex items-center text-amber-700 bg-amber-50 px-4 py-2 rounded-lg hover:bg-amber-100 transition-colors font-medium"
-                        >
-                            <Pencil className="w-4 h-4 mr-2" />
-                            Edit
-                        </button>
-                        <button 
-                            onClick={() => setShowDeleteModal(true)}
-                            className="flex items-center text-red-600 bg-red-50 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors font-medium"
-                        >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete
-                        </button>
+                        {canEdit && (
+                            <>
+                                <button 
+                                    onClick={() => navigate(`/story/${id}/edit`)}
+                                    className="flex items-center text-amber-700 bg-amber-50 px-4 py-2 rounded-lg hover:bg-amber-100 transition-colors font-medium cursor-pointer"
+                                >
+                                    <Pencil className="w-4 h-4 mr-2" />
+                                    Edit
+                                </button>
+                                <button 
+                                    onClick={() => setShowDeleteModal(true)}
+                                    className="flex items-center text-red-600 bg-red-50 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors font-medium cursor-pointer"
+                                >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete
+                                </button>
+                            </>
+                        )}
                     </div>
-                )}
-            </div>
+                </div>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 {/* Media Gallery Header */}
                 {story.mediaFiles && story.mediaFiles.length > 0 && (
                     <div className="relative bg-black h-96 md:h-[500px] flex items-center justify-center">
@@ -412,6 +522,7 @@ export default function StoryView() {
                     )}
                 </div>
             </div>
+        </div>
 
             {/* Custom Delete Confirmation Modal */}
             {showDeleteModal && (

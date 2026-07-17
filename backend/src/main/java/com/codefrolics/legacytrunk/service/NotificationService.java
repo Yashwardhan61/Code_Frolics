@@ -85,6 +85,11 @@ public class NotificationService {
         emailService.sendNotificationEmail(user.getEmail(), title, message, actionUrl);
     }
 
+    @Transactional
+    public void deleteNotificationsByStoryId(Long storyId) {
+        notificationRepository.deleteByStoryId(storyId);
+    }
+
     private NotificationResponse mapToResponse(Notification notification) {
         return NotificationResponse.builder()
                 .id(notification.getId())
