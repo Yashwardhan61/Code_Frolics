@@ -31,6 +31,7 @@ import Welcome from './pages/Welcome';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Feedback from './pages/Feedback';
+import ResetPassword from './pages/ResetPassword';
 import ScrapbookList from './pages/ScrapbookList';
 import ScrapbookEditor from './pages/ScrapbookEditor';
 import ScrapbookScanner from './pages/ScrapbookScanner';
@@ -49,6 +50,7 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/feedback" element={<Feedback />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
 
           {/* Protected Routes */}
