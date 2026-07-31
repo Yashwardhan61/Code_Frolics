@@ -5,6 +5,11 @@ export const storyService = {
         const response = await api.get('/stories');
         return response.data;
     },
+
+    getMemoryStatistics: async () => {
+        const response = await api.get('/memories/statistics');
+        return response.data;
+    },
     
     searchStories: async (params) => {
         const response = await api.get('/memories/search', { params });

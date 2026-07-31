@@ -265,6 +265,97 @@ public class StoryService {
         return page.map(this::mapToResponse);
     }
 
+    @Transactional(readOnly = true)
+    public com.codefrolics.legacytrunk.dto.MemoryStatisticsResponse getMemoryStatistics() {
+        User currentUser = userService.getCurrentUser();
+        List<Story> ownStories = storyRepository.findByUserIdOrderByCreatedAtDesc(currentUser.getId());
+        List<Story> sharedStories = storyRepository.findSharedWithUserOrderByCreatedAtDesc(currentUser.getId());
+        
+        List<Story> allStories = new ArrayList<>(ownStories);
+        allStories.addAll(sharedStories);
+
+        long totalStories = allStories.size();
+        long totalPhotos = 0;
+        long totalVideos = 0;
+        long totalAudios = 0;
+        long totalTextOnly = 0;
+        long totalViews = 0;
+
+        java.util.Map<String, Long> tagCounts = new java.util.HashMap<>();
+        java.util.Map<String, Long> locationCounts = new java.util.HashMap<>();
+
+        for (Story story : allStories) {
+            totalViews += (story.getViews() != null ? story.getViews() : 0);
+
+            // Media counters
+            boolean hasMedia = false;
+            if (story.getMediaFiles() != null && !story.getMediaFiles().isEmpty()) {
+                for (StoryMedia media : story.getMediaFiles()) {
+                    hasMedia = true;
+                    String type = media.getMediaType().toLowerCase();
+                    if (type.contains("image") || type.contains("photo")) {
+                        totalPhotos++;
+                    } else if (type.contains("video")) {
+                        totalVideos++;
+                    } else if (type.contains("audio")) {
+                        totalAudios++;
+                    }
+                }
+            }
+            if (!hasMedia) {
+                totalTextOnly++;
+            }
+
+            // Tags counts
+            if (story.getTags() != null) {
+                for (StoryTag tag : story.getTags()) {
+                    String tagName = tag.getTag();
+                    if (tagName != null && !tagName.trim().isEmpty()) {
+                        tagCounts.put(tagName, tagCounts.getOrDefault(tagName, 0L) + 1);
+                    }
+                }
+            }
+
+            // Location counts
+            String loc = story.getLocation();
+            if (loc != null && !loc.trim().isEmpty()) {
+                locationCounts.put(loc, locationCounts.getOrDefault(loc, 0L) + 1);
+            }
+        }
+
+        // Limit tags and locations to top 6 elements for layout display cleanly
+        java.util.Map<String, Long> topTags = tagCounts.entrySet().stream()
+                .sorted(java.util.Map.Entry.<String, Long>comparingByValue().reversed())
+                .limit(6)
+                .collect(Collectors.toMap(
+                        java.util.Map.Entry::getKey,
+                        java.util.Map.Entry::getValue,
+                        (e1, e2) -> e1,
+                        java.util.LinkedHashMap::new
+                ));
+
+        java.util.Map<String, Long> topLocations = locationCounts.entrySet().stream()
+                .sorted(java.util.Map.Entry.<String, Long>comparingByValue().reversed())
+                .limit(6)
+                .collect(Collectors.toMap(
+                        java.util.Map.Entry::getKey,
+                        java.util.Map.Entry::getValue,
+                        (e1, e2) -> e1,
+                        java.util.LinkedHashMap::new
+                ));
+
+        return com.codefrolics.legacytrunk.dto.MemoryStatisticsResponse.builder()
+                .totalStories(totalStories)
+                .totalPhotos(totalPhotos)
+                .totalVideos(totalVideos)
+                .totalAudios(totalAudios)
+                .totalTextOnly(totalTextOnly)
+                .totalViews(totalViews)
+                .topTags(topTags)
+                .topLocations(topLocations)
+                .build();
+    }
+
     private StoryResponse mapToResponse(Story story) {
         boolean isLocked = story.getUnlockDateTime() != null && java.time.LocalDateTime.now().isBefore(story.getUnlockDateTime());
 

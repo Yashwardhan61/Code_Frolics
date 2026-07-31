@@ -761,6 +761,36 @@ body {
     background: linear-gradient(to bottom, #9b6534, #8b5628);
 }
 
+/* Center HTML5 QR Code Scanner contents and elements */
+#qr-reader-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+#qr-reader-container img {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    display: block !important;
+}
+
+#qr-reader-container video {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    display: block !important;
+}
+
+#qr-reader-container div,
+#qr-reader-container span,
+#qr-reader-container button,
+#qr-reader-container select {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+
 
 
 
