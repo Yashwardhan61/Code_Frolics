@@ -6,35 +6,12 @@ import { friendService } from '../api/friendService';
 import { aiService } from '../api/aiService';
 import { useToast } from '../contexts/ToastContext';
 import { 
-    ImageIcon, X, Loader2, ArrowLeft, Mic, Square, Music, Film, 
+    ImageIcon, X, Loader2, ArrowLeft, Mic, Music, Film, 
     MapPin, Users, Hash, ChevronRight, ChevronLeft, Plus, 
-    ChevronDown, Check, User, Sparkles, Calendar
+    ChevronDown, Check, User, Sparkles, Calendar, Lock
 } from 'lucide-react';
-
-const promptsByCategory = {
-    "🌅 Childhood": [
-        "What is your earliest childhood memory?",
-        "Describe a favorite holiday tradition you had.",
-        "What was your favorite childhood game or toy?"
-    ],
-    "🗺️ Travel": [
-        "What was the most adventurous trip you took?",
-        "Describe a place that felt like home away from home.",
-        "What was the local food you loved on a past trip?"
-    ],
-    "🏡 Family": [
-        "What is a piece of advice your parents/grandparents gave you?",
-        "Tell the story of how your family name/tradition originated.",
-        "Describe a typical Sunday evening in your family home."
-    ],
-    "🎓 Milestones": [
-        "Describe your first day of school or college.",
-        "How did you feel when you achieved a major goal?",
-        "What was a major turning point in your life?"
-    ]
-};
-
-
+import AudioRecorderModal from '../components/story/AudioRecorderModal';
+import MemoryPromptsModal from '../components/story/MemoryPromptsModal';
 
 export default function StoryCreate() {
     const navigate = useNavigate();
@@ -44,8 +21,7 @@ export default function StoryCreate() {
     const [friends, setFriends] = useState([]);
     const [isShareDropdownOpen, setIsShareDropdownOpen] = useState(false);
     const [activePreviewIndex, setActivePreviewIndex] = useState(0);
-    const [showPromptsDrawer, setShowPromptsDrawer] = useState(false);
-    const [expandedPromptCategory, setExpandedPromptCategory] = useState(null);
+    const [showPromptsModal, setShowPromptsModal] = useState(false);
     
     // AI State
     const [aiSuggestion, setAiSuggestion] = useState('');
@@ -98,7 +74,7 @@ export default function StoryCreate() {
             if (timerInterval) clearInterval(timerInterval);
             previews.forEach(preview => URL.revokeObjectURL(preview));
         };
-    }, [timerInterval]);
+    }, [timerInterval, previews]);
 
     // AI Debounce for Suggestion
     useEffect(() => {
@@ -215,12 +191,6 @@ export default function StoryCreate() {
         }
     };
 
-    const formatTime = (secs) => {
-        const mins = Math.floor(secs / 60);
-        const remainingSecs = secs % 60;
-        return `${mins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')}`;
-    };
-
     const handleFileChange = (e) => {
         const selectedFiles = Array.from(e.target.files);
         if (selectedFiles.length === 0) return;
@@ -250,52 +220,48 @@ export default function StoryCreate() {
     const handleAddTag = (e) => {
         if (e.key === 'Enter' && tagInput.trim()) {
             e.preventDefault();
-            const cleanTag = tagInput.trim().replace(/^#/, '');
-            if (!formData.tags.includes(cleanTag)) {
-                setFormData({
-                    ...formData,
-                    tags: [...formData.tags, cleanTag]
-                });
+            const tag = tagInput.trim().replace(/^#/, '');
+            if (!formData.tags.includes(tag)) {
+                setFormData(prev => ({
+                    ...prev,
+                    tags: [...prev.tags, tag]
+                }));
             }
             setTagInput('');
         }
     };
 
     const removeTag = (tagToRemove) => {
-        setFormData({
-            ...formData,
-            tags: formData.tags.filter(tag => tag !== tagToRemove)
-        });
+        setFormData(prev => ({
+            ...prev,
+            tags: prev.tags.filter(tag => tag !== tagToRemove)
+        }));
     };
 
-    const handleToggleShare = (userId) => {
+    const handleToggleShare = (friendUserId) => {
         setFormData(prev => {
-            const shared = prev.sharedWithUserIds.includes(userId);
-            const updated = shared 
-                ? prev.sharedWithUserIds.filter(id => id !== userId) 
-                : [...prev.sharedWithUserIds, userId];
+            const isShared = prev.sharedWithUserIds.includes(friendUserId);
             return {
                 ...prev,
-                sharedWithUserIds: updated
+                sharedWithUserIds: isShared 
+                    ? prev.sharedWithUserIds.filter(id => id !== friendUserId)
+                    : [...prev.sharedWithUserIds, friendUserId]
             };
         });
     };
 
-    const handleSelectPrompt = (prompt) => {
+    const handleSelectPrompt = (promptText) => {
         setFormData(prev => ({
             ...prev,
-            description: `Prompt: ${prompt}\n\n${prev.description}`
+            description: prev.description ? `${prev.description}\n\n${promptText}` : promptText
         }));
-        setShowPromptsDrawer(false);
-        toast.success('Story Starter loaded into composer!');
     };
-
-
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
         if (!formData.title.trim()) {
-            toast.error('Title is required.');
+            toast.error('Please provide a title for your memory.');
             return;
         }
         
@@ -313,8 +279,7 @@ export default function StoryCreate() {
         
         try {
             setLoading(true);
-            // Capture the current system date at the exact time of upload
-            const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format in local timezone
+            const today = new Date().toLocaleDateString('en-CA');
             const storyData = {
                 ...formData,
                 storyDate: formData.storyDate || today,
@@ -340,7 +305,7 @@ export default function StoryCreate() {
         <div className="max-w-5xl mx-auto py-6 px-4">
             <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center">
-                    <Link to="/dashboard" className="text-amber-800 hover:text-amber-955 transition-colors mr-3 p-1.5 hover:bg-amber-100/55 rounded-full">
+                    <Link to="/dashboard" className="text-amber-800 hover:text-amber-950 transition-colors mr-3 p-1.5 hover:bg-amber-100/55 rounded-full">
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
                     <h1 className="text-3xl font-extrabold tracking-tight text-amber-950 font-serif">New Memory</h1>
@@ -348,7 +313,7 @@ export default function StoryCreate() {
                 <button 
                     onClick={handleSubmit}
                     disabled={loading || !formData.title.trim()}
-                    className="px-5 py-2 bg-gradient-to-r from-amber-800 to-amber-900 hover:scale-105 active:scale-95 transition-all text-white text-sm font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-amber-900/10"
+                    className="px-5 py-2 bg-gradient-to-r from-amber-800 to-amber-900 hover:scale-105 active:scale-95 transition-all text-white text-sm font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-amber-900/10 cursor-pointer"
                 >
                     {loading ? (
                         <>
@@ -388,7 +353,7 @@ export default function StoryCreate() {
                                 <button
                                     type="button"
                                     onClick={() => setShowRecorder(true)}
-                                    className="flex items-center justify-center gap-1.5 px-5 py-2.5 bg-zinc-900 hover:bg-zinc-800 hover:scale-105 text-zinc-200 text-xs font-semibold rounded-xl border border-zinc-800 transition-all"
+                                    className="flex items-center justify-center gap-1.5 px-5 py-2.5 bg-zinc-900 hover:bg-zinc-800 hover:scale-105 text-zinc-200 text-xs font-semibold rounded-xl border border-zinc-800 transition-all cursor-pointer"
                                 >
                                     <Mic className="w-3.5 h-3.5 text-amber-500" />
                                     Record Audio
@@ -405,7 +370,7 @@ export default function StoryCreate() {
                             <button
                                 type="button"
                                 onClick={() => removeFile(activePreviewIndex)}
-                                className="absolute top-4 right-4 z-20 bg-red-600/80 hover:bg-red-600 text-white rounded-full p-1.5 transition-colors shadow-md hover:scale-110 active:scale-95 duration-150"
+                                className="absolute top-4 right-4 z-20 bg-red-600/80 hover:bg-red-600 text-white rounded-full p-1.5 transition-colors shadow-md hover:scale-110 active:scale-95 duration-150 cursor-pointer"
                                 title="Remove file"
                             >
                                 <X className="w-4 h-4" />
@@ -425,7 +390,6 @@ export default function StoryCreate() {
                                             <audio src={activePreview} controls className="w-full max-w-[280px] h-8 accent-amber-500 bg-amber-950/80 rounded-lg p-1" />
                                         </div>
                                     ) : (
-                                        // Scrapbook slot for photos/videos
                                         <div className="scrapbook-photo-slot relative p-4 max-h-[380px] max-w-full flex items-center justify-center rounded-sm">
                                             <div className="photo-corner-tl"></div>
                                             <div className="photo-corner-tr"></div>
@@ -447,7 +411,7 @@ export default function StoryCreate() {
                                             type="button"
                                             onClick={() => setActivePreviewIndex(prev => Math.max(0, prev - 1))}
                                             disabled={activePreviewIndex === 0}
-                                            className="absolute left-4 bg-black/50 hover:bg-black/80 hover:scale-105 active:scale-95 text-white rounded-full p-2 disabled:opacity-20 transition-all z-10"
+                                            className="absolute left-4 bg-black/50 hover:bg-black/80 hover:scale-105 active:scale-95 text-white rounded-full p-2 disabled:opacity-20 transition-all z-10 cursor-pointer"
                                         >
                                             <ChevronLeft className="w-5 h-5" />
                                         </button>
@@ -455,7 +419,7 @@ export default function StoryCreate() {
                                             type="button"
                                             onClick={() => setActivePreviewIndex(prev => Math.min(previews.length - 1, prev + 1))}
                                             disabled={activePreviewIndex === previews.length - 1}
-                                            className="absolute right-4 bg-black/50 hover:bg-black/80 hover:scale-105 active:scale-95 text-white rounded-full p-2 disabled:opacity-20 transition-all z-10"
+                                            className="absolute right-4 bg-black/50 hover:bg-black/80 hover:scale-105 active:scale-95 text-white rounded-full p-2 disabled:opacity-20 transition-all z-10 cursor-pointer"
                                         >
                                             <ChevronRight className="w-5 h-5" />
                                         </button>
@@ -476,7 +440,7 @@ export default function StoryCreate() {
                                                 key={idx}
                                                 type="button"
                                                 onClick={() => setActivePreviewIndex(idx)}
-                                                className={`w-14 h-14 rounded-lg overflow-hidden border-2 flex items-center justify-center flex-shrink-0 bg-zinc-900 transition-all duration-300 hover:scale-105 ${
+                                                className={`w-14 h-14 rounded-lg overflow-hidden border-2 flex items-center justify-center flex-shrink-0 bg-zinc-900 transition-all duration-300 hover:scale-105 cursor-pointer ${
                                                     idx === activePreviewIndex 
                                                         ? 'border-amber-500 scale-90 ring-2 ring-amber-500/20' 
                                                         : 'border-zinc-800 opacity-60 hover:opacity-100'
@@ -506,77 +470,10 @@ export default function StoryCreate() {
                             </div>
                         </div>
                     )}
-
-                    {/* Audio Recorder Slide-up Overlay */}
-                    {showRecorder && (
-                        <div className="absolute inset-0 bg-zinc-950/95 backdrop-blur-md z-30 flex flex-col items-center justify-center p-6 text-white text-center animate-fadeIn">
-                            <div className="w-16 h-16 rounded-full bg-red-600/10 border border-red-600/30 flex items-center justify-center mb-4 text-red-500 animate-pulse">
-                                <Mic className="w-8 h-8" />
-                            </div>
-                            <h4 className="text-lg font-bold mb-1">
-                                {isRecording ? 'Recording Voice Memory' : 'Voice Recorder'}
-                            </h4>
-                            <p className="text-xs text-zinc-400 mb-6">
-                                {isRecording ? `Duration: ${formatTime(recordingTime)}` : audioUrl ? 'Recording complete!' : 'Record a voice description for this memory card.'}
-                            </p>
-
-                            <div className="flex flex-col gap-3 w-full max-w-[280px]">
-                                {isRecording ? (
-                                    <button
-                                        type="button"
-                                        onClick={stopRecording}
-                                        className="flex items-center justify-center gap-2 w-full py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-xl transition-all shadow-lg shadow-red-600/20"
-                                    >
-                                        <Square className="w-4 h-4 fill-white" />
-                                        Stop Recording
-                                    </button>
-                                ) : audioUrl ? (
-                                    <>
-                                        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-2 mb-2">
-                                            <audio src={audioUrl} controls className="w-full h-8 accent-amber-500" />
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={addRecordedAudio}
-                                            className="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-xl transition-all"
-                                        >
-                                            Attach to Memory
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={discardRecording}
-                                            className="w-full py-2.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold rounded-xl border border-zinc-800 transition-all"
-                                        >
-                                            Discard
-                                        </button>
-                                    </>
-                                ) : (
-                                    <>
-                                        <button
-                                            type="button"
-                                            onClick={startRecording}
-                                            className="flex items-center justify-center gap-2 w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-xl transition-all shadow-lg shadow-amber-600/10"
-                                        >
-                                            <Mic className="w-4 h-4" />
-                                            Start Recording
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowRecorder(false)}
-                                            className="w-full py-2.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold rounded-xl border border-zinc-800 transition-all"
-                                        >
-                                            Close
-                                        </button>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    )}
                 </div>
 
                 {/* Right Pane - Details & Composer */}
                 <div className="md:col-span-5 flex flex-col justify-between p-6 vintage-journal-page overflow-y-auto max-h-[650px] md:max-h-none border-l border-amber-900/10">
-                    {/* Paper clip decoration to enhance vintage feel */}
                     <div className="paperclip-decoration"></div>
                     <div>
                         {/* Profile Header */}
@@ -594,53 +491,19 @@ export default function StoryCreate() {
                             </div>
                         </div>
 
-                        {/* Story Starters Drawer */}
-                        <div className="mb-4 bg-zinc-50 border border-zinc-100 rounded-2xl overflow-hidden transition-all duration-300">
+                        {/* Story Starters Trigger */}
+                        <div className="mb-4 bg-amber-50/50 border border-amber-200/60 rounded-2xl p-3 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-amber-700" />
+                                <span className="text-xs font-semibold text-amber-900">Need inspiration?</span>
+                            </div>
                             <button
                                 type="button"
-                                onClick={() => setShowPromptsDrawer(!showPromptsDrawer)}
-                                className="w-full flex items-center justify-between p-3.5 text-zinc-700 hover:text-amber-800 font-semibold text-xs transition-colors"
+                                onClick={() => setShowPromptsModal(true)}
+                                className="text-xs font-semibold text-amber-800 hover:text-amber-950 bg-white px-3 py-1 rounded-lg border border-amber-200 hover:bg-amber-50 transition-colors cursor-pointer"
                             >
-                                <div className="flex items-center gap-2">
-                                    <Sparkles className="w-4 h-4 text-amber-500 animate-spin" style={{ animationDuration: '3s' }} />
-                                    <span>💡 Need inspiration? Try a Story Starter</span>
-                                </div>
-                                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showPromptsDrawer ? 'rotate-180' : ''}`} />
+                                Browse Prompts
                             </button>
-
-                            {showPromptsDrawer && (
-                                <div className="p-3 pt-0 space-y-2 border-t border-zinc-100/50 max-h-56 overflow-y-auto animate-fadeIn">
-                                    {Object.entries(promptsByCategory).map(([category, questions]) => {
-                                        const isCatExpanded = expandedPromptCategory === category;
-                                        return (
-                                            <div key={category} className="border border-zinc-100 bg-white rounded-xl overflow-hidden">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setExpandedPromptCategory(isCatExpanded ? null : category)}
-                                                    className="w-full flex items-center justify-between p-2.5 text-zinc-800 font-bold text-xs text-left hover:bg-zinc-50 transition-colors"
-                                                >
-                                                    <span>{category}</span>
-                                                    <ChevronDown className={`w-3 h-3 transition-transform ${isCatExpanded ? 'rotate-180' : ''}`} />
-                                                </button>
-                                                {isCatExpanded && (
-                                                    <div className="p-2 pt-0 space-y-1.5 border-t border-zinc-50 bg-zinc-50/50">
-                                                        {questions.map((q, idx) => (
-                                                            <button
-                                                                key={idx}
-                                                                type="button"
-                                                                onClick={() => handleSelectPrompt(q)}
-                                                                className="w-full text-left p-2 hover:bg-amber-50 rounded-lg text-[11px] text-zinc-700 hover:text-amber-900 transition-colors leading-relaxed font-medium bg-white border border-zinc-100"
-                                                            >
-                                                                {q}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
                         </div>
 
                         {/* Title & Caption */}
@@ -651,7 +514,7 @@ export default function StoryCreate() {
                                 value={formData.title}
                                 onChange={(e) => setFormData({...formData, title: e.target.value})}
                                 placeholder="Give this memory a title..."
-                                className="w-full text-xl font-bold text-amber-955 placeholder:text-amber-800/40 vintage-input-title pl-10 focus:ring-0 p-0 focus:outline-none"
+                                className="w-full text-xl font-bold text-amber-950 placeholder:text-amber-800/40 vintage-input-title pl-10 focus:ring-0 p-0 focus:outline-none"
                             />
                             <div className="relative">
                                 <textarea 
@@ -679,14 +542,14 @@ export default function StoryCreate() {
                                     type="button"
                                     onClick={handleEnhanceDescription}
                                     disabled={isEnhancing || !formData.description.trim()}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 hover:scale-105 active:scale-95 transition-all text-amber-400 text-[11px] font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 hover:scale-105 active:scale-95 transition-all text-amber-400 text-[11px] font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-md cursor-pointer"
                                 >
                                     {isEnhancing ? (
                                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                     ) : (
                                         <Sparkles className="w-3.5 h-3.5" />
                                     )}
-                                    {isEnhancing ? 'Enhancing...' : '✨ Enhance'}
+                                    {isEnhancing ? 'Enhancing...' : 'Enhance with AI'}
                                 </button>
                             </div>
                         </div>
@@ -738,7 +601,7 @@ export default function StoryCreate() {
                                             <button 
                                                 type="button" 
                                                 onClick={() => removeTag(tag)}
-                                                className="hover:text-red-500 text-amber-800/60"
+                                                className="hover:text-red-500 text-amber-800/60 cursor-pointer"
                                             >
                                                 <X className="w-2.5 h-2.5" />
                                             </button>
@@ -753,7 +616,7 @@ export default function StoryCreate() {
                             <button 
                                 type="button" 
                                 onClick={() => setIsShareDropdownOpen(!isShareDropdownOpen)} 
-                                className="w-full flex items-center justify-between text-amber-800 hover:text-amber-950 text-xs font-semibold"
+                                className="w-full flex items-center justify-between text-amber-800 hover:text-amber-950 text-xs font-semibold cursor-pointer"
                             >
                                 <div className="flex items-center gap-3">
                                     <Users className="w-4 h-4 text-amber-700/60 flex-shrink-0" />
@@ -762,7 +625,6 @@ export default function StoryCreate() {
                                 <ChevronDown className={`w-4 h-4 text-amber-700/60 transition-transform ${isShareDropdownOpen ? 'rotate-180' : ''}`} />
                             </button>
                             
-                            {/* Selected Friends list */}
                             {!isShareDropdownOpen && formData.sharedWithUserIds.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mt-2 pl-7 select-none animate-fadeIn">
                                     {friends
@@ -770,7 +632,7 @@ export default function StoryCreate() {
                                         .map(f => (
                                             <span key={f.id} className="inline-flex items-center gap-1 text-[10px] bg-[#faf5e6] text-amber-950 px-2 py-0.5 rounded-full border border-amber-900/20 hover:scale-105 transition-transform">
                                                 {f.displayName}
-                                                <button type="button" onClick={() => handleToggleShare(f.userId)} className="text-amber-800/60 hover:text-red-500">
+                                                <button type="button" onClick={() => handleToggleShare(f.userId)} className="text-amber-800/60 hover:text-red-500 cursor-pointer">
                                                     <X className="w-2.5 h-2.5" />
                                                 </button>
                                             </span>
@@ -831,7 +693,8 @@ export default function StoryCreate() {
                                     className="rounded border-amber-900/30 text-amber-800 focus:ring-amber-500 h-4 w-4 bg-transparent"
                                 />
                                 <span className="flex items-center gap-1.5">
-                                    🔒 Seal in a Time Capsule
+                                    <Lock className="w-3.5 h-3.5 text-amber-800" />
+                                    Seal in a Time Capsule
                                 </span>
                             </label>
                             {isTimeCapsule && (
@@ -846,22 +709,22 @@ export default function StoryCreate() {
                                 <div>
                                     <label className="block text-[10px] font-bold text-amber-800/80 mb-1">Unlock Date</label>
                                     <input 
-                                        type="date"
+                                        type="date" 
                                         required={isTimeCapsule}
                                         value={unlockDate}
                                         onChange={(e) => setUnlockDate(e.target.value)}
                                         min={new Date().toLocaleDateString('en-CA')}
-                                        className="w-full text-xs p-2 rounded-lg border border-amber-900/20 bg-transparent text-amber-900 focus:ring-amber-500 focus:border-amber-500 focus:outline-none"
+                                        className="w-full text-xs p-2 rounded-lg border border-amber-900/20 bg-transparent text-amber-900 focus:ring-amber-500 focus:border-amber-500 focus:outline-none cursor-pointer"
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-bold text-amber-800/80 mb-1">Unlock Time</label>
                                     <input 
-                                        type="time"
+                                        type="time" 
                                         required={isTimeCapsule}
                                         value={unlockTime}
                                         onChange={(e) => setUnlockTime(e.target.value)}
-                                        className="w-full text-xs p-2 rounded-lg border border-amber-900/20 bg-transparent text-amber-900 focus:ring-amber-500 focus:border-amber-500 focus:outline-none"
+                                        className="w-full text-xs p-2 rounded-lg border border-amber-900/20 bg-transparent text-amber-900 focus:ring-amber-500 focus:border-amber-500 focus:outline-none cursor-pointer"
                                     />
                                 </div>
                             </div>
@@ -878,6 +741,25 @@ export default function StoryCreate() {
                     </div>
                 </div>
             </form>
+
+            {/* Subcomponent Modals */}
+            <AudioRecorderModal
+                isOpen={showRecorder}
+                onClose={() => setShowRecorder(false)}
+                isRecording={isRecording}
+                recordingTime={recordingTime}
+                audioUrl={audioUrl}
+                startRecording={startRecording}
+                stopRecording={stopRecording}
+                discardRecording={discardRecording}
+                addRecordedAudio={addRecordedAudio}
+            />
+
+            <MemoryPromptsModal
+                isOpen={showPromptsModal}
+                onClose={() => setShowPromptsModal(false)}
+                onSelectPrompt={handleSelectPrompt}
+            />
         </div>
     );
 }

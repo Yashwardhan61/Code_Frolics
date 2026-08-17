@@ -34,6 +34,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/forgot-password").permitAll()
                         .requestMatchers("/api/auth/validate-reset-token").permitAll()
                         .requestMatchers("/api/auth/reset-password").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/**").authenticated()   // All other API endpoints require auth
                         .anyRequest().permitAll()                     // Allow static resources
                 )
