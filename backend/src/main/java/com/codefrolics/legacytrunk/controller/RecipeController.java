@@ -6,6 +6,7 @@ import com.codefrolics.legacytrunk.service.RecipeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,7 +37,7 @@ public class RecipeController {
     @PostMapping(consumes = {"multipart/form-data"})
     @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
     public ResponseEntity<RecipeResponse> createRecipe(
-            @RequestPart("recipe") RecipeRequest request,
+            @Valid @RequestPart("recipe") RecipeRequest request,
             @RequestPart(value = "files", required = false) MultipartFile[] files) {
         return ResponseEntity.ok(recipeService.createRecipe(request, files));
     }
@@ -45,7 +46,7 @@ public class RecipeController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
     public ResponseEntity<RecipeResponse> updateRecipe(
             @PathVariable Long id,
-            @RequestPart("recipe") RecipeRequest request,
+            @Valid @RequestPart("recipe") RecipeRequest request,
             @RequestPart(value = "files", required = false) MultipartFile[] files) {
         return ResponseEntity.ok(recipeService.updateRecipe(id, request, files));
     }

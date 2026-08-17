@@ -5,6 +5,7 @@ import com.codefrolics.legacytrunk.dto.FamilyMemberResponse;
 import com.codefrolics.legacytrunk.service.FamilyTreeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,7 +34,7 @@ public class FamilyTreeController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
     public ResponseEntity<FamilyMemberResponse> addMember(
             @PathVariable String type,
-            @RequestBody FamilyMemberRequest request) {
+            @Valid @RequestBody FamilyMemberRequest request) {
         return ResponseEntity.ok(familyTreeService.addMember(type, request));
     }
 
@@ -42,7 +43,7 @@ public class FamilyTreeController {
     public ResponseEntity<FamilyMemberResponse> updateMember(
             @PathVariable String type,
             @PathVariable Long id,
-            @RequestBody FamilyMemberRequest request) {
+            @Valid @RequestBody FamilyMemberRequest request) {
         return ResponseEntity.ok(familyTreeService.updateMember(type, id, request));
     }
 

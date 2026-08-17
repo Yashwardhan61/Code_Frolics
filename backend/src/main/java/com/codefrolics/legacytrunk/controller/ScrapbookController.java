@@ -5,6 +5,7 @@ import com.codefrolics.legacytrunk.dto.ScrapbookResponse;
 import com.codefrolics.legacytrunk.service.ScrapbookService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,7 +30,7 @@ public class ScrapbookController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
-    public ResponseEntity<ScrapbookResponse> createScrapbook(@RequestBody ScrapbookRequest request) {
+    public ResponseEntity<ScrapbookResponse> createScrapbook(@Valid @RequestBody ScrapbookRequest request) {
         return ResponseEntity.ok(scrapbookService.createScrapbook(request));
     }
 
@@ -37,7 +38,7 @@ public class ScrapbookController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
     public ResponseEntity<ScrapbookResponse> updateScrapbook(
             @PathVariable Long id,
-            @RequestBody ScrapbookRequest request) {
+            @Valid @RequestBody ScrapbookRequest request) {
         return ResponseEntity.ok(scrapbookService.updateScrapbook(id, request));
     }
 

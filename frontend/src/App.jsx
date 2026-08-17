@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
 
 // Layouts
 import MainLayout from './layouts/MainLayout';
@@ -78,7 +79,11 @@ function App() {
             <Route path="/scrapbook/create" element={<ScrapbookEditor />} />
             <Route path="/scrapbook/edit/:id" element={<ScrapbookEditor />} />
             <Route path="/scrapbook/scanner" element={<ScrapbookScanner />} />
-            <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/admin" element={
+              <AdminRoute>
+                <AdminPanel />
+              </AdminRoute>
+            } />
           </Route>
 
           {/* Fallback */}

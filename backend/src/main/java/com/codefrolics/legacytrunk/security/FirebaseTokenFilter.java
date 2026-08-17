@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -19,13 +20,26 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class FirebaseTokenFilter extends OncePerRequestFilter {
 
     private final UserRepository userRepository;
+
+    @Value("${spring.profiles.active:}")
+    private String activeProfiles;
+
+    public FirebaseTokenFilter(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    private boolean isDevProfile() {
+        return Arrays.stream(activeProfiles.split(","))
+                .map(String::trim)
+                .anyMatch(p -> p.equalsIgnoreCase("dev"));
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -44,16 +58,22 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
                     parsedEmail = decodedToken.getEmail();
                     parsedName = decodedToken.getName();
                 } catch (IllegalStateException e) {
-                    // Fallback to unsafe manual JWT decoding if Firebase Admin is not initialized
-                    log.warn("Firebase Admin not initialized! Using unsafe manual token decoding for local dev.");
+                    // Only fall back to unsafe decoding in dev profile
+                    if (!isDevProfile()) {
+                        log.error("Firebase Admin not initialized and not running in dev profile. Rejecting token.");
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+
+                    log.warn("DEV MODE: Firebase Admin not initialized. Using unsafe manual token decoding. DO NOT USE IN PRODUCTION.");
                     String[] parts = token.split("\\.");
                     if (parts.length == 3) {
                         String payload = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
                         com.fasterxml.jackson.databind.JsonNode json = new com.fasterxml.jackson.databind.ObjectMapper().readTree(payload);
                         parsedUid = json.has("user_id") ? json.get("user_id").asText() : json.get("sub").asText();
                         parsedEmail = json.has("email") ? json.get("email").asText() : "dummy@example.com";
-                        parsedName = json.has("name") ? json.get("name").asText() : 
-                                     json.has("displayName") ? json.get("displayName").asText() : 
+                        parsedName = json.has("name") ? json.get("name").asText() :
+                                     json.has("displayName") ? json.get("displayName").asText() :
                                      json.has("display_name") ? json.get("display_name").asText() : null;
                     } else {
                         throw new IllegalArgumentException("Invalid JWT format");

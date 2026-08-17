@@ -12,8 +12,17 @@ Thumbs.db
 .env.local
 .env.development
 .env.production
+backend/.env
 
 # Java
 *.class
 backend/target/
+
+# Firebase keys
 firebase-key.json
+**/firebase-key*.json
+**/serviceAccountKey*.json
+
+# Frontend build output
+frontend/dist/
+frontend/.vite/

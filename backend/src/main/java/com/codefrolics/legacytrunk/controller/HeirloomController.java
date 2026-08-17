@@ -6,6 +6,7 @@ import com.codefrolics.legacytrunk.service.HeirloomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,7 +37,7 @@ public class HeirloomController {
     @PostMapping(consumes = {"multipart/form-data"})
     @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
     public ResponseEntity<HeirloomResponse> createHeirloom(
-            @RequestPart("heirloom") HeirloomRequest request,
+            @Valid @RequestPart("heirloom") HeirloomRequest request,
             @RequestPart(value = "files", required = false) MultipartFile[] files) {
         return ResponseEntity.ok(heirloomService.createHeirloom(request, files));
     }
@@ -45,7 +46,7 @@ public class HeirloomController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
     public ResponseEntity<HeirloomResponse> updateHeirloom(
             @PathVariable Long id,
-            @RequestPart("heirloom") HeirloomRequest request,
+            @Valid @RequestPart("heirloom") HeirloomRequest request,
             @RequestPart(value = "files", required = false) MultipartFile[] files) {
         return ResponseEntity.ok(heirloomService.updateHeirloom(id, request, files));
     }
