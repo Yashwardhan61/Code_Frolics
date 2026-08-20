@@ -1,0 +1,7 @@
+frontend/
+backend/target/
+.env
+backend/.env
+*.log
+.git/
+.DS_Store
