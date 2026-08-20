@@ -9,7 +9,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -36,6 +35,7 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
     }
 
     private boolean isDevProfile() {
+        if (activeProfiles == null || activeProfiles.isBlank()) return false;
         return Arrays.stream(activeProfiles.split(","))
                 .map(String::trim)
                 .anyMatch(p -> p.equalsIgnoreCase("dev"));

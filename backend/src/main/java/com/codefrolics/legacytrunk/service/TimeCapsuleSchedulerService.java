@@ -1,6 +1,5 @@
 package com.codefrolics.legacytrunk.service;
 
-import com.codefrolics.legacytrunk.model.Notification;
 import com.codefrolics.legacytrunk.model.Story;
 import com.codefrolics.legacytrunk.model.StoryShare;
 import com.codefrolics.legacytrunk.model.User;
