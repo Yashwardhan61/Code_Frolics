@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { authService } from '../api/authService';
 import { Mail, Lock } from 'lucide-react';
@@ -21,8 +21,30 @@ export default function Login() {
         }
         try {
             setResetLoading(true);
-            await authService.forgotPassword(email.trim().toLowerCase());
-            toast.success('Password reset email sent! Check your inbox.');
+            const cleanEmail = email.trim().toLowerCase();
+            let sent = false;
+
+            // 1. Try Firebase Auth client password reset first
+            try {
+                await sendPasswordResetEmail(auth, cleanEmail);
+                sent = true;
+            } catch (fbErr) {
+                console.warn('Firebase client password reset error:', fbErr);
+            }
+
+            // 2. Also trigger backend reset email / token flow
+            try {
+                await authService.forgotPassword(cleanEmail);
+                sent = true;
+            } catch (backendErr) {
+                console.warn('Backend custom reset email error:', backendErr);
+            }
+
+            if (sent) {
+                toast.success('Password reset email sent! Check your inbox.');
+            } else {
+                toast.error('Could not send reset email. Please ensure the email address is valid.');
+            }
         } catch (err) {
             const msg = err.response?.data?.error || 'Failed to send reset email. Please try again.';
             toast.error(msg);
@@ -100,7 +122,7 @@ export default function Login() {
                                 type="button"
                                 onClick={handleForgotPassword}
                                 disabled={resetLoading}
-                                className="text-sm text-amber-600 hover:text-amber-500 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="text-sm text-amber-600 hover:text-amber-500 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                             >
                                 {resetLoading ? 'Sending...' : 'Forgot Password?'}
                             </button>
@@ -110,7 +132,7 @@ export default function Login() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-base font-medium text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-base font-medium text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                         {loading ? 'Opening...' : 'Open Treasure Chest'}
                     </button>
