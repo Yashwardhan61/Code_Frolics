@@ -1,8 +1,12 @@
 import axios from 'axios';
 import { auth } from '../config/firebase';
 
+const rawApiUrl = import.meta.env.VITE_API_URL || '';
+const cleanApiUrl = rawApiUrl.replace(/\/$/, '');
+const baseURL = cleanApiUrl ? `${cleanApiUrl}/api` : '/api';
+
 const api = axios.create({
-    baseURL: '/api',
+    baseURL: baseURL,
 });
 
 // Add a request interceptor
@@ -27,7 +31,6 @@ api.interceptors.response.use(
     },
     (error) => {
         if (error.response && error.response.status === 401) {
-            // Handle unauthorized access (e.g., redirect to login)
             console.error('Unauthorized access - maybe token expired');
         }
         return Promise.reject(error);
