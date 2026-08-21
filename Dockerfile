@@ -11,6 +11,8 @@ WORKDIR /app
 RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 COPY --from=builder /app/target/*.jar app.jar
-EXPOSE 8080
-ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+EXPOSE 8080 10000
+
+# Tuned for Render Free Tier (512MB RAM limit) with fast startup
+ENV JAVA_OPTS="-Xms128m -Xmx300m -XX:+UseSerialGC -XX:MaxMetaspaceSize=128m -XX:+TieredCompilation -XX:TieredStopAtLevel=1"
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
