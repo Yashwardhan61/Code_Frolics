@@ -165,8 +165,8 @@ export default function StoryView() {
             const data = await storyService.getStoryById(id);
             setStory(data);
             
-            // Auto celebrate if unlocked and first time viewing in this browser
-            if (!data.isLocked && !localStorage.getItem(`revealed_${id}`)) {
+            // Only celebrate if this story is a Time Capsule that was unlocked
+            if (data.unlockDateTime && !data.isLocked && !localStorage.getItem(`revealed_${id}`)) {
                 setShowCelebration(true);
                 localStorage.setItem(`revealed_${id}`, 'true');
             }
