@@ -87,6 +87,19 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("handleRuntimeException returns 400 with exception message")
+    void testHandleRuntimeException() {
+        RuntimeException ex = new RuntimeException("Family member not found");
+
+        ResponseEntity<Map<String, Object>> response = exceptionHandler.handleRuntimeException(ex);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(400, response.getBody().get("status"));
+        assertEquals("Family member not found", response.getBody().get("message"));
+    }
+
+    @Test
     @DisplayName("handleGenericException returns 500 without leaking stack traces")
     void testHandleGenericException() {
         Exception ex = new NullPointerException("Null pointer in service");

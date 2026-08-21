@@ -3,7 +3,6 @@ package com.codefrolics.legacytrunk.model;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,6 +10,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
@@ -36,7 +37,7 @@ public class StoredMedia {
     @Column(name = "file_size")
     private Long fileSize;
 
-    @Lob
+    @JdbcTypeCode(SqlTypes.VARBINARY)
     @Column(name = "data", columnDefinition = "BYTEA")
     private byte[] data;
 

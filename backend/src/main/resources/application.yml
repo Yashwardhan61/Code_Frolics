@@ -7,6 +7,13 @@ spring:
     username: ${DB_USER:postgres}
     password: ${DB_PASS:}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 30000
+      max-lifetime: 60000
+      connection-timeout: 20000
+      keepalive-time: 30000
 
   jpa:
     hibernate:
@@ -46,3 +53,4 @@ app:
     service-account-path: ${FIREBASE_SERVICE_ACCOUNT:none}
   groq:
     api-key: ${GROQ_API_KEY:}
+    model: ${GROQ_MODEL:groq/compound-mini}
