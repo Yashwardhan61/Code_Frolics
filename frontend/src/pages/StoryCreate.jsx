@@ -281,16 +281,22 @@ export default function StoryCreate() {
             setLoading(true);
             const today = new Date().toLocaleDateString('en-CA');
             const storyData = {
-                ...formData,
-                storyDate: formData.storyDate || today,
-                unlockDateTime: isTimeCapsule ? `${unlockDate}T${unlockTime}:00` : null
+                title: formData.title.trim(),
+                description: formData.description?.trim() || null,
+                location: formData.location?.trim() || null,
+                storyDate: formData.storyDate ? formData.storyDate : today,
+                tags: formData.tags && formData.tags.length > 0 ? formData.tags : [],
+                sharedWithUserIds: formData.sharedWithUserIds && formData.sharedWithUserIds.length > 0 ? formData.sharedWithUserIds : [],
+                familyMemberId: formData.familyMemberId ? Number(formData.familyMemberId) : null,
+                unlockDateTime: isTimeCapsule && unlockDate && unlockTime ? `${unlockDate}T${unlockTime}:00` : null
             };
             await storyService.createStory(storyData, files);
             toast.success('Memory saved successfully!');
             navigate('/dashboard');
         } catch (error) {
             console.error('Failed to create story', error);
-            toast.error('Failed to save memory: ' + (error.response?.data?.message || error.message));
+            const msg = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to save memory';
+            toast.error('Failed to save memory: ' + msg);
         } finally {
             setLoading(false);
         }

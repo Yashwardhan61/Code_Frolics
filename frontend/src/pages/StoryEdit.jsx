@@ -215,15 +215,22 @@ export default function StoryEdit() {
         try {
             setSaving(true);
             const payload = {
-                ...formData,
-                unlockDateTime: isTimeCapsule ? `${unlockDate}T${unlockTime}:00` : null
+                title: formData.title.trim(),
+                description: formData.description?.trim() || null,
+                location: formData.location?.trim() || null,
+                storyDate: formData.storyDate ? formData.storyDate : null,
+                tags: formData.tags && formData.tags.length > 0 ? formData.tags : [],
+                sharedWithUserIds: formData.sharedWithUserIds && formData.sharedWithUserIds.length > 0 ? formData.sharedWithUserIds : [],
+                familyMemberId: formData.familyMemberId ? Number(formData.familyMemberId) : null,
+                unlockDateTime: isTimeCapsule && unlockDate && unlockTime ? `${unlockDate}T${unlockTime}:00` : null
             };
             await storyService.updateStory(id, payload, newFiles);
             toast.success('Memory updated successfully!');
             navigate(`/story/${id}`);
         } catch (error) {
             console.error('Failed to update story', error);
-            toast.error('Failed to update memory: ' + (error.response?.data?.message || error.message));
+            const msg = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to update memory';
+            toast.error('Failed to update memory: ' + msg);
         } finally {
             setSaving(false);
         }

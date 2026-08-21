@@ -2,8 +2,10 @@ package com.codefrolics.legacytrunk.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+
 import java.util.List;
 import java.util.Map;
 
@@ -13,7 +15,9 @@ import java.util.Map;
 public class GroqService {
 
     private final RestClient groqRestClient;
-    private static final String MODEL_NAME = "llama-3.1-8b-instant";
+
+    @Value("${app.groq.model:groq/compound-mini}")
+    private String modelName;
 
     public String suggestNextWords(String currentText) {
         if (currentText == null || currentText.trim().isEmpty()) {
@@ -45,7 +49,7 @@ public class GroqService {
     private String callGroqApi(String prompt) {
         try {
             Map<String, Object> requestBody = Map.of(
-                "model", MODEL_NAME,
+                "model", modelName != null && !modelName.isBlank() ? modelName : "groq/compound-mini",
                 "messages", List.of(
                     Map.of("role", "user", "content", prompt)
                 ),
@@ -66,7 +70,8 @@ public class GroqService {
                 if (!choices.isEmpty()) {
                     @SuppressWarnings("unchecked")
                     Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
-                    return (String) message.get("content");
+                    String content = (String) message.get("content");
+                    return content != null ? content : "";
                 }
             }
             return "";
