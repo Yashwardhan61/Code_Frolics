@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../config/firebase';
-import { User, Mail, Lock, Check, X } from 'lucide-react';
+import { User, Mail, Lock, Check, X, Eye, EyeOff } from 'lucide-react';
 import { authService } from '../api/authService';
 import { useToast } from '../contexts/ToastContext';
 
@@ -11,6 +11,8 @@ export default function Register() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const toast = useToast();
@@ -23,6 +25,7 @@ export default function Register() {
     ], []);
 
     const allRulesPassed = passwordRules.every(rule => rule.test(password));
+    const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -129,20 +132,28 @@ export default function Register() {
                                 <Lock className="h-5 w-5 text-gray-400" />
                             </div>
                             <input
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:ring-amber-500 focus:border-amber-500 bg-white/50 transition-colors"
+                                className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:ring-amber-500 focus:border-amber-500 bg-white/50 transition-colors"
                                 placeholder="••••••••"
                                 minLength="8"
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer focus:outline-none"
+                                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                            >
+                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                            </button>
                         </div>
                         {password.length > 0 && (
                             <div className="mt-2 space-y-1 pl-1">
                                 {passwordRules.map((rule, i) => (
-                                    <div key={i} className={`flex items-center gap-1.5 text-xs transition-colors ${rule.test(password) ? 'text-green-600' : 'text-gray-400'}`}>
-                                        {rule.test(password) ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                                    <div key={i} className={`flex items-center gap-1.5 text-xs transition-colors ${rule.test(password) ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
+                                        {rule.test(password) ? <Check className="w-3 h-3 text-green-600" /> : <X className="w-3 h-3 text-gray-400" />}
                                         {rule.label}
                                     </div>
                                 ))}
@@ -157,21 +168,44 @@ export default function Register() {
                                 <Lock className="h-5 w-5 text-gray-400" />
                             </div>
                             <input
-                                type="password"
+                                type={showConfirmPassword ? 'text' : 'password'}
                                 required
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:ring-amber-500 focus:border-amber-500 bg-white/50 transition-colors"
+                                className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:ring-amber-500 focus:border-amber-500 bg-white/50 transition-colors"
                                 placeholder="••••••••"
                                 minLength="8"
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer focus:outline-none"
+                                aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                            >
+                                {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                            </button>
                         </div>
+                        {confirmPassword.length > 0 && (
+                            <div className={`mt-1.5 text-xs flex items-center gap-1.5 pl-1 ${passwordsMatch ? 'text-green-600 font-medium' : 'text-amber-600'}`}>
+                                {passwordsMatch ? (
+                                    <>
+                                        <Check className="w-3.5 h-3.5 text-green-600" />
+                                        Passwords match
+                                    </>
+                                ) : (
+                                    <>
+                                        <X className="w-3.5 h-3.5 text-amber-600" />
+                                        Passwords do not match
+                                    </>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-base font-medium text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+                        className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-base font-medium text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed mt-6 cursor-pointer"
                     >
                         {loading ? 'Creating Account...' : 'Begin Journey'}
                     </button>

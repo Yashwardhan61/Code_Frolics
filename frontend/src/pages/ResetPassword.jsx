@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { authService } from '../api/authService';
-import { KeyRound, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { KeyRound, CheckCircle, AlertCircle, Loader2, Eye, EyeOff, Check, X } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 
 export default function ResetPassword() {
@@ -13,6 +13,8 @@ export default function ResetPassword() {
     const [errorMsg, setErrorMsg] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     useEffect(() => {
         if (!token) {
@@ -35,6 +37,8 @@ export default function ResetPassword() {
 
         processToken();
     }, [token]);
+
+    const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -90,14 +94,23 @@ export default function ResetPassword() {
                                         <KeyRound className="h-5 w-5 text-gray-400" />
                                     </div>
                                     <input
-                                        type="password"
+                                        type={showPassword ? 'text' : 'password'}
                                         required
                                         disabled={status === 'submitting'}
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:ring-amber-500 focus:border-amber-500 bg-white/50 transition-colors disabled:opacity-50"
+                                        className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:ring-amber-500 focus:border-amber-500 bg-white/50 transition-colors disabled:opacity-50"
                                         placeholder="••••••••"
+                                        minLength="6"
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer focus:outline-none"
+                                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                    >
+                                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                    </button>
                                 </div>
                             </div>
 
@@ -108,21 +121,45 @@ export default function ResetPassword() {
                                         <KeyRound className="h-5 w-5 text-gray-400" />
                                     </div>
                                     <input
-                                        type="password"
+                                        type={showConfirmPassword ? 'text' : 'password'}
                                         required
                                         disabled={status === 'submitting'}
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:ring-amber-500 focus:border-amber-500 bg-white/50 transition-colors disabled:opacity-50"
+                                        className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:ring-amber-500 focus:border-amber-500 bg-white/50 transition-colors disabled:opacity-50"
                                         placeholder="••••••••"
+                                        minLength="6"
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer focus:outline-none"
+                                        aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                                    >
+                                        {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                    </button>
                                 </div>
+                                {confirmPassword.length > 0 && (
+                                    <div className={`mt-1.5 text-xs flex items-center gap-1.5 pl-1 ${passwordsMatch ? 'text-green-600 font-medium' : 'text-amber-600'}`}>
+                                        {passwordsMatch ? (
+                                            <>
+                                                <Check className="w-3.5 h-3.5 text-green-600" />
+                                                Passwords match
+                                            </>
+                                        ) : (
+                                            <>
+                                                <X className="w-3.5 h-3.5 text-amber-600" />
+                                                Passwords do not match
+                                            </>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             <button
                                 type="submit"
                                 disabled={status === 'submitting'}
-                                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-base font-medium text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-base font-medium text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                             >
                                 {status === 'submitting' ? 'Resetting Password...' : 'Reset Password'}
                             </button>
