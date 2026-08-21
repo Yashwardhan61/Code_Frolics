@@ -88,6 +88,9 @@ export default function Dashboard() {
     const [stories, setStories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCelebration, setShowCelebration] = useState(false);
+    const toastRef = useRef(toast);
+    toastRef.current = toast;
+    const hasErrored = useRef(false);
 
     const fetchStories = useCallback(async () => {
         try {
@@ -98,13 +101,17 @@ export default function Dashboard() {
                 return dateB - dateA;
             });
             setStories(sortedData);
+            hasErrored.current = false;
         } catch (err) {
             console.error('Failed to fetch stories', err);
-            toast.error('Could not load your family chronicle.');
+            if (!hasErrored.current) {
+                hasErrored.current = true;
+                toastRef.current.error('Could not load your family chronicle.');
+            }
         } finally {
             setLoading(false);
         }
-    }, [toast]);
+    }, []);
 
     useEffect(() => {
         fetchStories();
