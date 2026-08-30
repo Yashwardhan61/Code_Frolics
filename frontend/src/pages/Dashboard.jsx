@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { storyService } from '../api/storyService';
 import { useToast } from '../contexts/ToastContext';
@@ -85,9 +85,11 @@ function ScrollReveal({ children, delay = 0 }) {
 export default function Dashboard() {
     const { currentUser, userRole } = useAuth();
     const toast = useToast();
+    const navigate = useNavigate();
     const [stories, setStories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCelebration, setShowCelebration] = useState(false);
+    const unlockedStoryIdRef = useRef(null);
     const toastRef = useRef(toast);
     toastRef.current = toast;
     const hasErrored = useRef(false);
@@ -117,10 +119,11 @@ export default function Dashboard() {
         fetchStories();
     }, [fetchStories]);
 
-    const handleUnlock = () => {
+    const handleUnlock = useCallback((storyId) => {
+        unlockedStoryIdRef.current = storyId || null;
         setShowCelebration(true);
         fetchStories();
-    };
+    }, [fetchStories]);
 
     /* -- Computed Stats -- */
     const stats = useMemo(() => {
@@ -363,7 +366,7 @@ export default function Dashboard() {
                                                     <Lock className="w-4 h-4 text-amber-800" />
                                                     Locked:
                                                 </div>
-                                                <CapsuleCountdown targetDateStr={spotlightStory.unlockDateTime} onUnlock={handleUnlock} />
+                                                <CapsuleCountdown targetDateStr={spotlightStory.unlockDateTime} onUnlock={() => handleUnlock(spotlightStory.id)} />
                                             </div>
                                         ) : (
                                             <p className="text-gray-600 mb-6 line-clamp-3 text-lg leading-relaxed font-sans">
@@ -399,7 +402,7 @@ export default function Dashboard() {
                                             className="absolute inset-0"
                                             isLocked={spotlightStory.isLocked}
                                             unlockDateTime={spotlightStory.unlockDateTime}
-                                            onUnlock={handleUnlock}
+                                            onUnlock={() => handleUnlock(spotlightStory.id)}
                                         />
                                     </div>
                                 </div>
@@ -426,7 +429,7 @@ export default function Dashboard() {
                                                     <TimelineStoryCard
                                                         story={story}
                                                         rotation={rotation}
-                                                        onUnlock={handleUnlock}
+                                                        onUnlock={() => handleUnlock(story.id)}
                                                     />
                                                 </div>
                                             </div>
@@ -438,7 +441,13 @@ export default function Dashboard() {
                     )}
                 </div>
             )}
-            {showCelebration && <CelebrationOverlay onClose={() => setShowCelebration(false)} />}
+            {showCelebration && <CelebrationOverlay onClose={() => {
+                setShowCelebration(false);
+                if (unlockedStoryIdRef.current) {
+                    navigate(`/story/${unlockedStoryIdRef.current}`);
+                    unlockedStoryIdRef.current = null;
+                }
+            }} />}
         </div>
     );
 }

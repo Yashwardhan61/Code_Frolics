@@ -47,9 +47,11 @@ function useCountdown(targetDateStr) {
 
 export function CapsuleCountdown({ targetDateStr, onUnlock }) {
     const countdown = useCountdown(targetDateStr);
+    const hasUnlocked = useRef(false);
 
     useEffect(() => {
-        if (countdown.expired && onUnlock) {
+        if (countdown.expired && onUnlock && !hasUnlocked.current) {
+            hasUnlocked.current = true;
             onUnlock();
         }
     }, [countdown.expired, onUnlock]);

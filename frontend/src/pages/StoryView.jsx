@@ -184,9 +184,11 @@ export default function StoryView() {
 
     const countdown = useCountdown(story?.unlockDateTime);
     const [notifiedTwoMinutes, setNotifiedTwoMinutes] = useState(false);
+    const hasRefetched = useRef(false);
 
     useEffect(() => {
-        if (story?.isLocked && countdown.expired) {
+        if (story?.isLocked && countdown.expired && !hasRefetched.current) {
+            hasRefetched.current = true;
             fetchStory();
         }
     }, [countdown.expired, story?.isLocked]);
@@ -195,11 +197,11 @@ export default function StoryView() {
         if (story?.isLocked && !notifiedTwoMinutes && story?.unlockDateTime) {
             const difference = +new Date(story.unlockDateTime) - +new Date();
             if (difference > 0 && difference <= 120000) {
-                toast.info(`⏰ Get ready! "${story.title}" will unlock in less than 2 minutes!`);
+                toast.info(`Get ready! "${story.title}" will unlock in less than 2 minutes!`);
                 setNotifiedTwoMinutes(true);
             }
         }
-    }, [countdown, story?.isLocked, story?.unlockDateTime, notifiedTwoMinutes, toast, story?.title]);
+    }, [countdown.minutes, story?.isLocked, story?.unlockDateTime, notifiedTwoMinutes, toast, story?.title]);
 
     const confirmDelete = async () => {
         try {
