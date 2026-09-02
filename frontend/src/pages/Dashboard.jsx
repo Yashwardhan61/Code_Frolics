@@ -97,18 +97,25 @@ export default function Dashboard() {
     const fetchStories = useCallback(async () => {
         try {
             const data = await storyService.getAllStories();
-            const sortedData = data.sort((a, b) => {
-                const dateA = a.storyDate ? new Date(a.storyDate) : new Date(a.createdAt);
-                const dateB = b.storyDate ? new Date(b.storyDate) : new Date(b.createdAt);
-                return dateB - dateA;
-            });
-            setStories(sortedData);
+            if (Array.isArray(data)) {
+                const sortedData = [...data].sort((a, b) => {
+                    const dateA = a?.storyDate ? new Date(a.storyDate) : (a?.createdAt ? new Date(a.createdAt) : new Date(0));
+                    const dateB = b?.storyDate ? new Date(b.storyDate) : (b?.createdAt ? new Date(b.createdAt) : new Date(0));
+                    const timeA = isNaN(dateA.getTime()) ? 0 : dateA.getTime();
+                    const timeB = isNaN(dateB.getTime()) ? 0 : dateB.getTime();
+                    return timeB - timeA;
+                });
+                setStories(sortedData);
+            } else {
+                setStories([]);
+            }
             hasErrored.current = false;
         } catch (err) {
             console.error('Failed to fetch stories', err);
+            setStories([]);
             if (!hasErrored.current) {
                 hasErrored.current = true;
-                toastRef.current.error('Could not load your family chronicle.');
+                toastRef.current?.error?.('Could not load your family chronicle.');
             }
         } finally {
             setLoading(false);
@@ -127,11 +134,11 @@ export default function Dashboard() {
 
     /* -- Computed Stats -- */
     const stats = useMemo(() => {
-        if (stories.length === 0) return null;
-        const locations = new Set(stories.filter(s => s.location).map(s => s.location));
-        const members = new Set(stories.filter(s => s.familyMemberName).map(s => s.familyMemberName));
+        if (!Array.isArray(stories) || stories.length === 0) return null;
+        const locations = new Set(stories.filter(s => s?.location).map(s => s.location));
+        const members = new Set(stories.filter(s => s?.familyMemberName).map(s => s.familyMemberName));
         const years = stories
-            .filter(s => s.storyDate)
+            .filter(s => s?.storyDate)
             .map(s => new Date(s.storyDate).getFullYear())
             .filter(y => !isNaN(y));
         const oldest = years.length > 0 ? Math.min(...years) : null;
@@ -146,24 +153,26 @@ export default function Dashboard() {
 
     /* -- "On This Day" -- */
     const onThisDayStory = useMemo(() => {
+        if (!Array.isArray(stories) || stories.length === 0) return null;
         const today = new Date();
         const todayMonth = today.getMonth();
         const todayDate = today.getDate();
 
         return stories.find(s => {
-            if (!s.storyDate) return false;
+            if (!s?.storyDate) return false;
             const d = new Date(s.storyDate);
-            return d.getMonth() === todayMonth && d.getDate() === todayDate && d.getFullYear() !== today.getFullYear();
+            return !isNaN(d.getTime()) && d.getMonth() === todayMonth && d.getDate() === todayDate && d.getFullYear() !== today.getFullYear();
         }) || null;
     }, [stories]);
 
-    const yearsAgo = onThisDayStory
+    const yearsAgo = onThisDayStory?.storyDate
         ? new Date().getFullYear() - new Date(onThisDayStory.storyDate).getFullYear()
         : 0;
 
     /* -- Spotlight & Timeline -- */
-    const spotlightStory = stories.length > 0 ? stories[Math.floor(Math.random() * Math.min(3, stories.length))] : null;
-    const timelineStories = stories.filter(s => s.id !== spotlightStory?.id && s.id !== onThisDayStory?.id);
+    const validStories = Array.isArray(stories) ? stories : [];
+    const spotlightStory = validStories.length > 0 ? validStories[Math.floor(Math.random() * Math.min(3, validStories.length))] : null;
+    const timelineStories = validStories.filter(s => s && s.id !== spotlightStory?.id && s.id !== onThisDayStory?.id);
 
     if (loading) {
         return (

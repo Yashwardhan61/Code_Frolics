@@ -2,14 +2,19 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, Music, Film, Lock, Image as ImageIcon } from 'lucide-react';
 
 function isAudioMedia(media) {
-    return media.mediaType?.startsWith('audio/') ||
-        media.mediaUrl?.endsWith('.webm') ||
-        media.mediaUrl?.endsWith('.wav') ||
-        media.mediaUrl?.endsWith('.mp3');
+    if (!media) return false;
+    const url = typeof media === 'string' ? media : (media.mediaUrl || '');
+    const type = media.mediaType || '';
+    return type.startsWith('audio/') ||
+        url.endsWith('.webm') ||
+        url.endsWith('.wav') ||
+        url.endsWith('.mp3');
 }
 
 function isVideoMedia(media) {
-    return media.mediaType?.startsWith('video/');
+    if (!media) return false;
+    const type = media.mediaType || '';
+    return type.startsWith('video/');
 }
 
 function useCountdown(targetDateStr) {
@@ -160,7 +165,7 @@ export default function MediaCarousel({ mediaFiles, alt, className = '', isLocke
                 return (
                     <img
                         key={media.id || i}
-                        src={media.mediaUrl}
+                        src={typeof media === 'string' ? media : (media.mediaUrl || '')}
                         alt={`${alt} ${i + 1}`}
                         className={`absolute inset-0 w-full h-full object-cover ${visibilityClass}`}
                     />

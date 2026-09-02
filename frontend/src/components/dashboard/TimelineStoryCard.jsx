@@ -106,7 +106,7 @@ export default function TimelineStoryCard({ story, rotation = 'rotate-0', onUnlo
                             </span>
                         </div>
                         <div className="text-xs font-medium text-amber-700">
-                            By {story.isLocked ? 'Sealed' : story.authorName?.split(' ')[0]}
+                            By {story.isLocked ? 'Sealed' : (story.authorName?.split(' ')[0] || 'Family Member')}
                         </div>
                     </div>
                 </div>
