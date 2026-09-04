@@ -30,6 +30,7 @@ public class StoryResponse {
     private LocalDateTime createdAt;
     private LocalDateTime unlockDateTime;
     private Boolean isLocked;
+    private List<Long> sharedWithUserIds;
     
     @Data
     @NoArgsConstructor

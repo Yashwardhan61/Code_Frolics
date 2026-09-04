@@ -17,10 +17,29 @@ function isVideoMedia(media) {
     return type.startsWith('video/');
 }
 
-function useCountdown(targetDateStr) {
+export function parseUnlockDate(dateVal) {
+    if (!dateVal) return null;
+    if (typeof dateVal === 'string') {
+        const hasTimezone = dateVal.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(dateVal);
+        const isoString = hasTimezone ? dateVal : dateVal + 'Z';
+        const d = new Date(isoString);
+        if (!isNaN(d.getTime())) return d;
+        const fallback = new Date(dateVal);
+        return isNaN(fallback.getTime()) ? null : fallback;
+    }
+    if (Array.isArray(dateVal)) {
+        const [y, m, d, h = 0, min = 0, s = 0] = dateVal;
+        return new Date(Date.UTC(y, m - 1, d, h, min, s));
+    }
+    const d = new Date(dateVal);
+    return isNaN(d.getTime()) ? null : d;
+}
+
+export function useCountdown(targetDateStr) {
     const calculateTimeLeft = () => {
-        if (!targetDateStr) return { expired: true };
-        const difference = +new Date(targetDateStr) - +new Date();
+        const targetDate = parseUnlockDate(targetDateStr);
+        if (!targetDate) return { expired: true };
+        const difference = targetDate.getTime() - Date.now();
         let timeLeft = {};
 
         if (difference > 0) {
@@ -40,6 +59,7 @@ function useCountdown(targetDateStr) {
     const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
 
     useEffect(() => {
+        setTimeLeft(calculateTimeLeft());
         const timer = setInterval(() => {
             setTimeLeft(calculateTimeLeft());
         }, 1000);
@@ -55,7 +75,9 @@ export function CapsuleCountdown({ targetDateStr, onUnlock }) {
     const hasUnlocked = useRef(false);
 
     useEffect(() => {
-        if (countdown.expired && onUnlock && !hasUnlocked.current) {
+        if (!countdown.expired) {
+            hasUnlocked.current = false;
+        } else if (countdown.expired && onUnlock && !hasUnlocked.current) {
             hasUnlocked.current = true;
             onUnlock();
         }

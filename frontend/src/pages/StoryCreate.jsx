@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { storyService } from '../api/storyService';
 import { profileService } from '../api/profileService';
@@ -51,7 +51,7 @@ export default function StoryCreate() {
     const [audioBlob, setAudioBlob] = useState(null);
     const [audioUrl, setAudioUrl] = useState(null);
 
-    // Clean up timers and URL previews on unmount
+    // Load initial profile and friends
     useEffect(() => {
         const loadData = async () => {
             try {
@@ -62,19 +62,28 @@ export default function StoryCreate() {
             }
             try {
                 const friendsData = await friendService.getFriends();
-                setFriends(friendsData);
+                setFriends(friendsData || []);
             } catch (err) {
                 console.error('Failed to load friends', err);
             }
         };
 
         loadData();
+    }, []);
 
+    // Clean up timers and blob previews strictly on unmount
+    const previewsRef = useRef(previews);
+    previewsRef.current = previews;
+    useEffect(() => {
         return () => {
             if (timerInterval) clearInterval(timerInterval);
-            previews.forEach(preview => URL.revokeObjectURL(preview));
+            previewsRef.current.forEach(preview => {
+                if (preview && typeof preview === 'string' && preview.startsWith('blob:')) {
+                    URL.revokeObjectURL(preview);
+                }
+            });
         };
-    }, [timerInterval, previews]);
+    }, [timerInterval]);
 
     // AI Debounce for Suggestion
     useEffect(() => {
@@ -280,6 +289,17 @@ export default function StoryCreate() {
         try {
             setLoading(true);
             const today = new Date().toLocaleDateString('en-CA');
+            
+            let formattedUnlockDateTime = null;
+            if (isTimeCapsule && unlockDate && unlockTime) {
+                const formattedTime = unlockTime.length === 5 ? `${unlockTime}:00` : unlockTime;
+                const localDate = new Date(`${unlockDate}T${formattedTime}`);
+                if (!isNaN(localDate.getTime())) {
+                    // Normalize to UTC for reliable cross-timezone and server synchronization
+                    formattedUnlockDateTime = localDate.toISOString().substring(0, 19);
+                }
+            }
+
             const storyData = {
                 title: formData.title.trim(),
                 description: formData.description?.trim() || null,
@@ -288,7 +308,7 @@ export default function StoryCreate() {
                 tags: formData.tags && formData.tags.length > 0 ? formData.tags : [],
                 sharedWithUserIds: formData.sharedWithUserIds && formData.sharedWithUserIds.length > 0 ? formData.sharedWithUserIds : [],
                 familyMemberId: formData.familyMemberId ? Number(formData.familyMemberId) : null,
-                unlockDateTime: isTimeCapsule && unlockDate && unlockTime ? `${unlockDate}T${unlockTime}:00` : null
+                unlockDateTime: formattedUnlockDateTime
             };
             await storyService.createStory(storyData, files);
             toast.success('Memory saved successfully!');
@@ -302,8 +322,8 @@ export default function StoryCreate() {
         }
     };
 
-    const activePreview = previews[activePreviewIndex];
-    const activeFile = files[activePreviewIndex];
+    const activePreview = previews[activePreviewIndex] || null;
+    const activeFile = files[activePreviewIndex] || null;
     const isActiveAudio = activeFile?.type?.startsWith('audio/') || activeFile?.name?.endsWith('.webm') || activeFile?.name?.endsWith('.wav') || activeFile?.name?.endsWith('.mp3');
     const isActiveVideo = activeFile?.type?.startsWith('video/');
 

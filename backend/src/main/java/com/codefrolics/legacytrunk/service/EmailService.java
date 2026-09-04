@@ -188,7 +188,7 @@ public class EmailService {
                                 <tr>
                                     <td style="background:linear-gradient(135deg,#92400e,#b45309,#d97706);padding:32px 40px;text-align:center;">
                                         <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;letter-spacing:0.5px;">
-                                            🪵 Legacy Trunk
+                                            Legacy Trunk
                                         </h1>
                                         <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">
                                             Yaado ka Baksa

@@ -1,10 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { storyService } from '../api/storyService';
 import { useToast } from '../contexts/ToastContext';
-import { ArrowLeft, MapPin, Calendar, Trash2, Pencil, Music, Film, Lock, Sparkles } from 'lucide-react';
+import {
+    ArrowLeft, MapPin, Calendar, Trash2, Pencil, Music, Film, Lock,
+    Sparkles, Share2, Copy, Check, ExternalLink, Mail, MessageSquare,
+    Globe, Users, X, Unlock
+} from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import AudioWaveformPlayer from '../components/AudioWaveformPlayer';
+import { useCountdown, parseUnlockDate } from '../components/dashboard/MediaCarousel';
 
 export function CelebrationOverlay({ onClose }) {
     const [confetti, setConfetti] = useState([]);
@@ -62,9 +67,8 @@ export function CelebrationOverlay({ onClose }) {
 
             {/* Glowing Celebration Box */}
             <div className="relative z-10 text-center max-w-sm px-8 py-12 bg-white/10 border border-white/20 rounded-3xl backdrop-blur-xl shadow-2xl scale-up-bounce flex flex-col items-center gap-6 mx-4">
-                <div className="w-20 h-20 bg-gradient-to-tr from-amber-500 via-orange-500 to-yellow-400 rounded-full flex items-center justify-center text-4xl shadow-lg shadow-orange-500/40 animate-bounce relative">
-                    <Sparkles className="absolute -top-1 -right-1 w-6 h-6 text-yellow-200 animate-pulse" />
-                    🎉
+                <div className="w-20 h-20 bg-gradient-to-tr from-amber-500 via-orange-500 to-yellow-400 rounded-full flex items-center justify-center shadow-lg shadow-orange-500/40 animate-bounce relative">
+                    <Sparkles className="w-10 h-10 text-white" />
                 </div>
                 <div>
                     <h2 className="text-3xl font-extrabold text-white font-serif tracking-wide bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-200 bg-clip-text text-transparent drop-shadow-md">
@@ -79,7 +83,7 @@ export function CelebrationOverlay({ onClose }) {
                     onClick={onClose}
                     className="mt-4 px-8 py-3.5 bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-xl shadow-xl shadow-orange-500/20 hover:shadow-orange-500/40 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer text-sm tracking-wide uppercase"
                 >
-                    Reveal Memory ✨
+                    Reveal Memory
                 </button>
             </div>
 
@@ -115,40 +119,6 @@ export function CelebrationOverlay({ onClose }) {
     );
 }
 
-function useCountdown(targetDateStr) {
-    const calculateTimeLeft = () => {
-        if (!targetDateStr) return { expired: true };
-        const difference = +new Date(targetDateStr) - +new Date();
-        let timeLeft = {};
-
-        if (difference > 0) {
-            timeLeft = {
-                days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-                hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-                minutes: Math.floor((difference / 1000 / 60) % 60),
-                seconds: Math.floor((difference / 1000) % 60),
-                expired: false
-            };
-        } else {
-            timeLeft = { expired: true };
-        }
-        return timeLeft;
-    };
-
-    const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
-
-    useEffect(() => {
-        const timer = setInterval(() => {
-            const current = calculateTimeLeft();
-            setTimeLeft(current);
-        }, 1000);
-
-        return () => clearInterval(timer);
-    }, [targetDateStr]);
-
-    return timeLeft;
-}
-
 export default function StoryView() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -160,6 +130,37 @@ export default function StoryView() {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showCelebration, setShowCelebration] = useState(false);
     const [animationFinished, setAnimationFinished] = useState(false);
+    const [showShareModal, setShowShareModal] = useState(false);
+    const [copiedLink, setCopiedLink] = useState(false);
+
+    const handleCopyLink = () => {
+        try {
+            navigator.clipboard.writeText(window.location.href);
+            setCopiedLink(true);
+            toast.success("Story link copied to clipboard!");
+            setTimeout(() => setCopiedLink(false), 3000);
+        } catch (e) {
+            toast.error("Failed to copy link. Please copy URL manually.");
+        }
+    };
+
+    const handleNativeShare = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: story?.title || "Family Memory",
+                    text: story?.description || "Check out this family chronicle memory on Legacy Trunk",
+                    url: window.location.href,
+                });
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error("Share failed", err);
+                }
+            }
+        } else {
+            handleCopyLink();
+        }
+    };
     const fetchStory = async () => {
         try {
             const data = await storyService.getStoryById(id);
@@ -179,6 +180,7 @@ export default function StoryView() {
     };
 
     useEffect(() => {
+        hasRefetched.current = false;
         fetchStory();
     }, [id]);
 
@@ -195,10 +197,13 @@ export default function StoryView() {
 
     useEffect(() => {
         if (story?.isLocked && !notifiedTwoMinutes && story?.unlockDateTime) {
-            const difference = +new Date(story.unlockDateTime) - +new Date();
-            if (difference > 0 && difference <= 120000) {
-                toast.info(`Get ready! "${story.title}" will unlock in less than 2 minutes!`);
-                setNotifiedTwoMinutes(true);
+            const target = parseUnlockDate(story.unlockDateTime);
+            if (target) {
+                const difference = target.getTime() - Date.now();
+                if (difference > 0 && difference <= 120000) {
+                    toast.info(`Get ready! "${story.title}" will unlock in less than 2 minutes!`);
+                    setNotifiedTwoMinutes(true);
+                }
             }
         }
     }, [countdown.minutes, story?.isLocked, story?.unlockDateTime, notifiedTwoMinutes, toast, story?.title]);
@@ -248,25 +253,35 @@ export default function StoryView() {
                         Back
                     </Link>
                     
-                    {isAuthor && (
-                        <div className="flex space-x-3">
-                            <button 
-                                disabled
-                                className="flex items-center text-gray-400 bg-gray-100 px-4 py-2 rounded-lg cursor-not-allowed font-medium opacity-60"
-                                title="Editing is disabled while the time capsule is locked"
-                            >
-                                <Pencil className="w-4 h-4 mr-2" />
-                                Edit
-                            </button>
-                            <button 
-                                onClick={() => setShowDeleteModal(true)}
-                                className="flex items-center text-red-600 bg-red-50 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors font-medium cursor-pointer"
-                            >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Delete
-                            </button>
-                        </div>
-                    )}
+                    <div className="flex items-center space-x-3">
+                        <button
+                            onClick={() => setShowShareModal(true)}
+                            className="flex items-center text-amber-800 bg-amber-50 border border-amber-200 px-4 py-2 rounded-lg hover:bg-amber-100 transition-colors font-medium cursor-pointer"
+                            title="Share Time Capsule"
+                        >
+                            <Share2 className="w-4 h-4 mr-2" />
+                            Share
+                        </button>
+                        {isAuthor && (
+                            <>
+                                <button 
+                                    disabled
+                                    className="flex items-center text-gray-400 bg-gray-100 px-4 py-2 rounded-lg cursor-not-allowed font-medium opacity-60"
+                                    title="Editing is disabled while the time capsule is locked"
+                                >
+                                    <Pencil className="w-4 h-4 mr-2" />
+                                    Edit
+                                </button>
+                                <button 
+                                    onClick={() => setShowDeleteModal(true)}
+                                    className="flex items-center text-red-600 bg-red-50 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors font-medium cursor-pointer"
+                                >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete
+                                </button>
+                            </>
+                        )}
+                    </div>
                 </div>
 
                 <div className="bg-[#fcfaf2] rounded-2xl shadow-lg border border-amber-900/10 overflow-hidden p-8 md:p-12 text-center min-h-[500px] flex flex-col justify-center items-center relative vintage-journal-page select-none">
@@ -281,9 +296,16 @@ export default function StoryView() {
                         <Lock className="w-10 h-10 text-amber-800 animate-bounce" style={{ animationDuration: '3s' }} />
                     </div>
 
-                    <h1 className="text-3xl md:text-4xl font-extrabold text-amber-955 font-serif mb-6 leading-tight">
-                        🔒 Sealed Time Capsule
+                    <h1 className="text-3xl md:text-4xl font-extrabold text-amber-955 font-serif mb-3 leading-tight">
+                        {story.title ? `Sealed Time Capsule: ${story.title}` : 'Sealed Time Capsule'}
                     </h1>
+
+                    <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-amber-800/80 mb-6">
+                        <span>Sealed by <strong className="text-amber-950">{story.authorName || 'Family Member'}</strong></span>
+                        {story.unlockDateTime && (
+                            <span>Unlocks on <strong className="text-amber-950">{parseUnlockDate(story.unlockDateTime)?.toLocaleString() || ''}</strong></span>
+                        )}
+                    </div>
 
                     {/* Countdown Display Card */}
                     <div className="bg-white border border-amber-900/10 rounded-2xl px-6 py-6 md:px-10 max-w-lg w-full shadow-md mb-8">
@@ -376,7 +398,15 @@ export default function StoryView() {
                         Back
                     </Link>
                     
-                    <div className="flex space-x-3">
+                    <div className="flex items-center space-x-3">
+                        <button
+                            onClick={() => setShowShareModal(true)}
+                            className="flex items-center text-amber-800 bg-amber-50 border border-amber-200 px-4 py-2 rounded-lg hover:bg-amber-100 transition-colors font-medium cursor-pointer"
+                            title="Share Memory"
+                        >
+                            <Share2 className="w-4 h-4 mr-2" />
+                            Share
+                        </button>
                         {canEdit && (
                             <>
                                 <button 
@@ -542,15 +572,110 @@ export default function StoryView() {
                         <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
                             <button
                                 onClick={() => setShowDeleteModal(false)}
-                                className="w-full px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                                className="w-full px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium cursor-pointer"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={confirmDelete}
-                                className="w-full px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors font-medium"
+                                className="w-full px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors font-medium cursor-pointer"
                             >
                                 Yes, Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Interactive Story Share Modal */}
+            {showShareModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm select-none">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 transform transition-all border border-amber-900/10">
+                        <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-4">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-800">
+                                    <Share2 className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-900 font-serif">Share Memory</h3>
+                                    <p className="text-xs text-gray-500">Share with relatives and family friends</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowShareModal(false)}
+                                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Story Summary Card */}
+                        <div className="p-3.5 bg-amber-50/60 rounded-xl border border-amber-200/50 mb-5">
+                            <p className="font-bold text-sm text-gray-900 font-serif line-clamp-1">{story.title}</p>
+                            <p className="text-xs text-amber-900/70 mt-0.5">By {story.authorName} {story.storyDate ? `• ${story.storyDate}` : ''}</p>
+                            <div className="flex items-center gap-1.5 mt-2">
+                                <Users className="w-3.5 h-3.5 text-amber-700" />
+                                <span className="text-[11px] font-medium text-amber-800">
+                                    {story.sharedWithUserIds && story.sharedWithUserIds.length > 0
+                                        ? `Shared with ${story.sharedWithUserIds.length} designated friend(s)`
+                                        : "Family Archive"}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Quick Share Links */}
+                        <div className="space-y-3 mb-5">
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="text"
+                                    readOnly
+                                    value={window.location.href}
+                                    className="flex-1 px-3 py-2 text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-lg select-all focus:outline-none"
+                                />
+                                <button
+                                    onClick={handleCopyLink}
+                                    className="flex items-center gap-1.5 px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer shrink-0"
+                                >
+                                    {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
+                                    {copiedLink ? "Copied" : "Copy"}
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2.5 pt-2">
+                                {navigator.share && (
+                                    <button
+                                        onClick={handleNativeShare}
+                                        className="col-span-2 flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs font-semibold hover:bg-amber-100 transition-colors cursor-pointer"
+                                    >
+                                        <ExternalLink className="w-4 h-4 text-amber-700" />
+                                        Share via Apps
+                                    </button>
+                                )}
+                                <a
+                                    href={`https://api.whatsapp.com/send?text=${encodeURIComponent(story.title + ' - ' + window.location.href)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-center gap-2 px-3 py-2.5 border border-emerald-200 bg-emerald-50/60 hover:bg-emerald-100/60 text-emerald-800 rounded-xl text-xs font-semibold transition-colors"
+                                >
+                                    <MessageSquare className="w-4 h-4 text-emerald-600" />
+                                    WhatsApp
+                                </a>
+                                <a
+                                    href={`mailto:?subject=${encodeURIComponent(story.title)}&body=${encodeURIComponent("Read this family memory on Legacy Trunk: " + window.location.href)}`}
+                                    className="flex items-center justify-center gap-2 px-3 py-2.5 border border-sky-200 bg-sky-50/60 hover:bg-sky-100/60 text-sky-800 rounded-xl text-xs font-semibold transition-colors"
+                                >
+                                    <Mail className="w-4 h-4 text-sky-600" />
+                                    Email
+                                </a>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end pt-3 border-t border-gray-100">
+                            <button
+                                onClick={() => setShowShareModal(false)}
+                                className="px-4 py-2 text-xs font-semibold text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
+                            >
+                                Close
                             </button>
                         </div>
                     </div>

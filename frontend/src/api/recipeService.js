@@ -29,11 +29,7 @@ export const recipeService = {
             }
         }
         
-        const response = await api.post('/recipes', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        });
+        const response = await api.post('/recipes', formData);
         return response.data;
     },
     
@@ -50,11 +46,7 @@ export const recipeService = {
             }
         }
         
-        const response = await api.put(`/recipes/${id}`, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        });
+        const response = await api.put(`/recipes/${id}`, formData);
         return response.data;
     },
 

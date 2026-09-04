@@ -29,11 +29,7 @@ export const heirloomService = {
             }
         }
         
-        const response = await api.post('/heirlooms', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        });
+        const response = await api.post('/heirlooms', formData);
         return response.data;
     },
     
@@ -50,11 +46,7 @@ export const heirloomService = {
             }
         }
         
-        const response = await api.put(`/heirlooms/${id}`, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        });
+        const response = await api.put(`/heirlooms/${id}`, formData);
         return response.data;
     },
 

@@ -26,7 +26,7 @@ public class TimeCapsuleSchedulerService {
     @Scheduled(fixedRate = 30000) // Runs every 30 seconds
     @Transactional
     public void checkUnlockingStories() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(java.time.ZoneOffset.UTC);
 
         // 1. Check stories unlocking today
         checkRevealDayStories(now);
@@ -80,7 +80,7 @@ public class TimeCapsuleSchedulerService {
             notificationService.createNotification(
                     user,
                     type,
-                    "Time Capsule Unlocks Today! 📅",
+                    "Time Capsule Unlocks Today!",
                     "Today is the day! The memory '" + story.getTitle() + "' is set to reveal itself today at " + timeFormatted + ".",
                     story,
                     "/story/" + story.getId()
@@ -97,7 +97,7 @@ public class TimeCapsuleSchedulerService {
             notificationService.createNotification(
                     user,
                     type,
-                    "Time Capsule Unlocking Soon 🔒",
+                    "Time Capsule Unlocking Soon",
                     "The memory '" + story.getTitle() + "' will reveal itself in less than 2 minutes!",
                     story,
                     "/story/" + story.getId()

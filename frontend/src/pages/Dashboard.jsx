@@ -170,9 +170,12 @@ export default function Dashboard() {
         : 0;
 
     /* -- Spotlight & Timeline -- */
-    const validStories = Array.isArray(stories) ? stories : [];
-    const spotlightStory = validStories.length > 0 ? validStories[Math.floor(Math.random() * Math.min(3, validStories.length))] : null;
-    const timelineStories = validStories.filter(s => s && s.id !== spotlightStory?.id && s.id !== onThisDayStory?.id);
+    const validStories = useMemo(() => Array.isArray(stories) ? stories : [], [stories]);
+    const spotlightStory = useMemo(() => validStories.length > 0 ? validStories[0] : null, [validStories]);
+    const timelineStories = useMemo(() => 
+        validStories.filter(s => s && s.id !== spotlightStory?.id && s.id !== onThisDayStory?.id),
+        [validStories, spotlightStory, onThisDayStory]
+    );
 
     if (loading) {
         return (
@@ -367,7 +370,7 @@ export default function Dashboard() {
                                             <span className="text-sm font-semibold text-amber-700 uppercase tracking-widest">Memory Spotlight</span>
                                         </div>
                                         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 font-serif leading-tight">
-                                            {spotlightStory.isLocked ? "Locked Time Capsule" : spotlightStory.title}
+                                            {spotlightStory.isLocked ? `Time Capsule: ${spotlightStory.title}` : spotlightStory.title}
                                         </h2>
                                         {spotlightStory.isLocked ? (
                                             <div className="mb-6 flex flex-wrap items-center gap-3 p-3 bg-[#faf5e6] rounded-xl border border-amber-900/5">
@@ -395,8 +398,8 @@ export default function Dashboard() {
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-medium text-gray-900">{spotlightStory.isLocked ? "Sealed Author" : spotlightStory.authorName}</p>
-                                                    <p className="text-xs text-gray-500 italic">{spotlightStory.isLocked ? "Locked" : (spotlightStory.storyDate || 'Timeless')}</p>
+                                                    <p className="text-sm font-medium text-gray-900">{spotlightStory.authorName || 'Family Member'}</p>
+                                                    <p className="text-xs text-gray-500 italic">{spotlightStory.isLocked ? "Time Capsule Locked" : (spotlightStory.storyDate || 'Timeless')}</p>
                                                 </div>
                                             </div>
                                             <Link to={`/story/${spotlightStory.id}`} className="text-amber-700 hover:text-amber-900 font-medium text-sm transition-colors">

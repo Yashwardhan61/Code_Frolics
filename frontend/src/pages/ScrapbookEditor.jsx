@@ -27,25 +27,22 @@ const STICKERS = [
     { id: 'tape_gold', type: 'tape', name: 'Gold Washi Tape', content: 'washi-tape', color: '#d2ab51', style: { opacity: 0.8, background: 'linear-gradient(to right, #d2ab51, #e3c177, #d2ab51)' } },
     { id: 'tape_stars', type: 'tape', name: 'Teal Stars Washi Tape', content: 'washi-tape', color: '#2f6b6b', style: { opacity: 0.8, background: 'repeating-linear-gradient(45deg, #2f6b6b, #2f6b6b 10px, #4d8c8c 10px, #4d8c8c 20px)' } },
     { id: 'tape_cork', type: 'tape', name: 'Cork Strip Washi Tape', content: 'washi-tape', color: '#b59263', style: { opacity: 0.8, background: 'repeating-linear-gradient(90deg, #b59263, #b59263 12px, #9a7343 12px, #9a7343 24px)' } },
-    { id: 'pushpin', type: 'pin', name: 'Red Pushpin', content: '📌' },
-    { id: 'paperclip', type: 'pin', name: 'Paperclip', content: '📎' },
-    { id: 'badge_memories', type: 'emoji', name: 'Memories Sparkles', content: '✨' },
-    { id: 'badge_love', type: 'emoji', name: 'Family Love Heart', content: '❤️' },
-    { id: 'badge_story', type: 'emoji', name: 'Our Story Scroll', content: '📜' },
-    { id: 'flower', type: 'emoji', name: 'Vintage Rose', content: '🌹' },
-    { id: 'sparkles', type: 'emoji', name: 'Sparkles', content: '✨' },
-    { id: 'sun', type: 'emoji', name: 'Vintage Sun', content: '☀️' },
-    { id: 'heart', type: 'emoji', name: 'Gold Heart', content: '💛' },
-    { id: 'leaf', type: 'emoji', name: 'Oak Leaf', content: '🍂' },
-    { id: 'camera', type: 'emoji', name: 'Retro Camera', content: '📸' },
-    { id: 'balloon', type: 'emoji', name: 'Balloons', content: '🎈' },
-    { id: 'cake', type: 'emoji', name: 'Birthday Cake', content: '🎂' },
-    { id: 'ring', type: 'emoji', name: 'Wedding Rings', content: '💍' },
-    { id: 'trophy', type: 'emoji', name: 'Trophy Award', content: '🏆' },
-    { id: 'grad_cap', type: 'emoji', name: 'Graduation Cap', content: '🎓' },
-    { id: 'plane', type: 'emoji', name: 'Airplane', content: '✈️' },
-    { id: 'suitcase', type: 'emoji', name: 'Suitcase', content: '🧳' },
-    { id: 'map', type: 'emoji', name: 'Map', content: '🗺️' }
+    { id: 'pushpin', type: 'pin', name: 'Red Pushpin', content: 'Pin', color: '#dc2626' },
+    { id: 'paperclip', type: 'clip', name: 'Brass Paperclip', content: 'Clip', color: '#b45309' },
+    { id: 'seal_cherished', type: 'seal', name: 'Wax Seal: Cherished', content: 'CHERISHED', color: '#881337' },
+    { id: 'seal_legacy', type: 'seal', name: 'Wax Seal: Legacy', content: 'LEGACY', color: '#78350f' },
+    { id: 'seal_honor', type: 'seal', name: 'Wax Seal: Honor', content: 'HONOR', color: '#14532d' },
+    { id: 'stamp_heritage', type: 'stamp', name: 'Heritage Postal Stamp', content: 'HERITAGE POST', color: '#1e3a8a' },
+    { id: 'stamp_archive', type: 'stamp', name: 'Archive Stamp: 2026', content: 'ARCHIVE 2026', color: '#14532d' },
+    { id: 'stamp_airmail', type: 'stamp', name: 'Airmail Special Delivery', content: 'FIRST CLASS AIR', color: '#b45309' },
+    { id: 'badge_memories', type: 'badge', name: 'Golden Memories', content: 'Sweet Memories' },
+    { id: 'badge_love', type: 'badge', name: 'Family Love', content: 'With Love and Joy' },
+    { id: 'badge_story', type: 'badge', name: 'Our Story Chronicle', content: 'Our Living Chronicle' },
+    { id: 'badge_celebration', type: 'badge', name: 'Celebration Days', content: 'Happy Days' },
+    { id: 'badge_milestone', type: 'badge', name: 'Milestone Honor', content: 'Major Milestone' },
+    { id: 'badge_journey', type: 'badge', name: 'Grand Journey', content: 'Grand Journey' },
+    { id: 'badge_sunshine', type: 'badge', name: 'Sunshine Rays', content: 'Sunny Days' },
+    { id: 'badge_vintage', type: 'badge', name: 'Timeless Memory', content: 'Timeless Memory' }
 ];
 
 // Fonts
@@ -254,7 +251,7 @@ export default function ScrapbookEditor() {
                     id: `elem_${Date.now()}_auto_pin_${i}`,
                     type: 'sticker',
                     stickerType: 'pin',
-                    content: '📌',
+                    content: 'Pin',
                     x: 47,
                     y: 65,
                     width: 6,
@@ -296,8 +293,8 @@ export default function ScrapbookEditor() {
                 elements.push({
                     id: `elem_${Date.now()}_auto_clip_${idx}`,
                     type: 'sticker',
-                    stickerType: 'pin',
-                    content: '📎',
+                    stickerType: 'clip',
+                    content: 'Clip',
                     x: 24,
                     y: 12,
                     width: 8,
@@ -343,8 +340,9 @@ export default function ScrapbookEditor() {
                 elements.push({
                     id: `elem_${Date.now()}_auto_badge_${idx}`,
                     type: 'sticker',
-                    stickerType: 'emoji',
-                    content: '✨',
+                    stickerType: 'seal',
+                    content: 'CHRONICLE',
+                    color: '#78350f',
                     x: 70,
                     y: 78,
                     width: 10,
@@ -373,22 +371,27 @@ export default function ScrapbookEditor() {
             try {
                 // Fetch posted stories
                 const fetchedStories = await storyService.getAllStories();
-                setStories(fetchedStories);
+                setStories(Array.isArray(fetchedStories) ? fetchedStories : []);
 
                 // Fetch scrapbook draft if ID provided
                 if (id) {
                     const data = await scrapbookService.getScrapbookById(id);
-                    setTitle(data.title);
+                    setTitle(data.title || "My Scrapbook Draft");
                     setDescription(data.description || "");
                     if (data.canvasData) {
-                        const parsed = JSON.parse(data.canvasData);
-                        if (parsed.pages && parsed.pages.length > 0) {
-                            setPages(parsed.pages);
+                        try {
+                            const parsed = typeof data.canvasData === 'string' ? JSON.parse(data.canvasData) : data.canvasData;
+                            if (Array.isArray(parsed?.pages) && parsed.pages.length > 0) {
+                                setPages(parsed.pages);
+                            }
+                        } catch (parseErr) {
+                            console.error("Failed to parse canvasData", parseErr);
                         }
                     }
                 }
             } catch (err) {
                 console.error("Failed to load initial data", err);
+                setStories([]);
             } finally {
                 setLoading(false);
             }
@@ -515,16 +518,22 @@ export default function ScrapbookEditor() {
                         const tapeSticker = STICKERS.find(s => s.id === elem.id || s.name === elem.name) || STICKERS[0];
                         let tapeBg = '';
                         if (elem.style?.background) tapeBg = `background: ${elem.style.background};`;
-                        else if (tapeSticker.style?.background) tapeBg = `background: ${tapeSticker.style.background};`;
+                        else if (tapeSticker?.style?.background) tapeBg = `background: ${tapeSticker.style.background};`;
                         else tapeBg = `background-color: ${elem.color || '#d2ab51'};`;
 
                         innerContent = `<div class="washi-tape-sticker" style="width: 100%; height: 100%; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); ${tapeBg}"></div>`;
                     } else if (elem.stickerType === 'pin') {
-                        innerContent = `<div style="font-size: 24px; text-align: center; line-height: 1; transform: translate(-2px, -4px);">${elem.content}</div>`;
+                        innerContent = `<div style="width: 16px; height: 16px; border-radius: 50%; background: #dc2626; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.3); margin: auto;"></div>`;
+                    } else if (elem.stickerType === 'clip') {
+                        innerContent = `<div style="width: 10px; height: 22px; border-radius: 6px; border: 2px solid #b45309; background: rgba(251,191,36,0.1); margin: auto;"></div>`;
+                    } else if (elem.stickerType === 'seal') {
+                        innerContent = `<div style="width: 44px; height: 44px; border-radius: 50%; background: ${elem.color || '#881337'}; color: #fef3c7; border: 2px dashed #fde68a; display: flex; align-items: center; justify-content: center; font-size: 7px; font-weight: bold; text-align: center; text-transform: uppercase; margin: auto; font-family: Georgia, serif;">${elem.content}</div>`;
+                    } else if (elem.stickerType === 'stamp') {
+                        innerContent = `<div style="padding: 4px 8px; border: 2px dashed #78350f; background: #fffbeb; color: #451a03; font-size: 8px; font-weight: bold; text-transform: uppercase; text-align: center; font-family: monospace;">${elem.content}</div>`;
                     } else if (elem.stickerType === 'badge') {
-                        innerContent = `<div style="font-family: 'Dancing Script', cursive; color: #3d2106; font-size: 26px; text-align: center; white-space: nowrap; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">${elem.content}</div>`;
+                        innerContent = `<div style="font-family: 'Dancing Script', cursive; color: #3d2106; font-size: 24px; text-align: center; white-space: nowrap; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">${elem.content}</div>`;
                     } else {
-                        innerContent = `<div style="font-size: 28px; text-align: center; line-height: 1;">${elem.content}</div>`;
+                        innerContent = `<div style="padding: 2px 6px; border-radius: 12px; background: #fef3c7; border: 1px solid #d97706; color: #78350f; font-size: 10px; font-weight: bold; text-align: center;">${elem.content}</div>`;
                     }
                 } else if (elem.type === 'qr') {
                     const qrDataUrl = qrImages[elem.id] || '';
@@ -538,7 +547,7 @@ export default function ScrapbookEditor() {
                     if (elem.isPlaceholder) {
                         innerContent = `
                             <div style="width: 100%; height: 100%; border: 2px dashed #f59e0b; background: rgba(254, 243, 199, 0.2); border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; box-sizing: border-box;">
-                                <span style="font-size: 20px;">📸</span>
+                                <div style="width: 20px; height: 16px; border: 2px solid #78350f; border-radius: 3px; position: relative; margin-bottom: 4px;"></div>
                                 <span style="font-size: 10px; font-weight: bold; color: #78350f; margin-top: 4px;">Placeholder</span>
                             </div>
                         `;
@@ -803,7 +812,7 @@ export default function ScrapbookEditor() {
                 id: `elem_${Date.now()}_6`,
                 type: 'sticker',
                 stickerType: 'pin',
-                content: '📌',
+                content: 'Pin',
                 x: 48, y: 64, width: 6, height: 6, rotation: 0, zIndex: 6
             });
             // Custom text
@@ -837,8 +846,8 @@ export default function ScrapbookEditor() {
             page.elements.push({
                 id: `elem_${Date.now()}_3`,
                 type: 'sticker',
-                stickerType: 'pin',
-                content: '📎',
+                stickerType: 'clip',
+                content: 'Clip',
                 x: 28, y: 18, width: 8, height: 8, rotation: -10, zIndex: 3
             });
             page.elements.push({
@@ -851,8 +860,9 @@ export default function ScrapbookEditor() {
             page.elements.push({
                 id: `elem_${Date.now()}_5`,
                 type: 'sticker',
-                stickerType: 'emoji',
-                content: '✨',
+                stickerType: 'seal',
+                content: 'MEMORIES',
+                color: '#881337',
                 x: 70, y: 78, width: 10, height: 10, rotation: 5, zIndex: 5
             });
 
@@ -887,7 +897,7 @@ export default function ScrapbookEditor() {
                 id: `elem_${Date.now()}_3`,
                 type: 'text',
                 x: 64, y: 18, width: 26, height: 10, rotation: 0, zIndex: 3,
-                content: "🎵 Playback Scan",
+                content: "Playback Scan",
                 style: { fontFamily: 'sans-serif', fontSize: '14px', color: '#1a1a1a', textAlign: 'center', fontWeight: 'bold' }
             });
 
@@ -902,9 +912,9 @@ export default function ScrapbookEditor() {
             page.elements.push({
                 id: `elem_${Date.now()}_5`,
                 type: 'sticker',
-                stickerType: 'emoji',
-                content: '🍂',
-                x: 74, y: 62, width: 8, height: 8, rotation: 12, zIndex: 5
+                stickerType: 'stamp',
+                content: 'AUDIO ARCHIVE',
+                x: 74, y: 62, width: 12, height: 8, rotation: 12, zIndex: 5
             });
         } else if (templateType === 'birthday_preset') {
             page.background = 'pastel-rose';
@@ -913,7 +923,7 @@ export default function ScrapbookEditor() {
                 id: `elem_${Date.now()}_title`,
                 type: 'text',
                 x: 10, y: 5, width: 80, height: 10, rotation: -1, zIndex: 1,
-                content: "Happy Birthday! 🎉",
+                content: "Happy Birthday!",
                 style: { fontFamily: 'Dancing Script', fontSize: '36px', color: '#c05c5c', textAlign: 'center', fontWeight: 'bold' }
             });
             // Photo Placeholder 1
@@ -951,17 +961,17 @@ export default function ScrapbookEditor() {
             page.elements.push({
                 id: `elem_${Date.now()}_cake`,
                 type: 'sticker',
-                stickerType: 'emoji',
-                content: '🎂',
-                x: 46, y: 64, width: 8, height: 8, rotation: 0, zIndex: 5
+                stickerType: 'stamp',
+                content: 'CELEBRATE',
+                x: 46, y: 64, width: 10, height: 6, rotation: 0, zIndex: 5
             });
             // Balloons sticker
             page.elements.push({
                 id: `elem_${Date.now()}_balloons`,
                 type: 'sticker',
-                stickerType: 'emoji',
-                content: '🎈',
-                x: 82, y: 12, width: 8, height: 10, rotation: 12, zIndex: 6
+                stickerType: 'badge',
+                content: 'Joyful Day',
+                x: 78, y: 12, width: 16, height: 8, rotation: 12, zIndex: 6
             });
             // Text caption
             page.elements.push({
@@ -997,25 +1007,26 @@ export default function ScrapbookEditor() {
             page.elements.push({
                 id: `elem_${Date.now()}_clip`,
                 type: 'sticker',
-                stickerType: 'pin',
-                content: '📎',
+                stickerType: 'clip',
+                content: 'Clip',
                 x: 30, y: 15, width: 8, height: 8, rotation: -15, zIndex: 3
             });
             // Rings sticker
             page.elements.push({
                 id: `elem_${Date.now()}_ring`,
                 type: 'sticker',
-                stickerType: 'emoji',
-                content: '💍',
-                x: 70, y: 22, width: 8, height: 8, rotation: 15, zIndex: 4
+                stickerType: 'seal',
+                content: 'DEVOTION',
+                color: '#881337',
+                x: 70, y: 22, width: 10, height: 10, rotation: 15, zIndex: 4
             });
             // Heart sticker
             page.elements.push({
                 id: `elem_${Date.now()}_heart`,
                 type: 'sticker',
-                stickerType: 'emoji',
-                content: '❤️',
-                x: 64, y: 48, width: 6, height: 6, rotation: 0, zIndex: 5
+                stickerType: 'badge',
+                content: 'With Endless Love',
+                x: 64, y: 48, width: 18, height: 6, rotation: 0, zIndex: 5
             });
             // Letter text
             page.elements.push({
@@ -1060,17 +1071,18 @@ export default function ScrapbookEditor() {
             page.elements.push({
                 id: `elem_${Date.now()}_trophy`,
                 type: 'sticker',
-                stickerType: 'emoji',
-                content: '🏆',
-                x: 12, y: 70, width: 8, height: 8, rotation: -8, zIndex: 4
+                stickerType: 'seal',
+                content: 'ACHIEVEMENT',
+                color: '#b45309',
+                x: 12, y: 70, width: 12, height: 10, rotation: -8, zIndex: 4
             });
             // Grad cap
             page.elements.push({
                 id: `elem_${Date.now()}_cap`,
                 type: 'sticker',
-                stickerType: 'emoji',
-                content: '🎓',
-                x: 80, y: 70, width: 8, height: 8, rotation: 8, zIndex: 5
+                stickerType: 'stamp',
+                content: 'CLASS OF 2026',
+                x: 76, y: 70, width: 14, height: 8, rotation: 8, zIndex: 5
             });
             // Text desc
             page.elements.push({
@@ -1088,7 +1100,7 @@ export default function ScrapbookEditor() {
                 id: `elem_${Date.now()}_title`,
                 type: 'text',
                 x: 10, y: 6, width: 80, height: 8, rotation: -2, zIndex: 1,
-                content: "Wanderlust - Travel Diary ✈️",
+                content: "Wanderlust - Travel Diary",
                 style: { fontFamily: 'Pacifico', fontSize: '24px', color: '#3d2106', textAlign: 'center' }
             });
             // Placeholder 1
@@ -1117,25 +1129,26 @@ export default function ScrapbookEditor() {
             page.elements.push({
                 id: `elem_${Date.now()}_cam`,
                 type: 'sticker',
-                stickerType: 'emoji',
-                content: '📸',
-                x: 47, y: 64, width: 6, height: 6, rotation: -5, zIndex: 4
+                stickerType: 'stamp',
+                content: 'JOURNAL DISPATCH',
+                x: 44, y: 64, width: 14, height: 7, rotation: -5, zIndex: 4
             });
             // Suitcase sticker
             page.elements.push({
                 id: `elem_${Date.now()}_case`,
                 type: 'sticker',
-                stickerType: 'emoji',
-                content: '🧳',
-                x: 82, y: 12, width: 8, height: 8, rotation: 10, zIndex: 5
+                stickerType: 'seal',
+                content: 'EXPEDITION',
+                color: '#1e3a8a',
+                x: 80, y: 12, width: 10, height: 10, rotation: 10, zIndex: 5
             });
             // Map
             page.elements.push({
                 id: `elem_${Date.now()}_map`,
                 type: 'sticker',
-                stickerType: 'emoji',
-                content: '🗺️',
-                x: 10, y: 64, width: 8, height: 8, rotation: -12, zIndex: 6
+                stickerType: 'badge',
+                content: 'Far and Wide',
+                x: 8, y: 64, width: 14, height: 6, rotation: -12, zIndex: 6
             });
             // Text
             page.elements.push({
@@ -1432,29 +1445,29 @@ export default function ScrapbookEditor() {
                                         onClick={() => applyTemplate('birthday_preset')}
                                         className="p-3 border border-gray-150 rounded-xl hover:border-amber-600 hover:bg-amber-50/20 text-left transition-all cursor-pointer border-dashed"
                                     >
-                                        <p className="font-bold text-xs text-amber-900 flex items-center gap-1">🎈 Birthday Celebration</p>
-                                        <p className="text-[11px] text-gray-500 mt-1">Balloons, cake decorations, and empty frame placeholders.</p>
+                                        <p className="font-bold text-xs text-amber-900 flex items-center gap-1">Birthday Celebration</p>
+                                        <p className="text-[11px] text-gray-500 mt-1">Festive decorations, stamps, and photo placeholders.</p>
                                     </button>
                                     <button
                                         onClick={() => applyTemplate('anniversary_preset')}
                                         className="p-3 border border-gray-150 rounded-xl hover:border-amber-600 hover:bg-amber-50/20 text-left transition-all cursor-pointer border-dashed"
                                     >
-                                        <p className="font-bold text-xs text-amber-900 flex items-center gap-1">💍 Anniversary Milestone</p>
-                                        <p className="text-[11px] text-gray-500 mt-1">Hearts and ring stickers with a romantic letter layout.</p>
+                                        <p className="font-bold text-xs text-amber-900 flex items-center gap-1">Anniversary Milestone</p>
+                                        <p className="text-[11px] text-gray-500 mt-1">Wax seals and love badges with a romantic letter layout.</p>
                                     </button>
                                     <button
                                         onClick={() => applyTemplate('achievements_preset')}
                                         className="p-3 border border-gray-150 rounded-xl hover:border-amber-600 hover:bg-amber-50/20 text-left transition-all cursor-pointer border-dashed"
                                     >
-                                        <p className="font-bold text-xs text-amber-900 flex items-center gap-1">🏆 Achievement Milestone</p>
-                                        <p className="text-[11px] text-gray-500 mt-1">Trophy, grad cap details, and recognition frames.</p>
+                                        <p className="font-bold text-xs text-amber-900 flex items-center gap-1">Achievement Milestone</p>
+                                        <p className="text-[11px] text-gray-500 mt-1">Honors seals, archival stamps, and recognition frames.</p>
                                     </button>
                                     <button
                                         onClick={() => applyTemplate('travel_preset')}
                                         className="p-3 border border-gray-150 rounded-xl hover:border-amber-600 hover:bg-amber-50/20 text-left transition-all cursor-pointer border-dashed"
                                     >
-                                        <p className="font-bold text-xs text-amber-900 flex items-center gap-1">✈️ Travel Adventure</p>
-                                        <p className="text-[11px] text-gray-500 mt-1">Maps, suitcases, sunglasses, and photo slots.</p>
+                                        <p className="font-bold text-xs text-amber-900 flex items-center gap-1">Travel Adventure</p>
+                                        <p className="text-[11px] text-gray-500 mt-1">Expedition seals, dispatch stamps, and travel journal slots.</p>
                                     </button>
                                 </div>
 
@@ -1557,8 +1570,22 @@ export default function ScrapbookEditor() {
                                         >
                                             {sticker.type === 'tape' ? (
                                                 <div className="w-12 h-3 rounded" style={sticker.style}></div>
+                                            ) : sticker.type === 'pin' ? (
+                                                <div className="w-4 h-4 rounded-full bg-red-600 border border-white shadow-xs"></div>
+                                            ) : sticker.type === 'clip' ? (
+                                                <div className="w-2 h-5 rounded-full border-2 border-amber-800 bg-amber-100/40"></div>
+                                            ) : sticker.type === 'seal' ? (
+                                                <div className="w-7 h-7 rounded-full flex items-center justify-center text-[5px] font-bold text-amber-100 uppercase border border-dashed border-amber-300 shadow-xs" style={{ backgroundColor: sticker.color || '#881337', fontFamily: 'serif' }}>
+                                                    {sticker.content}
+                                                </div>
+                                            ) : sticker.type === 'stamp' ? (
+                                                <div className="px-1 py-0.5 rounded border border-dashed border-amber-900/60 bg-amber-50 text-[5px] font-mono font-bold tracking-wider uppercase text-amber-950">
+                                                    {sticker.content}
+                                                </div>
+                                            ) : sticker.type === 'badge' ? (
+                                                <span className="text-[10px] font-serif italic text-amber-950 truncate px-1" style={{ fontFamily: 'Dancing Script' }}>{sticker.content}</span>
                                             ) : (
-                                                <span className="text-2xl select-none">{sticker.content}</span>
+                                                <span className="text-xs font-serif font-bold text-amber-900">{sticker.content}</span>
                                             )}
                                             <span className="text-[9px] text-gray-500 font-medium truncate w-full text-center">{sticker.name}</span>
                                         </button>
@@ -1972,7 +1999,7 @@ export default function ScrapbookEditor() {
                                                     className="absolute -top-3 -right-3 w-6 h-6 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center shadow-lg border border-white print:hidden cursor-pointer transition-all hover:scale-110 z-[100]"
                                                     title="Delete"
                                                 >
-                                                    <span className="text-[10px] font-extrabold select-none">✕</span>
+                                                    <Trash2 className="w-3 h-3 text-white" />
                                                 </button>
 
                                                 {/* Corner Resize Handles */}
@@ -2062,12 +2089,28 @@ export default function ScrapbookEditor() {
                                                 <div className="w-full h-full flex items-center justify-center select-none">
                                                     {elem.stickerType === 'tape' ? (
                                                         <div className="w-full h-full rounded shadow-sm border border-black/5" style={elem.style}></div>
+                                                    ) : elem.stickerType === 'pin' ? (
+                                                        <div className="w-5 h-5 rounded-full bg-red-600 shadow-md border-2 border-white flex items-center justify-center">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-white/70" />
+                                                        </div>
+                                                    ) : elem.stickerType === 'clip' ? (
+                                                        <div className="w-3 h-8 rounded-full border-2 border-amber-800/80 bg-amber-100/40 shadow-sm" />
+                                                    ) : elem.stickerType === 'seal' ? (
+                                                        <div className="w-12 h-12 rounded-full flex items-center justify-center text-[8px] font-bold text-amber-100 uppercase tracking-widest border-2 border-dashed border-amber-300 shadow-md" style={{ backgroundColor: elem.color || '#881337', fontFamily: 'serif' }}>
+                                                            {elem.content}
+                                                        </div>
+                                                    ) : elem.stickerType === 'stamp' ? (
+                                                        <div className="px-2 py-1 rounded border-2 border-dashed border-amber-900/60 bg-amber-50 text-[9px] font-mono font-bold tracking-wider uppercase text-amber-950 shadow-sm">
+                                                            {elem.content}
+                                                        </div>
                                                     ) : elem.stickerType === 'badge' ? (
                                                         <div className="w-full h-full flex items-center justify-center font-serif text-amber-950 whitespace-nowrap gap-1" style={{ fontFamily: 'Dancing Script', fontSize: '26px' }}>
                                                             {elem.content}
                                                         </div>
                                                     ) : (
-                                                        <span className="text-2xl leading-none select-none">{elem.content}</span>
+                                                        <div className="px-2 py-1 rounded-full bg-amber-100/80 border border-amber-800/30 text-amber-900 text-xs font-semibold font-serif">
+                                                            {elem.content}
+                                                        </div>
                                                     )}
                                                 </div>
                                             )}

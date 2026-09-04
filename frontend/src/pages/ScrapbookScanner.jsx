@@ -74,11 +74,15 @@ export default function ScrapbookScanner() {
             const data = await storyService.getStoryById(id);
             setStoryDetails(data);
             
-            // Check for media attachments
-            const videoFile = data.mediaFiles?.find(f => f.mediaType.includes('video'));
-            const audioFile = data.mediaFiles?.find(f => f.mediaType.includes('audio'));
-            if (videoFile) setActiveVideoUrl(videoFile.mediaUrl);
-            if (audioFile) setActiveAudioUrl(audioFile.mediaUrl);
+            // Check for media attachments safely
+            const videoFile = Array.isArray(data?.mediaFiles)
+                ? data.mediaFiles.find(f => f?.mediaType?.includes('video') || (typeof f?.mediaUrl === 'string' && f.mediaUrl.match(/\.(mp4|webm|mov)$/i)))
+                : null;
+            const audioFile = Array.isArray(data?.mediaFiles)
+                ? data.mediaFiles.find(f => f?.mediaType?.includes('audio') || (typeof f?.mediaUrl === 'string' && f.mediaUrl.match(/\.(mp3|wav|ogg)$/i)))
+                : null;
+            if (videoFile?.mediaUrl) setActiveVideoUrl(videoFile.mediaUrl);
+            if (audioFile?.mediaUrl) setActiveAudioUrl(audioFile.mediaUrl);
         } catch (err) {
             console.error("Error fetching story", err);
             setScanError("Failed to retrieve story details. Make sure you are logged in and connected.");

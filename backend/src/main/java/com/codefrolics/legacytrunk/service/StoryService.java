@@ -37,9 +37,16 @@ public class StoryService {
         // Get shared stories
         List<Story> sharedStories = storyRepository.findSharedWithUserOrderByCreatedAtDesc(currentUser.getId());
         
-        // Combine and sort
-        List<Story> allStories = new ArrayList<>(ownStories);
-        allStories.addAll(sharedStories);
+        // Combine, deduplicate, and sort
+        java.util.Map<Long, Story> uniqueStories = new java.util.LinkedHashMap<>();
+        for (Story s : ownStories) {
+            if (s != null && s.getId() != null) uniqueStories.put(s.getId(), s);
+        }
+        for (Story s : sharedStories) {
+            if (s != null && s.getId() != null) uniqueStories.putIfAbsent(s.getId(), s);
+        }
+
+        List<Story> allStories = new ArrayList<>(uniqueStories.values());
         allStories.sort((s1, s2) -> {
             java.time.LocalDateTime d1 = s1.getCreatedAt();
             java.time.LocalDateTime d2 = s2.getCreatedAt();
@@ -59,10 +66,12 @@ public class StoryService {
                 
         User currentUser = userService.getCurrentUser();
         
-        // Check access
-        if (!story.getUser().getId().equals(currentUser.getId())) {
-            boolean isShared = story.getShares().stream()
-                    .anyMatch(share -> share.getSharedWithUser().getId().equals(currentUser.getId()));
+        // Check access (owner, admin, or shared user)
+        boolean isOwner = story.getUser().getId().equals(currentUser.getId());
+        boolean isAdmin = currentUser.getRole() == com.codefrolics.legacytrunk.model.Role.ADMIN;
+        if (!isOwner && !isAdmin) {
+            boolean isShared = story.getShares() != null && story.getShares().stream()
+                    .anyMatch(share -> share.getSharedWithUser() != null && share.getSharedWithUser().getId().equals(currentUser.getId()));
             if (!isShared) {
                 throw new RuntimeException("Unauthorized to view this story");
             }
@@ -210,6 +219,17 @@ public class StoryService {
             }
         }
 
+        // Handle shares update
+        if (request.getSharedWithUserIds() != null) {
+            story.getShares().clear();
+            List<StoryShare> newShares = request.getSharedWithUserIds().stream()
+                    .map(userId -> userRepository.findById(userId).orElse(null))
+                    .filter(u -> u != null)
+                    .map(u -> StoryShare.builder().story(story).sharedWithUser(u).build())
+                    .collect(Collectors.toList());
+            story.getShares().addAll(newShares);
+        }
+
         Story saved = storyRepository.save(story);
         return mapToResponse(saved);
     }
@@ -228,9 +248,13 @@ public class StoryService {
         // Delete associated notifications to prevent foreign key violations
         notificationService.deleteNotificationsByStoryId(id);
         
-        // Delete physical files
-        for (StoryMedia media : story.getMediaFiles()) {
-            mediaStorageService.deleteFile(media.getFilePath());
+        // Delete physical files safely
+        if (story.getMediaFiles() != null) {
+            for (StoryMedia media : story.getMediaFiles()) {
+                if (media.getFilePath() != null) {
+                    mediaStorageService.deleteFile(media.getFilePath());
+                }
+            }
         }
         
         storyRepository.delete(story);
@@ -357,7 +381,7 @@ public class StoryService {
     }
 
     private StoryResponse mapToResponse(Story story) {
-        boolean isLocked = story.getUnlockDateTime() != null && java.time.LocalDateTime.now().isBefore(story.getUnlockDateTime());
+        boolean isLocked = story.getUnlockDateTime() != null && java.time.LocalDateTime.now(java.time.ZoneOffset.UTC).isBefore(story.getUnlockDateTime());
 
         return StoryResponse.builder()
                 .id(story.getId())
@@ -369,20 +393,23 @@ public class StoryService {
                 .description(isLocked ? null : story.getDescription())
                 .location(story.getLocation())
                 .storyDate(story.getStoryDate())
-                .tags(story.getTags().stream().map(StoryTag::getTag).collect(Collectors.toList()))
-                .mediaFiles(isLocked ? java.util.Collections.emptyList() : story.getMediaFiles().stream().map(m -> 
+                .tags(story.getTags() != null ? story.getTags().stream().map(StoryTag::getTag).collect(Collectors.toList()) : java.util.Collections.emptyList())
+                .mediaFiles(isLocked ? java.util.Collections.emptyList() : (story.getMediaFiles() != null ? story.getMediaFiles().stream().map(m -> 
                     StoryResponse.StoryMediaDto.builder()
                         .id(m.getId())
                         .mediaUrl("/api/media/" + m.getFilePath())
                         .mediaType(m.getMediaType())
                         .build()
-                ).collect(Collectors.toList()))
+                ).collect(Collectors.toList()) : java.util.Collections.emptyList()))
                 .views(story.getViews() != null ? story.getViews() : 0)
                 .createdAt(story.getCreatedAt())
                 .familyMemberId(story.getFamilyMember() != null ? story.getFamilyMember().getId() : null)
                 .familyMemberName(story.getFamilyMember() != null ? story.getFamilyMember().getName() : null)
                 .unlockDateTime(story.getUnlockDateTime())
                 .isLocked(isLocked)
+                .sharedWithUserIds(story.getShares() != null ? story.getShares().stream()
+                    .map(share -> share.getSharedWithUser().getId())
+                    .collect(Collectors.toList()) : java.util.Collections.emptyList())
                 .build();
     }
 }

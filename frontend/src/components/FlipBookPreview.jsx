@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight, Volume2, ScanLine, Film } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Volume2, ScanLine, Film, Camera } from 'lucide-react';
 import QRCode from 'qrcode';
 
 // Helper component for asynchronous QR code generation inside 3D preview
@@ -126,7 +126,7 @@ export default function FlipBookPreview({ isOpen, onClose, title, pages, backgro
                     </div>
 
                     <div className="text-[9px] text-amber-500/40 tracking-wider mb-8 select-none">
-                        Yaado Ka Baksa © 2026
+                        Yaado Ka Baksa - 2026
                     </div>
                 </div>
             );
@@ -150,10 +150,10 @@ export default function FlipBookPreview({ isOpen, onClose, title, pages, backgro
         }
 
         // Render standard scrapbook canvas layout scaled down
-        const canvasBg = backgrounds.find(bg => bg.id === page.data.background) || backgrounds[0];
+        const canvasBg = (backgrounds && backgrounds.find(bg => bg.id === page.data?.background)) || backgrounds?.[0] || { style: {} };
         
         return (
-            <div className="w-full h-full relative overflow-hidden shadow-inner" style={{ ...canvasBg.style }}>
+            <div className="w-full h-full relative overflow-hidden shadow-inner" style={{ ...(canvasBg.style || {}) }}>
                 {/* Center binding page shadows */}
                 <div className="absolute inset-y-0 w-8 bg-gradient-to-r from-black/8 to-transparent pointer-events-none z-50 odd:left-0 odd:from-black/10 even:right-0 even:bg-gradient-to-l even:from-black/10"></div>
                 
@@ -190,12 +190,24 @@ export default function FlipBookPreview({ isOpen, onClose, title, pages, backgro
                                 <div className="w-full h-full flex items-center justify-center">
                                     {elem.stickerType === 'tape' ? (
                                         <div className="w-full h-full rounded shadow-sm border border-black/5 opacity-75" style={elem.style}></div>
+                                    ) : elem.stickerType === 'pin' ? (
+                                        <div className="w-2.5 h-2.5 rounded-full bg-red-600 border border-white shadow-xs" />
+                                    ) : elem.stickerType === 'clip' ? (
+                                        <div className="w-1.5 h-4 rounded-full border border-amber-800 bg-amber-100/40" />
+                                    ) : elem.stickerType === 'seal' ? (
+                                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-[4px] font-bold text-amber-100 uppercase border border-dashed border-amber-300 shadow-xs" style={{ backgroundColor: elem.color || '#881337', fontFamily: 'serif' }}>
+                                            {elem.content}
+                                        </div>
+                                    ) : elem.stickerType === 'stamp' ? (
+                                        <div className="px-1 py-0.5 rounded border border-dashed border-amber-900/60 bg-amber-50 text-[4px] font-mono font-bold tracking-wider uppercase text-amber-950">
+                                            {elem.content}
+                                        </div>
                                     ) : elem.stickerType === 'badge' ? (
-                                        <div className="w-full h-full flex items-center justify-center font-serif text-amber-950 whitespace-nowrap gap-0.5" style={{ fontFamily: 'Dancing Script', fontSize: '11px' }}>
+                                        <div className="w-full h-full flex items-center justify-center font-serif text-amber-950 whitespace-nowrap" style={{ fontFamily: 'Dancing Script', fontSize: '11px' }}>
                                             {elem.content}
                                         </div>
                                     ) : (
-                                        <span className="text-xl select-none leading-none">{elem.content}</span>
+                                        <span className="text-[6px] font-serif font-bold text-amber-900 select-none leading-none">{elem.content}</span>
                                     )}
                                 </div>
                             )}
@@ -213,7 +225,7 @@ export default function FlipBookPreview({ isOpen, onClose, title, pages, backgro
                                 <div className="w-full h-full bg-white p-1 shadow border border-gray-150 flex flex-col justify-between font-serif relative select-none">
                                     {elem.isPlaceholder ? (
                                         <div className="w-full h-full border border-dashed border-amber-300 bg-amber-50/20 rounded flex flex-col items-center justify-center p-1 text-center">
-                                            <span className="text-[8px]">📸</span>
+                                            <Camera className="w-2.5 h-2.5 text-amber-700/60" />
                                             <span className="text-[4px] font-bold text-amber-950 mt-0.5 leading-none">{elem.title}</span>
                                         </div>
                                     ) : (

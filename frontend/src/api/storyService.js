@@ -41,11 +41,7 @@ export const storyService = {
             }
         }
         
-        const response = await api.post('/stories', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        });
+        const response = await api.post('/stories', formData);
         return response.data;
     },
     
@@ -62,11 +58,7 @@ export const storyService = {
             }
         }
         
-        const response = await api.put(`/stories/${id}`, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        });
+        const response = await api.put(`/stories/${id}`, formData);
         return response.data;
     },
 

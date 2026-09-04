@@ -16,6 +16,17 @@ export default function ScrapbookList() {
     const [previewOpen, setPreviewOpen] = useState(false);
     const navigate = useNavigate();
 
+    const getBookPages = (book) => {
+        if (!book?.canvasData) return [];
+        try {
+            const parsed = typeof book.canvasData === 'string' ? JSON.parse(book.canvasData) : book.canvasData;
+            return Array.isArray(parsed?.pages) ? parsed.pages : [];
+        } catch (e) {
+            console.error("Failed to parse canvasData", e);
+            return [];
+        }
+    };
+
     const handleOpenPreview = async (id) => {
         try {
             const fullBook = await scrapbookService.getScrapbookById(id);
@@ -31,10 +42,11 @@ export default function ScrapbookList() {
         setLoading(true);
         try {
             const data = await scrapbookService.getAllScrapbooks();
-            setScrapbooks(data);
+            setScrapbooks(Array.isArray(data) ? data : []);
             setError(null);
         } catch (err) {
             console.error("Error loading scrapbooks", err);
+            setScrapbooks([]);
             setError("Unable to load scrapbooks. Please make sure the backend server is running.");
         } finally {
             setLoading(false);
@@ -45,7 +57,9 @@ export default function ScrapbookList() {
         setStatsLoading(true);
         try {
             const data = await storyService.getMemoryStatistics();
-            setStats(data);
+            if (data && typeof data === 'object') {
+                setStats(data);
+            }
         } catch (err) {
             console.error("Failed to load statistics", err);
         } finally {
@@ -327,7 +341,7 @@ export default function ScrapbookList() {
                     isOpen={previewOpen}
                     onClose={() => { setPreviewOpen(false); setPreviewBook(null); }}
                     title={previewBook.title}
-                    pages={JSON.parse(previewBook.canvasData || '{"pages":[]}').pages || []}
+                    pages={getBookPages(previewBook)}
                     backgrounds={[
                         { id: 'parchment', name: 'Vintage Parchment', style: { backgroundColor: '#FDFBF7', backgroundImage: 'radial-gradient(#ecdab9 1px, transparent 1px)', backgroundSize: '24px 24px' } },
                         { id: 'kraft', name: 'Kraft Cardboard', style: { backgroundColor: '#EADBC8', backgroundImage: 'linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px)', backgroundSize: '100% 20px' } },

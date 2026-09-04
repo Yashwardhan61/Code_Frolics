@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { storyService } from '../api/storyService';
+import { friendService } from '../api/friendService';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
-import { ImageIcon, X, Loader2, ArrowLeft, Trash2, Mic, Square, Play, Music, Film } from 'lucide-react';
+import { ImageIcon, X, Loader2, ArrowLeft, Trash2, Mic, Square, Play, Music, Film, Users, ChevronDown, Check, User, Lock } from 'lucide-react';
 
 export default function StoryEdit() {
     const { id } = useParams();
@@ -17,8 +18,11 @@ export default function StoryEdit() {
         description: '',
         storyDate: '',
         location: '',
-        tags: []
+        tags: [],
+        sharedWithUserIds: []
     });
+    const [friends, setFriends] = useState([]);
+    const [isShareDropdownOpen, setIsShareDropdownOpen] = useState(false);
     const [isTimeCapsule, setIsTimeCapsule] = useState(false);
     const [unlockDate, setUnlockDate] = useState('');
     const [unlockTime, setUnlockTime] = useState('');
@@ -118,6 +122,18 @@ export default function StoryEdit() {
     };
 
     useEffect(() => {
+        const loadFriends = async () => {
+            try {
+                const friendsData = await friendService.getFriends();
+                setFriends(friendsData || []);
+            } catch (err) {
+                console.error('Failed to load friends', err);
+            }
+        };
+        loadFriends();
+    }, []);
+
+    useEffect(() => {
         const fetchStory = async () => {
             try {
                 const story = await storyService.getStoryById(id);
@@ -141,14 +157,23 @@ export default function StoryEdit() {
                     description: story.description || '',
                     storyDate: story.storyDate || '',
                     location: story.location || '',
-                    tags: story.tags || []
+                    tags: story.tags || [],
+                    sharedWithUserIds: story.sharedWithUserIds || []
                 });
                 setExistingMedia(story.mediaFiles || []);
                 if (story.unlockDateTime) {
                     setIsTimeCapsule(true);
-                    const [d, t] = story.unlockDateTime.split('T');
-                    setUnlockDate(d);
-                    setUnlockTime(t ? t.substring(0, 5) : '');
+                    const isoStr = story.unlockDateTime.endsWith('Z') ? story.unlockDateTime : story.unlockDateTime + 'Z';
+                    const target = new Date(isoStr);
+                    if (!isNaN(target.getTime())) {
+                        const localYear = target.getFullYear();
+                        const localMonth = String(target.getMonth() + 1).padStart(2, '0');
+                        const localDay = String(target.getDate()).padStart(2, '0');
+                        const localHours = String(target.getHours()).padStart(2, '0');
+                        const localMinutes = String(target.getMinutes()).padStart(2, '0');
+                        setUnlockDate(`${localYear}-${localMonth}-${localDay}`);
+                        setUnlockTime(`${localHours}:${localMinutes}`);
+                    }
                 }
             } catch (error) {
                 console.error('Failed to fetch story', error);
@@ -199,6 +224,19 @@ export default function StoryEdit() {
         });
     };
 
+    const handleToggleShare = (friendUserId) => {
+        setFormData(prev => {
+            const currentShared = prev.sharedWithUserIds || [];
+            const isShared = currentShared.includes(friendUserId);
+            return {
+                ...prev,
+                sharedWithUserIds: isShared 
+                    ? currentShared.filter(id => id !== friendUserId)
+                    : [...currentShared, friendUserId]
+            };
+        });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (isTimeCapsule) {
@@ -206,7 +244,8 @@ export default function StoryEdit() {
                 toast.error('Please specify both unlock date and time for the Time Capsule.');
                 return;
             }
-            const unlockDateTime = `${unlockDate}T${unlockTime}:00`;
+            const formattedTime = unlockTime.length === 5 ? `${unlockTime}:00` : unlockTime;
+            const unlockDateTime = `${unlockDate}T${formattedTime}`;
             if (new Date(unlockDateTime) <= new Date()) {
                 toast.error('Unlock time must be in the future.');
                 return;
@@ -214,6 +253,15 @@ export default function StoryEdit() {
         }
         try {
             setSaving(true);
+            let formattedUnlockDateTime = null;
+            if (isTimeCapsule && unlockDate && unlockTime) {
+                const formattedTime = unlockTime.length === 5 ? `${unlockTime}:00` : unlockTime;
+                const localDate = new Date(`${unlockDate}T${formattedTime}`);
+                if (!isNaN(localDate.getTime())) {
+                    formattedUnlockDateTime = localDate.toISOString().substring(0, 19);
+                }
+            }
+
             const payload = {
                 title: formData.title.trim(),
                 description: formData.description?.trim() || null,
@@ -222,7 +270,7 @@ export default function StoryEdit() {
                 tags: formData.tags && formData.tags.length > 0 ? formData.tags : [],
                 sharedWithUserIds: formData.sharedWithUserIds && formData.sharedWithUserIds.length > 0 ? formData.sharedWithUserIds : [],
                 familyMemberId: formData.familyMemberId ? Number(formData.familyMemberId) : null,
-                unlockDateTime: isTimeCapsule && unlockDate && unlockTime ? `${unlockDate}T${unlockTime}:00` : null
+                unlockDateTime: formattedUnlockDateTime
             };
             await storyService.updateStory(id, payload, newFiles);
             toast.success('Memory updated successfully!');
@@ -483,6 +531,77 @@ export default function StoryEdit() {
                             </div>
                         )}
                     </div>
+
+                    {/* Friends Privacy Share Settings */}
+                    <div className="relative border-t border-gray-100 pt-6">
+                        <button 
+                            type="button" 
+                            onClick={() => setIsShareDropdownOpen(!isShareDropdownOpen)} 
+                            className="w-full flex items-center justify-between text-gray-700 hover:text-gray-900 text-sm font-semibold cursor-pointer py-2"
+                        >
+                            <div className="flex items-center gap-3">
+                                <Users className="w-4 h-4 text-amber-700 flex-shrink-0" />
+                                <span>Share with friends ({(formData.sharedWithUserIds || []).length})</span>
+                            </div>
+                            <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isShareDropdownOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        
+                        {!isShareDropdownOpen && (formData.sharedWithUserIds || []).length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mt-2 select-none animate-fadeIn">
+                                {friends
+                                    .filter(f => (formData.sharedWithUserIds || []).includes(f.userId))
+                                    .map(f => (
+                                        <span key={f.id} className="inline-flex items-center gap-1.5 text-xs bg-amber-50 text-amber-900 px-2.5 py-1 rounded-full border border-amber-200">
+                                            {f.displayName}
+                                            <button type="button" onClick={() => handleToggleShare(f.userId)} className="text-amber-700 hover:text-red-500 cursor-pointer">
+                                                <X className="w-3 h-3" />
+                                            </button>
+                                        </span>
+                                    ))
+                                }
+                            </div>
+                        )}
+
+                        {isShareDropdownOpen && (
+                            <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 max-h-48 overflow-y-auto p-2 animate-fadeIn">
+                                {friends.length === 0 ? (
+                                    <div className="text-center p-3 select-none">
+                                        <p className="text-xs text-gray-500 mb-1.5">No friends added yet.</p>
+                                        <Link to="/friends" className="text-xs text-amber-700 hover:underline font-semibold">
+                                            Go to Friends page
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    friends.map(friend => {
+                                        const isShared = (formData.sharedWithUserIds || []).includes(friend.userId);
+                                        return (
+                                            <div 
+                                                key={friend.id} 
+                                                onClick={() => handleToggleShare(friend.userId)} 
+                                                className="flex items-center justify-between p-2 hover:bg-amber-50 rounded-xl cursor-pointer transition-colors"
+                                            >
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="w-7 h-7 rounded-full bg-amber-100 overflow-hidden flex items-center justify-center border border-amber-200">
+                                                        {friend.photoUrl ? (
+                                                            <img src={friend.photoUrl} alt={friend.displayName} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <User className="w-3.5 h-3.5 text-amber-700" />
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-semibold text-gray-800">{friend.displayName}</p>
+                                                        <p className="text-[10px] text-gray-500">@{friend.username}</p>
+                                                    </div>
+                                                </div>
+                                                {isShared && <Check className="w-4 h-4 text-amber-700" />}
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        )}
+                    </div>
+
                     {/* Time Capsule Settings */}
                     <div className="border-t border-gray-100 pt-6">
                         <div className="flex items-center justify-between mb-3">
@@ -494,7 +613,8 @@ export default function StoryEdit() {
                                     className="rounded border-gray-300 text-amber-600 focus:ring-amber-500 h-4 w-4 bg-transparent"
                                 />
                                 <span className="flex items-center gap-1.5">
-                                    🔒 Seal in a Time Capsule
+                                    <Lock className="w-4 h-4 text-amber-700" />
+                                    Seal in a Time Capsule
                                 </span>
                             </label>
                             {isTimeCapsule && (
