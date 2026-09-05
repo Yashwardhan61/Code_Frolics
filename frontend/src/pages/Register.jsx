@@ -1,10 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { User, Mail, Lock, Check, X, Eye, EyeOff } from 'lucide-react';
 import { authService } from '../api/authService';
 import { useToast } from '../contexts/ToastContext';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Register() {
     const [name, setName] = useState('');
@@ -16,6 +17,14 @@ export default function Register() {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const toast = useToast();
+    const { currentUser } = useAuth();
+
+    // Auto-redirect if already signed in
+    useEffect(() => {
+        if (currentUser) {
+            navigate('/dashboard', { replace: true });
+        }
+    }, [currentUser, navigate]);
 
     const passwordRules = useMemo(() => [
         { label: 'At least 8 characters', test: (p) => p.length >= 8 },
@@ -48,7 +57,9 @@ export default function Register() {
         try {
             setLoading(true);
 
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            await setPersistence(auth, browserLocalPersistence);
+            const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+            localStorage.setItem('legacy_trunk_remember_email', email.trim().toLowerCase());
 
             // Set display name on Firebase profile
             await updateProfile(userCredential.user, { displayName: name.trim() });

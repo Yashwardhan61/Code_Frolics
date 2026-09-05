@@ -1,19 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { authService } from '../api/authService';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [rememberMe, setRememberMe] = useState(true);
     const [loading, setLoading] = useState(false);
     const [resetLoading, setResetLoading] = useState(false);
     const navigate = useNavigate();
     const toast = useToast();
+    const { currentUser } = useAuth();
+
+    // Auto-redirect if already signed in
+    useEffect(() => {
+        if (currentUser) {
+            navigate('/dashboard', { replace: true });
+        }
+    }, [currentUser, navigate]);
+
+    // Pre-populate remembered email
+    useEffect(() => {
+        const savedEmail = localStorage.getItem('legacy_trunk_remember_email');
+        if (savedEmail) {
+            setEmail(savedEmail);
+            setRememberMe(true);
+        }
+    }, []);
 
     const handleForgotPassword = async () => {
         if (!email.trim()) {
@@ -59,7 +78,16 @@ export default function Login() {
         e.preventDefault();
         try {
             setLoading(true);
-            await signInWithEmailAndPassword(auth, email, password);
+            const cleanEmail = email.trim().toLowerCase();
+            await setPersistence(auth, browserLocalPersistence);
+            await signInWithEmailAndPassword(auth, cleanEmail, password);
+
+            if (rememberMe) {
+                localStorage.setItem('legacy_trunk_remember_email', cleanEmail);
+            } else {
+                localStorage.removeItem('legacy_trunk_remember_email');
+            }
+
             toast.success('Welcome back! Opening your treasure chest...');
             navigate('/dashboard');
         } catch (err) {
@@ -126,12 +154,21 @@ export default function Login() {
                                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                             </button>
                         </div>
-                        <div className="flex justify-end mt-1.5">
+                        <div className="flex items-center justify-between mt-3">
+                            <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-gray-600 font-medium">
+                                <input
+                                    type="checkbox"
+                                    checked={rememberMe}
+                                    onChange={(e) => setRememberMe(e.target.checked)}
+                                    className="rounded border-gray-300 text-amber-600 focus:ring-amber-500 h-4 w-4 bg-transparent cursor-pointer"
+                                />
+                                <span>Remember my email</span>
+                            </label>
                             <button
                                 type="button"
                                 onClick={handleForgotPassword}
                                 disabled={resetLoading}
-                                className="text-sm text-amber-600 hover:text-amber-500 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                className="text-xs text-amber-700 hover:text-amber-800 font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                             >
                                 {resetLoading ? 'Sending...' : 'Forgot Password?'}
                             </button>

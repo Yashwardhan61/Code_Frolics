@@ -11,23 +11,28 @@ export function useAuth() {
 
 export function AuthProvider({ children }) {
     const [currentUser, setCurrentUser] = useState(null);
-    const [userRole, setUserRole] = useState('MEMBER');
+    const [userRole, setUserRole] = useState(() => localStorage.getItem('legacy_trunk_user_role') || 'MEMBER');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setCurrentUser(user);
+            setLoading(false);
+
             if (user) {
                 try {
                     const profile = await profileService.getProfile();
-                    if (profile?.role) setUserRole(profile.role);
+                    if (profile?.role) {
+                        setUserRole(profile.role);
+                        localStorage.setItem('legacy_trunk_user_role', profile.role);
+                    }
                 } catch (err) {
                     console.error("Failed to fetch user profile for role", err);
                 }
             } else {
                 setUserRole('MEMBER');
+                localStorage.removeItem('legacy_trunk_user_role');
             }
-            setLoading(false);
         });
 
         return unsubscribe;

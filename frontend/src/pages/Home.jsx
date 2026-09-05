@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Home() {
+    const { currentUser } = useAuth();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
@@ -28,7 +30,11 @@ export default function Home() {
                         {/* Desktop Menu */}
                         <div className="hidden md:flex items-center space-x-8">
                             <Link to="/about" className="font-medium text-amber-900 hover:text-amber-700 transition-colors">About</Link>
-                            <Link to="/login" className="font-medium text-amber-900 hover:text-amber-700 transition-colors">Login</Link>
+                            {currentUser ? (
+                                <Link to="/dashboard" className="font-bold text-amber-800 bg-amber-100/70 hover:bg-amber-200/70 px-4 py-1.5 rounded-full transition-colors">Dashboard</Link>
+                            ) : (
+                                <Link to="/login" className="font-medium text-amber-900 hover:text-amber-700 transition-colors">Login</Link>
+                            )}
                             <Link to="/feedback" className="font-medium text-amber-900 hover:text-amber-700 transition-colors">Feedback</Link>
                             <Link to="/contact" className="font-medium text-amber-900 hover:text-amber-700 transition-colors">Contact Us</Link>
                         </div>
@@ -50,7 +56,11 @@ export default function Home() {
                     <div className="md:hidden bg-white border-t border-gray-200">
                         <div className="px-4 pt-2 pb-4 space-y-1 shadow-lg">
                             <Link to="/about" className="block px-3 py-3 rounded-md text-base font-medium text-amber-900 hover:bg-amber-50">About</Link>
-                            <Link to="/login" className="block px-3 py-3 rounded-md text-base font-medium text-amber-900 hover:bg-amber-50">Login</Link>
+                            {currentUser ? (
+                                <Link to="/dashboard" className="block px-3 py-3 rounded-md text-base font-bold text-amber-800 bg-amber-50">Dashboard</Link>
+                            ) : (
+                                <Link to="/login" className="block px-3 py-3 rounded-md text-base font-medium text-amber-900 hover:bg-amber-50">Login</Link>
+                            )}
                             <Link to="/feedback" className="block px-3 py-3 rounded-md text-base font-medium text-amber-900 hover:bg-amber-50">Feedback</Link>
                             <Link to="/contact" className="block px-3 py-3 rounded-md text-base font-medium text-amber-900 hover:bg-amber-50">Contact Us</Link>
                         </div>
@@ -111,9 +121,9 @@ export default function Home() {
                             Welcome to your digital treasure chest of memories! Here, every photo tells a story, every video captures a moment, and every memory becomes a cherished part of your family's legacy. Join us to create, collect, and share the precious moments that make your family unique.
                         </p>
                         <div className="flex justify-center mb-4">
-                            <Link to="/welcome" className="inline-block">
-                                <button className="bg-gradient-to-r from-amber-700 to-amber-600 text-white px-8 py-3 rounded-lg hover:from-amber-800 hover:to-amber-700 transition-all transform hover:scale-105 text-lg font-semibold shadow-lg border-2 border-amber-300/20">
-                                    Begin Your Journey
+                            <Link to={currentUser ? "/dashboard" : "/welcome"} className="inline-block">
+                                <button className="bg-gradient-to-r from-amber-700 to-amber-600 text-white px-8 py-3 rounded-lg hover:from-amber-800 hover:to-amber-700 transition-all transform hover:scale-105 text-lg font-semibold shadow-lg border-2 border-amber-300/20 cursor-pointer">
+                                    {currentUser ? "Open Your Chronicle" : "Begin Your Journey"}
                                 </button>
                             </Link>
                         </div>

@@ -9,10 +9,30 @@ const api = axios.create({
     baseURL: baseURL,
 });
 
+// Helper to wait for Firebase to restore the auth user from IndexedDB/localStorage
+let authReadyPromise = null;
+const getValidUser = async () => {
+    if (auth.currentUser) return auth.currentUser;
+
+    if (!authReadyPromise) {
+        if (typeof auth.authStateReady === 'function') {
+            authReadyPromise = auth.authStateReady().then(() => auth.currentUser);
+        } else {
+            authReadyPromise = new Promise((resolve) => {
+                const unsubscribe = auth.onAuthStateChanged((u) => {
+                    unsubscribe();
+                    resolve(u);
+                });
+            });
+        }
+    }
+    return await authReadyPromise;
+};
+
 // Add a request interceptor
 api.interceptors.request.use(
     async (config) => {
-        const user = auth.currentUser;
+        const user = await getValidUser();
         if (user) {
             const token = await user.getIdToken();
             config.headers.Authorization = `Bearer ${token}`;
@@ -29,9 +49,20 @@ api.interceptors.response.use(
     (response) => {
         return response;
     },
-    (error) => {
-        if (error.response && error.response.status === 401) {
-            console.error('Unauthorized access - maybe token expired');
+    async (error) => {
+        const originalRequest = error.config;
+        if (error.response && error.response.status === 401 && originalRequest && !originalRequest._retry) {
+            originalRequest._retry = true;
+            const user = auth.currentUser;
+            if (user) {
+                try {
+                    const freshToken = await user.getIdToken(true);
+                    originalRequest.headers.Authorization = `Bearer ${freshToken}`;
+                    return api(originalRequest);
+                } catch (refreshErr) {
+                    console.error('Failed to refresh Firebase token', refreshErr);
+                }
+            }
         }
         return Promise.reject(error);
     }

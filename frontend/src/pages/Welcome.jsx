@@ -1,8 +1,17 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { User, UserPlus, ArrowLeft } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Welcome() {
+    const { currentUser } = useAuth();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (currentUser) {
+            navigate('/dashboard', { replace: true });
+        }
+    }, [currentUser, navigate]);
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-6 relative"
             style={{ background: 'linear-gradient(135deg, var(--brand-brown-800), var(--brand-brown-600))' }}>

@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCIIbfmTiLcnbBIf2a1RDe4NtgWvQ16IgE",
@@ -13,3 +13,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+
+// Enforce local session persistence across browser sessions
+setPersistence(auth, browserLocalPersistence).catch((err) => {
+    console.warn("Could not set browserLocalPersistence on auth", err);
+});
