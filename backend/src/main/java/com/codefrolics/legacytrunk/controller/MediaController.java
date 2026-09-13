@@ -1,20 +1,23 @@
 package com.codefrolics.legacytrunk.controller;
 
+import com.codefrolics.legacytrunk.dto.GalleryItemResponse;
 import com.codefrolics.legacytrunk.model.StoredMedia;
+import com.codefrolics.legacytrunk.model.StoryMedia;
+import com.codefrolics.legacytrunk.repository.StoryMediaRepository;
 import com.codefrolics.legacytrunk.service.MediaStorageService;
+import com.codefrolics.legacytrunk.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.Optional;

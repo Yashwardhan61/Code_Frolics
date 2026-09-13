@@ -100,6 +100,20 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("handleDataIntegrityViolation returns 409 Conflict with appropriate message")
+    void testHandleDataIntegrityViolation() {
+        org.springframework.dao.DataIntegrityViolationException ex =
+                new org.springframework.dao.DataIntegrityViolationException("duplicate key value violates unique constraint \"uk_users_username\"");
+
+        ResponseEntity<Map<String, Object>> response = exceptionHandler.handleDataIntegrityViolation(ex);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertEquals(409, response.getBody().get("status"));
+        assertEquals("Username already taken", response.getBody().get("message"));
+    }
+
+    @Test
     @DisplayName("handleGenericException returns 500 without leaking stack traces")
     void testHandleGenericException() {
         Exception ex = new NullPointerException("Null pointer in service");

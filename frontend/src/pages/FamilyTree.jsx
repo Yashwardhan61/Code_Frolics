@@ -524,7 +524,7 @@ export default function FamilyTree() {
                             <TreeNode
                                 key={root.id}
                                 node={root}
-                                onNodeClick={(id) => navigate(`/member/${id}/stories`)}
+                                onNodeClick={(id) => navigate(`/family-tree/member/${id}`)}
                                 onEdit={(node) => setModal({ mode: 'edit', initial: node })}
                                 onDelete={(node) => setDeleteTarget(node)}
                                 onAddChild={(node) => setModal({ mode: 'add', initial: { parentMemberId: node.id } })}

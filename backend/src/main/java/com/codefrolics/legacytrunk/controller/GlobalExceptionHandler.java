@@ -1,6 +1,7 @@
 package com.codefrolics.legacytrunk.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -75,6 +76,20 @@ public class GlobalExceptionHandler {
         log.warn("Runtime exception: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(errorBody(HttpStatus.BAD_REQUEST, ex.getMessage() != null ? ex.getMessage() : "Request could not be processed."));
+    }
+
+    /**
+     * Handles database constraint violations (e.g. concurrent duplicate username or email).
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        log.warn("Database integrity violation: {}", ex.getMessage());
+        String message = "A duplicate entry was detected or a database constraint was violated.";
+        if (ex.getMessage() != null && ex.getMessage().toLowerCase().contains("username")) {
+            message = "Username already taken";
+        }
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(errorBody(HttpStatus.CONFLICT, message));
     }
 
     /**

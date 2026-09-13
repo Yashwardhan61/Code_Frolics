@@ -34,7 +34,7 @@ The Legacy Trunk (Yaado Ka Baksa) is a digital family archive that helps preserv
 | Auth | Firebase Authentication (client SDK + Admin SDK for token verification) |
 | AI | Groq API (description enhancement and predictive text) |
 | Email | Gmail SMTP via Spring Boot Mail (async HTML emails) |
-| Storage | Local filesystem (~~/legacy-trunk-uploads) |
+| Storage | PostgreSQL (Neon) -- media files stored as binary blobs in `stored_media` table |
 | API Docs | Springdoc OpenAPI / Swagger UI |
 | Build | Maven (backend), npm (frontend) |
 | Deployment | Vercel (frontend) |

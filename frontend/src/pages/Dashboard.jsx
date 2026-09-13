@@ -88,48 +88,62 @@ export default function Dashboard() {
     const navigate = useNavigate();
     const [stories, setStories] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
     const [showCelebration, setShowCelebration] = useState(false);
     const unlockedStoryIdRef = useRef(null);
     const toastRef = useRef(toast);
     toastRef.current = toast;
     const hasErrored = useRef(false);
 
-    const fetchStories = useCallback(async () => {
+    const fetchStories = useCallback(async (pageNum = 0, append = false) => {
         try {
-            const data = await storyService.getAllStories();
-            if (Array.isArray(data)) {
-                const sortedData = [...data].sort((a, b) => {
-                    const dateA = a?.storyDate ? new Date(a.storyDate) : (a?.createdAt ? new Date(a.createdAt) : new Date(0));
-                    const dateB = b?.storyDate ? new Date(b.storyDate) : (b?.createdAt ? new Date(b.createdAt) : new Date(0));
-                    const timeA = isNaN(dateA.getTime()) ? 0 : dateA.getTime();
-                    const timeB = isNaN(dateB.getTime()) ? 0 : dateB.getTime();
-                    return timeB - timeA;
-                });
-                setStories(sortedData);
-            } else {
-                setStories([]);
-            }
+            if (!append) setLoading(true);
+            else setLoadingMore(true);
+
+            const data = await storyService.getAllStories(pageNum, 20);
+            // data is a Spring Page object: { content, last, totalElements, ... }
+            const content = Array.isArray(data?.content) ? data.content : [];
+            const isLast = data?.last ?? true;
+
+            const sortedContent = [...content].sort((a, b) => {
+                const dateA = a?.storyDate ? new Date(a.storyDate) : (a?.createdAt ? new Date(a.createdAt) : new Date(0));
+                const dateB = b?.storyDate ? new Date(b.storyDate) : (b?.createdAt ? new Date(b.createdAt) : new Date(0));
+                const timeA = isNaN(dateA.getTime()) ? 0 : dateA.getTime();
+                const timeB = isNaN(dateB.getTime()) ? 0 : dateB.getTime();
+                return timeB - timeA;
+            });
+
+            setStories(prev => append ? [...prev, ...sortedContent] : sortedContent);
+            setHasMore(!isLast);
+            setPage(pageNum);
             hasErrored.current = false;
         } catch (err) {
             console.error('Failed to fetch stories', err);
-            setStories([]);
+            if (!append) setStories([]);
             if (!hasErrored.current) {
                 hasErrored.current = true;
                 toastRef.current?.error?.('Could not load your family chronicle.');
             }
         } finally {
             setLoading(false);
+            setLoadingMore(false);
         }
     }, []);
 
     useEffect(() => {
-        fetchStories();
+        fetchStories(0, false);
     }, [fetchStories]);
+
+    const handleLoadMore = useCallback(() => {
+        if (!loadingMore && hasMore) fetchStories(page + 1, true);
+    }, [fetchStories, loadingMore, hasMore, page]);
 
     const handleUnlock = useCallback((storyId) => {
         unlockedStoryIdRef.current = storyId || null;
         setShowCelebration(true);
-        fetchStories();
+        fetchStories(0, false);
     }, [fetchStories]);
 
     /* -- Computed Stats -- */
@@ -449,6 +463,23 @@ export default function Dashboard() {
                                     );
                                 })}
                             </div>
+
+                            {/* Load More */}
+                            {hasMore && (
+                                <div className="flex justify-center mt-12">
+                                    <button
+                                        onClick={handleLoadMore}
+                                        disabled={loadingMore}
+                                        className="px-8 py-3 bg-white border border-amber-200 text-amber-700 font-medium rounded-xl shadow-sm hover:bg-amber-50 hover:border-amber-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    >
+                                        {loadingMore ? (
+                                            <><span className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />Loading...</>
+                                        ) : (
+                                            'Load more memories'
+                                        )}
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

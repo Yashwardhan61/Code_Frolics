@@ -7,6 +7,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,8 +23,11 @@ public class StoryController {
     private final StoryService storyService;
 
     @GetMapping
-    public ResponseEntity<List<StoryResponse>> getAllStories() {
-        return ResponseEntity.ok(storyService.getAllStoriesForCurrentUser());
+    public ResponseEntity<Page<StoryResponse>> getAllStories(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Pageable pageable = PageRequest.of(page, Math.min(size, 100));
+        return ResponseEntity.ok(storyService.getAllStoriesForCurrentUser(pageable));
     }
 
     @GetMapping("/{id}")

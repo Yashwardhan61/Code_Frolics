@@ -1,8 +1,9 @@
 import api from './axiosConfig';
 
 export const storyService = {
-    getAllStories: async () => {
-        const response = await api.get('/stories');
+    getAllStories: async (page = 0, size = 20) => {
+        const response = await api.get('/stories', { params: { page, size } });
+        // response.data is a Spring Page: { content: [...], totalElements, totalPages, last, ... }
         return response.data;
     },
 
@@ -47,17 +48,17 @@ export const storyService = {
     
     updateStory: async (id, storyRequest, files) => {
         const formData = new FormData();
-        
+
         formData.append('story', new Blob([JSON.stringify(storyRequest)], {
             type: 'application/json'
         }));
-        
+
         if (files && files.length > 0) {
             for (let i = 0; i < files.length; i++) {
                 formData.append('files', files[i]);
             }
         }
-        
+
         const response = await api.put(`/stories/${id}`, formData);
         return response.data;
     },

@@ -28,15 +28,16 @@ public class StoryService {
     private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
-    public List<StoryResponse> getAllStoriesForCurrentUser() {
+    public org.springframework.data.domain.Page<StoryResponse> getAllStoriesForCurrentUser(
+            org.springframework.data.domain.Pageable pageable) {
         User currentUser = userService.getCurrentUser();
-        
+
         // Get own stories
         List<Story> ownStories = storyRepository.findByUserIdOrderByCreatedAtDesc(currentUser.getId());
-        
+
         // Get shared stories
         List<Story> sharedStories = storyRepository.findSharedWithUserOrderByCreatedAtDesc(currentUser.getId());
-        
+
         // Combine, deduplicate, and sort
         java.util.Map<Long, Story> uniqueStories = new java.util.LinkedHashMap<>();
         for (Story s : ownStories) {
@@ -54,9 +55,26 @@ public class StoryService {
             if (d1 == null) return 1;
             if (d2 == null) return -1;
             return d2.compareTo(d1);
-        }); // Descending and null-safe
-        
-        return allStories.stream().map(this::mapToResponse).collect(Collectors.toList());
+        });
+
+        // Apply manual pagination over the merged list
+        if (pageable.isUnpaged()) {
+            List<StoryResponse> responses = allStories.stream().map(this::mapToResponse).collect(Collectors.toList());
+            return new org.springframework.data.domain.PageImpl<>(responses, pageable, allStories.size());
+        }
+        int pageNum = pageable.getPageNumber();
+        int pageSize = pageable.getPageSize();
+        int start = pageNum * pageSize;
+        int end = Math.min(start + pageSize, allStories.size());
+        List<Story> pageContent = start >= allStories.size() ? java.util.Collections.emptyList() : allStories.subList(start, end);
+
+        List<StoryResponse> responses = pageContent.stream().map(this::mapToResponse).collect(Collectors.toList());
+        return new org.springframework.data.domain.PageImpl<>(responses, pageable, allStories.size());
+    }
+
+    @Transactional(readOnly = true)
+    public List<StoryResponse> getAllStoriesForCurrentUser() {
+        return getAllStoriesForCurrentUser(org.springframework.data.domain.Pageable.unpaged()).getContent();
     }
 
     @Transactional
@@ -77,10 +95,13 @@ public class StoryService {
             }
         }
         
-        // Increment views safely
-        int currentViews = story.getViews() != null ? story.getViews() : 0;
-        story.setViews(currentViews + 1);
-        storyRepository.save(story);
+        // Increment views only for non-authors (prevents author from inflating their own count)
+        boolean isViewer = !story.getUser().getId().equals(currentUser.getId());
+        if (isViewer) {
+            int currentViews = story.getViews() != null ? story.getViews() : 0;
+            story.setViews(currentViews + 1);
+            storyRepository.save(story);
+        }
         
         return mapToResponse(story);
     }
@@ -200,6 +221,17 @@ public class StoryService {
                     .map(tag -> StoryTag.builder().story(story).tag(tag).build())
                     .collect(Collectors.toList());
             story.getTags().addAll(newTags);
+        }
+
+        // Delete existing media files that were removed by the user
+        if (request.getMediaIdsToDelete() != null && !request.getMediaIdsToDelete().isEmpty()) {
+            List<StoryMedia> toRemove = story.getMediaFiles().stream()
+                    .filter(m -> request.getMediaIdsToDelete().contains(m.getId()))
+                    .collect(Collectors.toList());
+            for (StoryMedia m : toRemove) {
+                mediaStorageService.deleteFile(m.getFilePath());
+            }
+            story.getMediaFiles().removeAll(toRemove);
         }
 
         // Handle new file uploads (append)

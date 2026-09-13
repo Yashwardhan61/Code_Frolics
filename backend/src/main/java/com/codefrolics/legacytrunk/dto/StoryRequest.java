@@ -31,4 +31,6 @@ public class StoryRequest {
     private List<Long> sharedWithUserIds;
     private Long familyMemberId;
     private LocalDateTime unlockDateTime;
+    /** IDs of existing StoryMedia rows to delete during an update. */
+    private List<Long> mediaIdsToDelete;
 }

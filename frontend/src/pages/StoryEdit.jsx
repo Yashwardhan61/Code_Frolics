@@ -28,6 +28,7 @@ export default function StoryEdit() {
     const [unlockTime, setUnlockTime] = useState('');
     const [tagInput, setTagInput] = useState('');
     const [existingMedia, setExistingMedia] = useState([]);
+    const [removedMediaIds, setRemovedMediaIds] = useState([]);
     const [newFiles, setNewFiles] = useState([]);
     const [newPreviews, setNewPreviews] = useState([]);
 
@@ -270,7 +271,8 @@ export default function StoryEdit() {
                 tags: formData.tags && formData.tags.length > 0 ? formData.tags : [],
                 sharedWithUserIds: formData.sharedWithUserIds && formData.sharedWithUserIds.length > 0 ? formData.sharedWithUserIds : [],
                 familyMemberId: formData.familyMemberId ? Number(formData.familyMemberId) : null,
-                unlockDateTime: formattedUnlockDateTime
+                unlockDateTime: formattedUnlockDateTime,
+                mediaIdsToDelete: removedMediaIds.length > 0 ? removedMediaIds : null
             };
             await storyService.updateStory(id, payload, newFiles);
             toast.success('Memory updated successfully!');
@@ -384,10 +386,16 @@ export default function StoryEdit() {
                             <label className="block text-sm font-medium text-gray-700 mb-2">Current Media</label>
                             <div className="flex flex-wrap gap-4">
                                 {existingMedia.map((media) => {
+                                    const isRemoved = removedMediaIds.includes(media.id);
                                     const isAudio = media.mediaType?.startsWith('audio/') || media.mediaUrl?.endsWith('.webm') || media.mediaUrl?.endsWith('.wav') || media.mediaUrl?.endsWith('.mp3');
                                     const isVideo = media.mediaType?.startsWith('video/');
                                     return (
-                                        <div key={media.id} className="relative w-32 h-32 rounded-xl overflow-hidden border border-gray-200 flex items-center justify-center bg-gray-50">
+                                        <div
+                                            key={media.id}
+                                            className={`relative w-32 h-32 rounded-xl overflow-hidden border flex items-center justify-center bg-gray-50 group transition-opacity ${
+                                                isRemoved ? 'opacity-30 border-red-300' : 'border-gray-200'
+                                            }`}
+                                        >
                                             {isAudio ? (
                                                 <div className="flex flex-col items-center justify-center p-2 text-center h-full w-full bg-amber-50">
                                                     <Music className="w-8 h-8 text-amber-700 mb-1" />
@@ -401,10 +409,35 @@ export default function StoryEdit() {
                                             ) : (
                                                 <img src={media.mediaUrl} alt="" className="w-full h-full object-cover" />
                                             )}
+                                            {/* Per-file delete toggle */}
+                                            <button
+                                                type="button"
+                                                onClick={() => setRemovedMediaIds(prev =>
+                                                    prev.includes(media.id)
+                                                        ? prev.filter(rid => rid !== media.id)
+                                                        : [...prev, media.id]
+                                                )}
+                                                title={isRemoved ? 'Undo remove' : 'Remove this file'}
+                                                className={`absolute top-1 right-1 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 ${
+                                                    isRemoved
+                                                        ? 'bg-amber-500 text-white opacity-100'
+                                                        : 'bg-red-500 text-white'
+                                                }`}
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                            {isRemoved && (
+                                                <div className="absolute inset-0 flex items-center justify-center bg-red-50/60 pointer-events-none">
+                                                    <span className="text-[10px] text-red-600 font-semibold">Will be removed</span>
+                                                </div>
+                                            )}
                                         </div>
                                     );
                                 })}
                             </div>
+                            {removedMediaIds.length > 0 && (
+                                <p className="text-xs text-red-500 mt-2">{removedMediaIds.length} file(s) will be deleted when you save.</p>
+                            )}
                         </div>
                     )}
 

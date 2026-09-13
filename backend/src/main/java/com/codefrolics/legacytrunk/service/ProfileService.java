@@ -8,6 +8,7 @@ import com.codefrolics.legacytrunk.repository.FriendRepository;
 import com.codefrolics.legacytrunk.repository.StoryRepository;
 import com.codefrolics.legacytrunk.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -60,17 +61,22 @@ public class ProfileService {
         user.setDescription(request.getDescription());
         
         // Handle username change (allowed only once usually, but keeping it flexible here)
-        if (request.getUsername() != null && !request.getUsername().equals(user.getUsername())) {
-            // Check if username taken
-            if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-                throw new RuntimeException("Username already taken");
+        if (request.getUsername() != null && !request.getUsername().trim().isEmpty() && !request.getUsername().trim().equals(user.getUsername())) {
+            String newUsername = request.getUsername().trim();
+            // Check if username taken in application layer
+            if (userRepository.findByUsername(newUsername).isPresent()) {
+                throw new IllegalArgumentException("Username already taken");
             }
-            user.setUsername(request.getUsername());
+            user.setUsername(newUsername);
             user.setHasChangedUsername(true);
         }
         
         user.setProfileSetupComplete(true);
-        userRepository.save(user);
+        try {
+            userRepository.saveAndFlush(user);
+        } catch (DataIntegrityViolationException e) {
+            throw new IllegalArgumentException("Username already taken");
+        }
         
         return getCurrentUserProfile();
     }
