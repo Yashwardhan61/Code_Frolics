@@ -12,7 +12,15 @@
 
 ## Overview
 
-The Legacy Trunk (Yaado Ka Baksa) is a digital family archive that helps preserve memories, heirlooms, and life stories across generations. It is a secure storytelling platform where family members can record, upload, and relive shared memories through photos, videos, and text -- keeping the heritage alive for years to come.
+The Legacy Trunk (Yaado Ka Baksa) is a digital family archive that helps preserve memories, heirlooms, and life stories across generations. It is a secure storytelling platform where family members can record, upload, and relive shared memories through photos, videos, audio, and text -- keeping the heritage alive for years to come.
+
+---
+
+## Live Demo
+
+**Deployed URL:** [https://code-frolics-rqln.vercel.app/](https://code-frolics-rqln.vercel.app/)
+
+**GitHub:** [https://github.com/Yashwardhan61/Code_Frolics](https://github.com/Yashwardhan61/Code_Frolics)
 
 ---
 
@@ -21,13 +29,15 @@ The Legacy Trunk (Yaado Ka Baksa) is a digital family archive that helps preserv
 | Layer | Technology |
 |-------|------------|
 | Frontend | React 19, Vite 8, Tailwind CSS 4, React Router 7 |
-| Backend | Spring Boot 3.4 (Java 17), Spring Security, Spring Data JPA |
+| Backend | Spring Boot 3.4 (Java 17), Spring Security, Spring Data JPA, Lombok |
 | Database | PostgreSQL (Neon serverless) |
 | Auth | Firebase Authentication (client SDK + Admin SDK for token verification) |
-| AI | Groq API (fast inference for description enhancement and predictive text) |
-| Email | Gmail SMTP with Spring Boot Mail |
-| Storage | Local filesystem (`~/legacy-trunk-uploads`) |
+| AI | Groq API (description enhancement and predictive text) |
+| Email | Gmail SMTP via Spring Boot Mail (async HTML emails) |
+| Storage | Local filesystem (~~/legacy-trunk-uploads) |
+| API Docs | Springdoc OpenAPI / Swagger UI |
 | Build | Maven (backend), npm (frontend) |
+| Deployment | Vercel (frontend) |
 
 ---
 
@@ -46,7 +56,7 @@ Make sure the following are installed on your machine before proceeding:
 
 ### Installing Prerequisites
 
-**Node.js and npm** -- Download from [nodejs.org](https://nodejs.org/) (LTS recommended). The npm CLI is bundled with the Node.js installer on all platforms.
+**Node.js and npm** -- Download from [nodejs.org](https://nodejs.org/) (LTS recommended).
 
 **Java (JDK 17+)**
 
@@ -79,8 +89,6 @@ cd Code_Frolics
 
 ### 2. Backend Environment Configuration
 
-The backend reads all credentials from a `.env` file. Copy the example template and fill in your values:
-
 ```bash
 cd backend
 cp .env.example .env
@@ -109,9 +117,7 @@ GROQ_API_KEY=your_groq_api_key
 
 ### 3. Firebase Setup
 
-The app uses Firebase Authentication. You need a Firebase project:
-
-1. Go to [Firebase Console](https://console.firebase.google.com/) and create a project (or use an existing one).
+1. Go to [Firebase Console](https://console.firebase.google.com/) and create a project.
 2. Enable **Email/Password** sign-in under Authentication > Sign-in method.
 3. Get your **web app config** from Project Settings > General > Your Apps > Web App.
 4. Update `frontend/src/config/firebase.js` with your project's config values.
@@ -126,7 +132,7 @@ For backend token verification (optional but recommended):
 FIREBASE_SERVICE_ACCOUNT=/path/to/your-service-account.json
 ```
 
-If you skip this, the backend starts with `service-account-path: none`. In dev profile (`-Dspring.profiles.active=dev`), it will use unsafe manual JWT decoding for local development. In production, tokens will be rejected if Firebase Admin SDK is not configured.
+If you skip this, the backend starts with `service-account-path: none`. In dev profile (`-Dspring.profiles.active=dev`), it will use unsafe manual JWT decoding for local development.
 
 ### 4. Backend Setup
 
@@ -141,13 +147,6 @@ mvn spring-boot:run
 ```
 
 The backend starts on **http://localhost:8080**.
-
-You should see output like:
-
-```
-Started LegacyTrunkApplication in X.XXX seconds
-Tomcat started on port 8080 (http)
-```
 
 ### 5. Frontend Setup
 
@@ -195,16 +194,6 @@ cd frontend
 npm run dev
 ```
 
-**Windows (PowerShell):**
-
-```powershell
-# Terminal 1 -- Backend
-cd backend; mvn spring-boot:run
-
-# Terminal 2 -- Frontend
-cd frontend; npm run dev
-```
-
 ---
 
 ## Project Structure
@@ -216,7 +205,7 @@ Code_Frolics/
     pom.xml                    # Maven dependencies
     src/main/java/com/codefrolics/legacytrunk/
       config/                  # CorsConfig, FirebaseConfig, GroqConfig, SecurityConfig
-      controller/              # REST API controllers (13 controllers)
+      controller/              # REST API controllers (14 controllers)
         AuthController         # Login sync, forgot/reset password
         StoryController        # Story CRUD
         RecipeController       # Recipe CRUD
@@ -231,9 +220,9 @@ Code_Frolics/
         AiController           # Groq AI integration
         MemoryController       # Memory search and statistics
         GlobalExceptionHandler # Centralized error handling
-      dto/                     # Request/Response data transfer objects (with validation)
-      model/                   # JPA entity classes (20 entities)
-      repository/              # Spring Data repositories
+      dto/                     # Request/Response DTOs (with Jakarta Bean Validation)
+      model/                   # JPA entity classes (21 entities)
+      repository/              # Spring Data JPA repositories
       service/                 # Business logic (14 services)
       security/                # Firebase token filter, user details
 
@@ -247,19 +236,30 @@ Code_Frolics/
         ProtectedRoute         # Auth guard for protected routes
         AdminRoute             # Role guard for admin-only routes
         AudioWaveformPlayer    # Audio playback with waveform visualization
-        AutoGenerateModal      # AI-powered scrapbook generation
+        AutoGenerateModal      # AI-powered scrapbook auto-generation
         FlipBookPreview        # Scrapbook flip-book viewer
+        MemoryPromptsModal     # Categorized story-starter prompt picker
+        ErrorBoundary          # React error boundary
         HourglassLoader        # Loading indicator
+        dashboard/
+          MediaCarousel        # Spotlight media carousel with time capsule countdown
+          TimelineStoryCard    # Timeline card for dashboard story list
+        story/
+          AudioRecorderModal   # In-browser voice recording modal
+          MemoryPromptsModal   # Story inspiration prompt modal
       config/                  # Firebase client config
       contexts/                # AuthContext, ToastContext
       layouts/                 # MainLayout (sidebar nav), AuthLayout (public pages)
-      pages/                   # All page components (27 pages)
+      pages/                   # All page components (28 pages)
     index.html
     package.json
     vite.config.js             # Dev server proxy config
+    vercel.json                # Vercel SPA rewrite rules
 
   README.md
   .gitignore
+  Dockerfile
+  vercel.json
 ```
 
 ---
@@ -337,64 +337,74 @@ All API errors return a consistent JSON structure:
 | Feature | Description |
 |---------|-------------|
 | **User Registration and Login** | Email/password authentication via Firebase Auth. Register with name, email, password with strength validation. Login with existing credentials. Firebase JWT tokens sent to backend on every API call. |
-| **Password Reset** | Forgot password flow with email-based reset tokens. Users receive an email with a secure link to reset their password. Token validation and password update handled server-side. |
-| **Dashboard** | Displays all stories as cards sorted by creation date. Each card shows cover image (or placeholder), title, description preview, date, location, author avatar, and tags. "New Memory" button links to story creation. |
-| **Story CRUD** | Create, view, edit, and delete stories with title, description, date, location, and tags (Enter-key to add). Supports multi-file upload for images, videos, and audio. Dedicated edit page with pre-filled fields. Story author can delete with confirmation dialog. |
+| **Password Reset** | Forgot password flow with email-based reset tokens. Users receive an HTML-formatted email with a secure link to reset their password. Token validation and password update handled server-side. |
+| **Dashboard** | Timeline-style family chronicle with a spotlight card for the latest story, an "On This Day" flashback panel, animated stat counters (memories, locations, members, oldest year), a media carousel with time capsule countdown, and scroll-reveal story cards sorted by date. |
+| **Story CRUD** | Create, view, edit, and delete stories with title, description, date, location, and tags. Supports multi-file upload for images, videos, and audio. Dedicated edit page with pre-filled fields. Story author can delete with confirmation dialog. Stories can be shared with specific friends. |
+| **Voice Recording** | In-browser audio recording modal during story creation. Records via the MediaRecorder API with a live timer, previews the recording, and attaches it as an audio file to the story. |
+| **Memory Prompts** | Categorized story-starter prompt picker (Childhood & Youth, Journeys & Travel, Family Heritage, Milestones & Turning Points) accessible during story creation. Selecting a prompt auto-fills the description field. |
+| **AI Description Enhancement** | Groq-powered AI integration for enhancing story descriptions with a single click and providing predictive text suggestions during story creation. |
 | **Search and Filtering** | Multi-criteria search across stories with query text, date range, author, media type, tags, location, and sort options. Backend supports paginated results. |
-| **Time Capsule** | Lock stories to be revealed on a future date and time. Backend scheduler (`TimeCapsuleSchedulerService`) scans for stories unlocking today and within the next 2 minutes, sends email and in-app notifications to the author when unlocked. |
+| **Time Capsule** | Lock stories to be revealed on a future date and time. A Spring `@Scheduled` task (runs every 30 seconds) scans for stories unlocking today and within the next 2 minutes, dispatching deduplicated in-app notifications for both "reveal day" and "unlocking soon" events to the author and all shared users. |
 | **Heritage Module** | Dedicated section for family recipes and heirlooms. Recipes include ingredients, steps, cooking time, servings, tags, and media. Heirlooms include current/next owner, estimated year, tags, and media. Full CRUD for both. |
-| **Scrapbook** | Canvas-based scrapbook editor for creating visual memory collages. List view of all scrapbooks. QR code scanner for sharing scrapbooks. Auto-generate scrapbooks with AI-powered themes (Legacy Capsule, Polaroid Grid, Vintage Journal). |
+| **Scrapbook** | Canvas-based scrapbook editor for creating visual memory collages. List view of all scrapbooks. AI-powered auto-generation with 3 themes (Legacy Capsule, Polaroid Grid, Vintage Journal). Flip-book preview mode. QR code generation for sharing; dedicated QR scanner page to decode and preview linked stories. |
 | **User Profile** | View and edit display name, username (one-time change enforced), bio, and profile photo. Shows account stats: story count, friend count, family member count. Profile photo upload with preview. |
-| **Family Tree Builder** | Interactive visual tree with paternal/maternal tabs. Add, edit, and delete family members. Each member has name, relationship, birth/death dates, birth place, bio, photo, and parent link. Hierarchical rendering with expand/collapse. Hover actions for quick edit/delete/add-child. Notifications sent when new members are added. |
+| **Family Tree Builder** | Interactive visual tree with paternal/maternal tabs. Add, edit, and delete family members. Each member has name, relationship, birth/death dates, birth place, bio, photo, and parent link. Hierarchical rendering with expand/collapse. Hover actions for quick edit/delete/add-child. Each member has a dedicated **Member Portal** page showing their profile and all stories linked to them. Notifications sent when new members are added. |
 | **Friends System** | Invite friends by email, accept or decline pending invitations, remove existing friends. Friends list with avatar, name, and email. Pending requests panel with accept/decline buttons. Notifications on friend request and acceptance. |
 | **Media Gallery** | Aggregates all media from all stories into a single masonry-grid page. Filter by All, Photos, or Videos. Click any item for fullscreen lightbox with Escape-to-close. Shows story title overlay on hover. |
-| **AI Description Enhancement** | Groq-powered AI integration for enhancing story descriptions and providing predictive text suggestions during story creation. |
 
 ### Access Control and Security
 
 | Feature | Description |
 |---------|-------------|
-| **Role-Based Access Control** | Two roles: ADMIN and MEMBER. First registered user gets ADMIN. Admins can view all users and change roles via the Admin Panel. Backend enforces roles with `@PreAuthorize`. |
+| **Role-Based Access Control** | Three roles: ADMIN, MEMBER, and VIEWER. First registered user gets ADMIN. Admins can view all users and change roles via the Admin Panel. Backend enforces roles with `@PreAuthorize`. |
 | **Admin Panel** | Admin-only dashboard showing all registered users with their roles. Admins can promote/demote users between ADMIN, MEMBER, and VIEWER roles. Frontend route is protected by role guard (non-admins redirected to dashboard). |
 | **Protected Routes** | Unauthenticated users are redirected to `/login` when trying to access any protected page. Admin routes additionally check for ADMIN role. |
 | **Backend Auth Middleware** | Spring Security filter intercepts every `/api/*` request, extracts the Firebase JWT from the `Authorization` header, verifies it with Firebase Admin SDK, and sets the authenticated user in the security context. Unsafe JWT fallback is gated behind `dev` profile only. |
 | **Input Validation** | All request DTOs are validated with Jakarta Bean Validation annotations (`@NotBlank`, `@Size`, `@Valid`). Invalid input returns structured field-level error messages. |
 | **Global Error Handling** | Centralized `@RestControllerAdvice` catches validation errors, access denials, upload limits, and runtime exceptions. Returns consistent JSON error responses. No stack traces leak to clients. |
-| **Privacy Control** | Stories can be shared with specific users by ID. Backend enforces access control -- users can only view their own stories or stories explicitly shared with them. Stored in `story_shares` table. |
+| **Privacy Control** | Stories can be shared with specific friends by user ID. Backend enforces access control -- users can only view their own stories or stories explicitly shared with them. Stored in `story_shares` table. |
 
 ### Notifications
 
 | Feature | Description |
 |---------|-------------|
 | **In-App Notifications** | Bell icon in navbar with unread count badge. Notification dropdown with mark-as-read and delete. Auto-polls backend every 30 seconds for new notifications. |
-| **Notification Triggers** | Notifications are automatically created for: story sharing, friend request sent, friend request accepted, family member added, and time capsule unlocked. |
-| **Email Notifications** | SMTP email service for password reset emails and time capsule unlock notifications. Uses Gmail with App Password authentication. |
+| **Notification Triggers** | Notifications are automatically created for: story sharing, friend request sent, friend request accepted, family member added, time capsule reveal day, and time capsule unlocking soon. |
+| **Email Notifications** | Async HTML SMTP email service for password reset emails. Styled HTML emails sent via Gmail with App Password authentication. |
 | **Toast Notifications** | Global toast system for all user actions across every page. Four variants: success (green), error (red), warning (amber), info (brown). Auto-dismiss with slide-out animation and manual close button. |
 
-### Additional Pages
+### Pages (28 total)
 
-| Page | Description |
-|------|-------------|
-| **Home** | Public landing page |
-| **Welcome** | Post-registration welcome page |
-| **Onboarding** | Profile setup wizard for new users |
-| **About** | About the project |
-| **Contact** | Contact information |
-| **Feedback** | User feedback form |
-
-### Not Yet Implemented
-
-| Feature | Description |
-|---------|-------------|
-| **AI Auto-Tagging** | Auto-tagging and content categorization using NLP. Tags are currently manual per-story only. |
-| **Story Export (PDF)** | Export stories or scrapbooks as downloadable PDF documents. |
-| **AI Memory Prompts** | Predefined story-starter questions to inspire story writing. |
-| **Cross-Generational Matching** | Matching family members with similar interests or experiences based on story content. |
-| **Collaborative Story Editing** | Multiple users co-editing a single family story. Stories are currently shared as read-only. |
-| **Geo-Tagged Memories** | Map view of memories using Google Maps or Mapbox. The `location` field stores text but there is no map integration or geocoding. |
-| **Multilingual Translation** | Translate stories into multiple languages for global family sharing. |
-| **AI Family Tree Helper** | AI assistance for building and suggesting family tree connections. |
-| **Timeline View** | Dedicated visual timeline layout. Currently stories are shown as sorted cards on the dashboard. |
+| Page | Route | Description |
+|------|-------|-------------|
+| Home | `/` | Public landing page |
+| Register | `/register` | New user sign-up |
+| Login | `/login` | User sign-in |
+| Reset Password | `/reset-password` | Password reset via token |
+| Welcome | `/welcome` | Post-registration welcome |
+| Onboarding | `/onboarding` | Profile setup wizard for new users |
+| Dashboard | `/dashboard` | Family chronicle timeline |
+| Story Create | `/story/create` | Multi-step story creation with voice recording and AI prompts |
+| Story View | `/story/:id` | Full story view with media and time capsule lock/unlock |
+| Story Edit | `/story/:id/edit` | Edit existing story |
+| Gallery | `/gallery` | Masonry media gallery across all stories |
+| Heritage | `/heritage` | Recipes and heirlooms listing |
+| Recipe Create | `/heritage/recipe/create` | Create a new recipe |
+| Recipe View | `/heritage/recipe/:id` | Full recipe view |
+| Heirloom Create | `/heritage/heirloom/create` | Create a new heirloom |
+| Heirloom View | `/heritage/heirloom/:id` | Full heirloom view |
+| Family Tree | `/family-tree` | Interactive hierarchical family tree |
+| Member Portal | `/family-tree/member/:id` | Individual member profile and their linked stories |
+| Friends | `/friends` | Friends list and invitation management |
+| Scrapbook List | `/scrapbook` | All scrapbooks overview |
+| Scrapbook Editor | `/scrapbook/:id/edit` | Canvas-based scrapbook editor |
+| Scrapbook Scanner | `/scrapbook/scanner` | QR code scanner to preview linked stories |
+| Profile | `/profile` | User profile view and edit |
+| Admin Panel | `/admin` | User and role management (ADMIN only) |
+| About | `/about` | About the project |
+| Contact | `/contact` | Contact information |
+| Feedback | `/feedback` | User feedback form |
+| Not Found | `*` | 404 page |
 
 ---
 
